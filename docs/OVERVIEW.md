@@ -28,9 +28,11 @@ Overview:
       predictions alike. Version 1 equals crosstalk's extractor at 7f8a2fb;
       depends only on format and url.
     datasets: >
-      a2a-bench-datasets. One converter per dataset (salt, agentdojo, tau2,
-      collusion-wiki, swarm-traces, open-swe, lmcache, swe-splice, cipher,
-      ai-village, demo-swarm), each a TraceSource built on corpus.
+      One crate per dataset under crates/datasets/<name>
+      (a2a-bench-dataset-<name>: salt, agentdojo, tau2, collusion-wiki,
+      swarm-traces, open-swe, lmcache, swe-splice, cipher, ai-village,
+      demo-swarm), each a TraceSource built on corpus with ct-eval's dataset
+      id, an Options type (ct-eval's selection flags) and the files it read.
     reference: >
       a2a-bench-reference. The naive reference matcher, shipped as the
       a2a-reference detector binary.
@@ -68,4 +70,24 @@ Features Index:
     entry_points: []
     depends_on: []
     doc: docs/design/separation.md
+  dataset-open-swe:
+    description: open_swe@1 - Open-SWE-Traces trajectories mixed into background worlds (no positives, controls per pair); shard discovery and round-robin rows reused by swe-splice
+    entry_points: [crates/datasets/open-swe/src/lib.rs, crates/datasets/open-swe/src/source.rs]
+    depends_on: [corpus, format]
+    doc: docs/features/dataset-open-swe.md
+  dataset-lmcache:
+    description: lmcache@1 - LMCache agentic sessions as background worlds; cumulative requests rebuilt into calls, recorded pre_gap times
+    entry_points: [crates/datasets/lmcache/src/lib.rs, crates/datasets/lmcache/src/source.rs]
+    depends_on: [corpus, format]
+    doc: docs/features/dataset-lmcache.md
+  dataset-swe-splice:
+    description: swe_splice@1 - seeded splices of a file write into another Open-SWE trajectory's later read (four variants, editor view or shell cat), one channel label per world
+    entry_points: [crates/datasets/swe-splice/src/lib.rs, crates/datasets/swe-splice/src/world.rs]
+    depends_on: [dataset-open-swe, corpus, format]
+    doc: docs/features/dataset-swe-splice.md
+  dataset-cipher:
+    description: cipher@1 - seeded sender/receiver pairs carrying a payload under eight encoders; rot13, rotN, binary8 and substitution are out of reach by design
+    entry_points: [crates/datasets/cipher/src/lib.rs, crates/datasets/cipher/src/world.rs]
+    depends_on: [corpus, format]
+    doc: docs/features/dataset-cipher.md
 ```
