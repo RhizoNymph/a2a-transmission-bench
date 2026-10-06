@@ -1,0 +1,139 @@
+{
+  "run": "tau2",
+  "result": "equal",
+  "bench_diff_normalize_ids": {
+    "worlds": 10832,
+    "rows_a": 131585,
+    "rows_b": 131585,
+    "differences": 263173,
+    "only_a": 131585,
+    "only_b": 131585,
+    "changed": 3,
+    "order": 0
+  },
+  "predictions_modulo_agent_ids": {
+    "run": "tau2",
+    "a": "golden",
+    "b": "bench",
+    "result": "equal",
+    "detectors": {
+      "golden": {
+        "name": "reference",
+        "version": "9707b1d58227fd8ba37ca6d6478097494fcef4ee",
+        "variant": "default"
+      },
+      "bench": {
+        "name": "reference",
+        "version": "0.1.0",
+        "variant": "max-postings-50",
+        "config_digest": "7acb2f5b7ea11c954ba3acea7b18946f859680125cdb4dc0e772f29ce904c576"
+      }
+    },
+    "worlds": 10832,
+    "worlds_equal": 10832,
+    "worlds_only_a": 0,
+    "worlds_only_b": 0,
+    "world_order_differs": 0,
+    "status_differs": 0,
+    "partition_differs": 0,
+    "attribution_rows": {
+      "golden": 18016,
+      "bench": 18016
+    },
+    "unattributed_rows": {
+      "golden": 0,
+      "bench": 0
+    },
+    "transmissions": {
+      "golden": 113569,
+      "bench": 113569,
+      "matched": 113569,
+      "only_golden": 0,
+      "only_bench": 0,
+      "only_golden_by_state": {},
+      "only_bench_by_state": {}
+    },
+    "first": []
+  },
+  "score_vs_p2": {
+    "result": "equal",
+    "compared_values": 77,
+    "differences": []
+  },
+  "score": {
+    "detector": "reference",
+    "totals": {
+      "worlds": 10832,
+      "agents": 18016,
+      "exchanges": 264793,
+      "expectations": 119256,
+      "negative_controls": 106465,
+      "predictions": 241794
+    },
+    "overall": {
+      "expected": 119256,
+      "found": 119085,
+      "missed": 171,
+      "suspected": 0,
+      "predicted": 241794,
+      "correct": 241233,
+      "false_positive": 561,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.9976798431722872,
+      "recall": 0.9985661098812638
+    },
+    "out_of_reach": {
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    "forwarding": {
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    "access_only": {
+      "labels": 0,
+      "expected": 119256,
+      "recall": 0.0,
+      "expected_access": 0,
+      "found_access": 0,
+      "access_recall": null
+    },
+    "rows": 7,
+    "transmissions": 5,
+    "violations": {
+      "tau2/shared_source": 481
+    },
+    "access_only_under_controls": {},
+    "fp_per_1k": 2.118636066663394,
+    "false_positives": 561,
+    "gates": {
+      "other_dataset": 7,
+      "pass": 2
+    },
+    "failed_worlds": 0,
+    "unscored": {
+      "worlds": 0,
+      "ingested": 0
+    },
+    "unknown_detected_agent": 0
+  }
+}

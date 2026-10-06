@@ -1,0 +1,108 @@
+{
+  "run": "wiki-demo",
+  "result": "equal modulo label ids",
+  "bench_diff": {
+    "file_worlds": 15,
+    "rows_a": 740,
+    "rows_b": 740,
+    "differences": 402,
+    "only_a": 197,
+    "only_b": 197,
+    "changed": 8,
+    "order": 0
+  },
+  "manifest_paths_changed": [
+    "/converter/git",
+    "/files/labels",
+    "/selection/family",
+    "/selection/limit",
+    "/selection/max_agents",
+    "/selection/min_agents",
+    "/selection/split_list",
+    "/source/revision"
+  ],
+  "ignored": [
+    "/converter/git",
+    "/source/revision"
+  ],
+  "considered": [
+    "/files/labels",
+    "/selection/family",
+    "/selection/limit",
+    "/selection/max_agents",
+    "/selection/min_agents",
+    "/selection/split_list"
+  ],
+  "file_digests_equal": {
+    "messages": true,
+    "exchanges": true,
+    "labels": false
+  },
+  "manifest_worlds_equal": true,
+  "worlds": 5,
+  "golden": {
+    "source_revision": "unknown",
+    "selection": {
+      "demo": true
+    },
+    "pace": {
+      "max_ms": 5000,
+      "min_ms": 1000,
+      "seed": 0
+    }
+  },
+  "bench": {
+    "source_revision": "unversioned",
+    "selection": {
+      "demo": true,
+      "family": [
+        "relay-coordination"
+      ],
+      "limit": 5,
+      "max_agents": 12,
+      "min_agents": 2,
+      "split_list": "none"
+    },
+    "pace": {
+      "max_ms": 5000,
+      "min_ms": 1000,
+      "seed": 0
+    }
+  },
+  "labels_modulo_ids": {
+    "a": "golden",
+    "b": "bench",
+    "result": "equal modulo ids",
+    "worlds": 5,
+    "worlds_equal": 5,
+    "world_keys_differ": 0,
+    "world_rows_differ": 0,
+    "rows": {
+      "golden": {
+        "exchange_agent": 156,
+        "transmission": 134,
+        "negative_control": 63
+      },
+      "bench": {
+        "exchange_agent": 156,
+        "transmission": 134,
+        "negative_control": 63
+      }
+    },
+    "matched_without_id": {
+      "exchange_agent": 156,
+      "transmission": 134,
+      "negative_control": 63
+    },
+    "ids_of_matched_rows": {
+      "equal": 0,
+      "differ": 197
+    },
+    "only_golden": {},
+    "only_bench": {},
+    "paired_fields_differ": {},
+    "unpaired_golden": {},
+    "unpaired_bench": {},
+    "first_differing_worlds": []
+  }
+}

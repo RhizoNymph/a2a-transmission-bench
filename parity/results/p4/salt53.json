@@ -1,0 +1,92 @@
+{
+  "run": "salt53",
+  "result": "equal (byte-identical files; manifest differs only in ignored fields and split_list)",
+  "bench_diff": {
+    "file_worlds": 159,
+    "rows_a": 71378,
+    "rows_b": 71378,
+    "differences": 3,
+    "only_a": 0,
+    "only_b": 0,
+    "changed": 3,
+    "order": 0
+  },
+  "manifest_paths_changed": [
+    "/converter/git",
+    "/selection/split_list",
+    "/source/revision"
+  ],
+  "ignored": [
+    "/converter/git",
+    "/source/revision"
+  ],
+  "considered": [
+    "/selection/split_list"
+  ],
+  "file_digests_equal": {
+    "messages": true,
+    "exchanges": true,
+    "labels": true
+  },
+  "manifest_worlds_equal": true,
+  "worlds": 53,
+  "golden": {
+    "source_revision": "2eba8f3771e8fbcc0f49f6cbbfd2111b939a117a",
+    "selection": {
+      "limit": 53
+    },
+    "pace": {
+      "max_ms": 5000,
+      "min_ms": 1000,
+      "seed": 0
+    }
+  },
+  "bench": {
+    "source_revision": "unversioned",
+    "selection": {
+      "limit": 53,
+      "split_list": "none"
+    },
+    "pace": {
+      "max_ms": 5000,
+      "min_ms": 1000,
+      "seed": 0
+    }
+  },
+  "labels_modulo_ids": {
+    "a": "golden",
+    "b": "bench",
+    "result": "equal modulo ids",
+    "worlds": 53,
+    "worlds_equal": 53,
+    "world_keys_differ": 0,
+    "world_rows_differ": 0,
+    "rows": {
+      "golden": {
+        "exchange_agent": 11796,
+        "transmission": 3850,
+        "negative_control": 12951
+      },
+      "bench": {
+        "exchange_agent": 11796,
+        "transmission": 3850,
+        "negative_control": 12951
+      }
+    },
+    "matched_without_id": {
+      "exchange_agent": 11796,
+      "transmission": 3850,
+      "negative_control": 12951
+    },
+    "ids_of_matched_rows": {
+      "equal": 16801,
+      "differ": 0
+    },
+    "only_golden": {},
+    "only_bench": {},
+    "paired_fields_differ": {},
+    "unpaired_golden": {},
+    "unpaired_bench": {},
+    "first_differing_worlds": []
+  }
+}

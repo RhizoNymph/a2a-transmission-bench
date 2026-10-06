@@ -1,0 +1,88 @@
+{
+  "run": "swarm-traces",
+  "result": "equal modulo label ids",
+  "bench_diff": {
+    "file_worlds": 1887,
+    "rows_a": 8177,
+    "rows_b": 8177,
+    "differences": 1262,
+    "only_a": 629,
+    "only_b": 629,
+    "changed": 4,
+    "order": 0
+  },
+  "manifest_paths_changed": [
+    "/converter/git",
+    "/files/labels",
+    "/selection/split_list",
+    "/source/revision"
+  ],
+  "ignored": [
+    "/converter/git",
+    "/source/revision"
+  ],
+  "considered": [
+    "/files/labels",
+    "/selection/split_list"
+  ],
+  "file_digests_equal": {
+    "messages": true,
+    "exchanges": true,
+    "labels": false
+  },
+  "manifest_worlds_equal": true,
+  "worlds": 629,
+  "golden": {
+    "source_revision": "unknown",
+    "selection": {},
+    "pace": {
+      "max_ms": 5000,
+      "min_ms": 1000,
+      "seed": 0
+    }
+  },
+  "bench": {
+    "source_revision": "unversioned",
+    "selection": {
+      "split_list": "none"
+    },
+    "pace": {
+      "max_ms": 5000,
+      "min_ms": 1000,
+      "seed": 0
+    }
+  },
+  "labels_modulo_ids": {
+    "a": "golden",
+    "b": "bench",
+    "result": "equal modulo ids",
+    "worlds": 629,
+    "worlds_equal": 629,
+    "world_keys_differ": 0,
+    "world_rows_differ": 0,
+    "rows": {
+      "golden": {
+        "exchange_agent": 1887,
+        "transmission": 629
+      },
+      "bench": {
+        "exchange_agent": 1887,
+        "transmission": 629
+      }
+    },
+    "matched_without_id": {
+      "exchange_agent": 1887,
+      "transmission": 629
+    },
+    "ids_of_matched_rows": {
+      "equal": 0,
+      "differ": 629
+    },
+    "only_golden": {},
+    "only_bench": {},
+    "paired_fields_differ": {},
+    "unpaired_golden": {},
+    "unpaired_bench": {},
+    "first_differing_worlds": []
+  }
+}
