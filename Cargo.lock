@@ -18,6 +18,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "a2a-bench-dataset-demo-swarm"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-corpus",
+ "a2a-bench-format",
+ "a2a-bench-resource",
+ "blake3",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "a2a-bench-format"
 version = "0.1.0"
 dependencies = [

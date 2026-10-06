@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/corpus", "crates/format", "crates/resource"]
+members = ["crates/corpus", "crates/datasets/demo-swarm", "crates/format", "crates/resource"]
 
 [workspace.package]
 version = "0.1.0"

@@ -63,6 +63,11 @@ Features Index:
     entry_points: [crates/resource/src/lib.rs]
     depends_on: [format]
     doc: docs/features/resource.md
+  dataset-demo-swarm:
+    description: demo-swarm/headline and demo-swarm/boilerplate - crosstalk demo swarm runs labelled from the swarm's truth v2 over the adapter's bench capture (session + turn join, tool_use_id and BLAKE3 cross-checks, run window, typed join diagnostics)
+    entry_points: [crates/datasets/demo-swarm/src/lib.rs, crates/datasets/demo-swarm/src/source.rs, crates/datasets/demo-swarm/src/label.rs]
+    depends_on: [format, corpus, resource]
+    doc: docs/features/dataset-demo-swarm.md
   separation:
     description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
     entry_points: []
