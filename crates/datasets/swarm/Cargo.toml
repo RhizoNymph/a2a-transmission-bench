@@ -1,0 +1,23 @@
+[package]
+name = "a2a-bench-dataset-swarm"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "swarm-traces converter: encoded payloads as decoded-class transmissions between two synthetic agents."
+
+[lints]
+workspace = true
+
+[dependencies]
+a2a-bench-corpus = { version = "0.1.0", path = "../../corpus" }
+a2a-bench-format = { version = "0.1.0", path = "../../format" }
+base64 = "=0.22.1"
+flate2 = "=1.1.10"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+thiserror = "=2.0.21"
+tracing = "=0.1.44"
+
+[dev-dependencies]
+tempfile = "=3.27.0"

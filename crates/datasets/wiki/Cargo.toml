@@ -1,0 +1,23 @@
+[package]
+name = "a2a-bench-dataset-wiki"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "collusion-wiki converter: agent swarms using public wikis as dead drops, as synthesised exchanges and channel labels."
+
+[lints]
+workspace = true
+
+[dependencies]
+a2a-bench-corpus = { version = "0.1.0", path = "../../corpus" }
+a2a-bench-format = { version = "0.1.0", path = "../../format" }
+a2a-bench-resource = { version = "0.1.0", path = "../../resource" }
+flate2 = "=1.1.10"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+thiserror = "=2.0.21"
+tracing = "=0.1.44"
+
+[dev-dependencies]
+tempfile = "=3.27.0"

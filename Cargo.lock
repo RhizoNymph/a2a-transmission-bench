@@ -45,11 +45,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "a2a-bench-dataset-swarm"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-corpus",
+ "a2a-bench-format",
+ "base64 0.22.1",
+ "flate2",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "a2a-bench-dataset-tau2"
 version = "0.1.0"
 dependencies = [
  "a2a-bench-corpus",
  "a2a-bench-format",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "a2a-bench-dataset-wiki"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-corpus",
+ "a2a-bench-format",
+ "a2a-bench-resource",
+ "flate2",
  "serde",
  "serde_json",
  "tempfile",
