@@ -6,7 +6,8 @@
 //! same order and memory is bounded by the largest world. A world the
 //! source fails to produce is logged, recorded in [`Exported::failures`]
 //! and skipped; the export goes on. The manifest is written last, with the
-//! trailers' digests and each world's exchange count.
+//! trailers' digests and each world's exchange count, label row count and
+//! notes.
 //!
 //! Exports are deterministic: the same source, info and selection give
 //! byte-identical files.
@@ -181,6 +182,8 @@ pub fn export<S: TraceSource>(
         worlds.push(WorldEntry {
             key: world.key().clone(),
             exchanges: u64::try_from(world.exchanges().len()).unwrap_or(u64::MAX),
+            labels: Some(u64::try_from(world.labels().len()).unwrap_or(u64::MAX)),
+            notes: world.notes().clone(),
         });
     }
     let trailers = writers.finish()?;

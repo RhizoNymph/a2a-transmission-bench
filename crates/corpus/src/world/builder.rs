@@ -85,6 +85,15 @@ pub struct WorldBuilder {
     exchanges: Vec<(Exchange, AgentKey)>,
     ids: BTreeSet<ExchangeId>,
     labels: Vec<Label>,
+    notes: BTreeMap<String, u64>,
+}
+
+/// Where an exchange's client comes from.
+enum ClientFrom {
+    /// The agent's credential and model, the draft's session, turn and model.
+    Agent,
+    /// A client the dataset recorded, kept as it is.
+    Recorded(Client),
 }
 
 impl WorldBuilder {
@@ -97,6 +106,7 @@ impl WorldBuilder {
             exchanges: Vec::new(),
             ids: BTreeSet::new(),
             labels: Vec::new(),
+            notes: BTreeMap::new(),
         }
     }
 
@@ -155,12 +165,22 @@ impl WorldBuilder {
         self.declare(name, Driven::Scripted, None, None)
     }
 
+    /// Declares scripted agent `name` with the model its dataset names for
+    /// it (a scripted role a run configured with a model it never called).
+    pub fn scripted_agent_with_model(
+        &mut self,
+        name: &str,
+        model: &str,
+    ) -> Result<WorldAgent, CorpusError> {
+        self.declare(name, Driven::Scripted, Some(model), None)
+    }
+
     /// Adds one exchange, its id derived from the dataset, its source and
     /// its time. Its agent must be of this world, declared and model-driven,
     /// and its time later than the agent's previous exchange.
     pub fn exchange(&mut self, draft: ExchangeDraft) -> Result<ExchangeId, CorpusError> {
         let id = exchange_id(&self.dataset, &draft.source, draft.at);
-        self.add(id, draft)
+        self.add(id, draft, ClientFrom::Agent)
     }
 
     /// Adds one exchange under an id the dataset recorded (a gateway's
@@ -170,10 +190,29 @@ impl WorldBuilder {
         id: ExchangeId,
         draft: ExchangeDraft,
     ) -> Result<ExchangeId, CorpusError> {
-        self.add(id, draft)
+        self.add(id, draft, ClientFrom::Agent)
     }
 
-    fn add(&mut self, id: ExchangeId, draft: ExchangeDraft) -> Result<ExchangeId, CorpusError> {
+    /// Adds one exchange under an id and with a client the dataset
+    /// recorded, both kept as they are: the client's credential, vendor,
+    /// model, session and turn replace the agent's and the draft's (the
+    /// draft's `model`, `session` and `turn` are not used). The checks are
+    /// [`WorldBuilder::exchange`]'s.
+    pub fn recorded_exchange_with_client(
+        &mut self,
+        id: ExchangeId,
+        client: Client,
+        draft: ExchangeDraft,
+    ) -> Result<ExchangeId, CorpusError> {
+        self.add(id, draft, ClientFrom::Recorded(client))
+    }
+
+    fn add(
+        &mut self,
+        id: ExchangeId,
+        draft: ExchangeDraft,
+        from: ClientFrom,
+    ) -> Result<ExchangeId, CorpusError> {
         if draft.agent.world != self.key {
             return Err(CorpusError::ForeignAgent {
                 agent: draft.agent.key,
@@ -200,18 +239,19 @@ impl WorldBuilder {
         if self.ids.contains(&id) {
             return Err(CorpusError::DuplicateExchange(id));
         }
-        let vendor = agent
-            .model
-            .as_deref()
-            .map(vendor_of)
-            .filter(|vendor| !vendor.is_empty());
-        let model = draft.model.or_else(|| agent.model.clone());
-        let client = Client {
-            credential: agent.credential.as_str().to_owned(),
-            session: draft.session,
-            turn: draft.turn,
-            vendor,
-            model,
+        let client = match from {
+            ClientFrom::Recorded(client) => client,
+            ClientFrom::Agent => Client {
+                credential: agent.credential.as_str().to_owned(),
+                session: draft.session,
+                turn: draft.turn,
+                vendor: agent
+                    .model
+                    .as_deref()
+                    .map(vendor_of)
+                    .filter(|vendor| !vendor.is_empty()),
+                model: draft.model.or_else(|| agent.model.clone()),
+            },
         };
         agent.last_at = Some(draft.at);
         self.ids.insert(id);
@@ -231,6 +271,7 @@ impl WorldBuilder {
             response: Response {
                 messages: response,
                 stop: draft.stop.map(|stop| stop.as_str().to_owned()),
+                error: None,
             },
             fidelity: draft.fidelity,
             source: draft.source,
@@ -247,6 +288,13 @@ impl WorldBuilder {
         }
         self.labels.push(label);
         Ok(())
+    }
+
+    /// Adds `n` to note `name`: a count the converter reports for this
+    /// world (labels it dropped, groups it did not label), written into the
+    /// manifest's world entry. A note that stays at 0 is not recorded.
+    pub fn add_note(&mut self, name: &str, n: u64) {
+        super::add_note(&mut self.notes, name, n);
     }
 
     /// The world: exchanges ordered by time (ties by agent, then id), an
@@ -278,13 +326,15 @@ impl WorldBuilder {
                 })
                 .collect(),
         };
-        World::new(
+        let mut world = World::new(
             self.dataset,
             decl,
             self.messages.into_values().collect(),
             exchanges,
             labels,
             coverage,
-        )
+        )?;
+        world.notes = self.notes;
+        Ok(world)
     }
 }
