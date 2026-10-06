@@ -13,10 +13,10 @@
 use std::collections::BTreeMap;
 
 use a2a_bench_format::exchange::Exchange;
-use a2a_bench_format::labels::{CarrierKind, Route};
+use a2a_bench_format::labels::CarrierKind;
 use a2a_bench_format::location::{ByteRange, Location};
 use a2a_bench_format::message::{Body, Message, ToolPart};
-use a2a_bench_format::predictions::{ContentEvidence, MatchKind};
+use a2a_bench_format::predictions::{ContentEvidence, MatchKind, PredictedRoute};
 
 use super::{Hit, Matcher, word_chars};
 use crate::route::{extract_resource, find_call};
@@ -179,18 +179,18 @@ impl Matcher<'_> {
         exchange: &Exchange,
         message: &Message,
         part: u16,
-    ) -> (CarrierKind, Route, String) {
+    ) -> (CarrierKind, PredictedRoute, String) {
         let user_turn = || {
             (
                 CarrierKind::UserTurn,
-                Route::Direct,
+                PredictedRoute::Direct,
                 "direct:user_turn".to_owned(),
             )
         };
         match message.body() {
             Body::System(_) => (
                 CarrierKind::SystemPrompt,
-                Route::Direct,
+                PredictedRoute::Direct,
                 "direct:system_prompt".to_owned(),
             ),
             Body::Tool(results) => {
@@ -201,8 +201,8 @@ impl Matcher<'_> {
                 match call.and_then(extract_resource) {
                     Some(resource) => (
                         CarrierKind::ToolResult,
-                        Route::Channel {
-                            resource: resource.resource(),
+                        PredictedRoute::Channel {
+                            resources: vec![resource.resource()],
                         },
                         format!("channel:{}", resource.key()),
                     ),
@@ -210,7 +210,7 @@ impl Matcher<'_> {
                         let name = call.map_or("unknown", |call| call.name.as_str());
                         (
                             CarrierKind::ToolResult,
-                            Route::Direct,
+                            PredictedRoute::Direct,
                             format!("direct:tool:{name}"),
                         )
                     }

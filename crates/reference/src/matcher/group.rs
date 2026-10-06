@@ -14,8 +14,7 @@
 use std::collections::BTreeMap;
 
 use a2a_bench_format::exchange::Exchange;
-use a2a_bench_format::labels::Route;
-use a2a_bench_format::predictions::{ContentEvidence, Transmission};
+use a2a_bench_format::predictions::{ContentEvidence, PredictedRoute, Transmission};
 
 use super::{Hit, Matcher};
 use crate::error::ReferenceError;
@@ -26,7 +25,7 @@ impl Matcher<'_> {
     /// span an earlier exchange already delivered to `reader` through the
     /// same channel; the rest are recorded as delivered.
     pub(super) fn first_reads(&mut self, reader: usize, hits: Vec<Hit>) -> Vec<Hit> {
-        let is_channel = |hit: &Hit| matches!(hit.evidence.route, Route::Channel { .. });
+        let is_channel = |hit: &Hit| matches!(hit.evidence.route, PredictedRoute::Channel { .. });
         let key = |hit: &Hit| (hit.span, reader, hit.route_key.clone());
         let (fresh, rereads): (Vec<Hit>, Vec<Hit>) = hits
             .into_iter()

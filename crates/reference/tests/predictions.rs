@@ -6,10 +6,10 @@
 mod common;
 
 use a2a_bench_format::ids::ExchangeId;
-use a2a_bench_format::labels::{CarrierKind, Codec, MatchClass, Route};
+use a2a_bench_format::labels::{CarrierKind, Codec, MatchClass};
 use a2a_bench_format::location::{ByteRange, Location};
 use a2a_bench_format::predictions::{
-    Attribution, ContentEvidence, MatchKind, Prediction, Quality, State,
+    Attribution, ContentEvidence, MatchKind, PredictedRoute, Prediction, Quality, State,
 };
 use a2a_bench_reference::predict::strongest;
 use a2a_bench_reference::{ReferenceConfig, ReferenceError, run};
@@ -157,7 +157,7 @@ fn evidence(kind: MatchKind, carrier: CarrierKind, at: u32) -> ContentEvidence {
         origin_at: None,
         kind,
         carrier,
-        route: Route::Direct,
+        route: PredictedRoute::Direct,
     }
 }
 

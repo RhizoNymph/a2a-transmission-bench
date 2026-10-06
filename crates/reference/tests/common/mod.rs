@@ -161,6 +161,7 @@ impl WorldBuilder {
             response: Response {
                 messages: response.iter().map(Message::id).collect(),
                 stop: None,
+                error: None,
             },
             fidelity: Fidelity::Synthetic,
             source,

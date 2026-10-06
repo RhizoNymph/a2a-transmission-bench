@@ -129,14 +129,16 @@ predictions = attributions (by agent name) ++ transmissions (production order)
    are cut out before spans, matching and decoding.
 8. **Routes** (`route.rs`): a system message is carrier `system_prompt`,
    route `direct`; a user message `user_turn`, `direct`; a tool result
-   `tool_result`, and `channel {resource}` when the request's call with that
-   call id (the last one) names a resource, else `direct`. Resources: the
+   `tool_result`, and `channel {resources}` (a `PredictedRoute` naming exactly
+   one resource) when the request's call with that call id (the last one)
+   names a resource, else `direct`. Resources: the
    first string argument, in member order, that is an `http(s)` URL
    (`Resource::Url`, scheme and host lower-cased, default port and fragment
    dropped, query parameters sorted), or an absolute path under a path-like
    name (`path`, `file`, `file_path`, `filepath`, `filename`, `target`,
-   `source_path`, `target_path`; `Resource::File`, `.`/`..` resolved). The
-   reference never writes `Resource::Opaque` or forge resources.
+   `source_path`, `target_path`; `Resource::File` with no `host`, `.`/`..`
+   resolved). The reference never writes `Resource::Opaque`, `Resource::Mcp`
+   or forge resources.
 9. **Rereads** (`matcher/group.rs`): a channel hit on a span already
    reported to the same reader through the same channel key in an earlier
    exchange is dropped (INV-1122). Hits on one span in one exchange all
@@ -159,7 +161,8 @@ predictions = attributions (by agent name) ++ transmissions (production order)
 - **Transmission**: state `confirmed`, `matches` in hit order, each
   `ContentEvidence {from, to, reader_exchange, read_at, origin_at, match,
   carrier, route}` with `origin_at` the span's location in the sender's
-  response.
+  response; `route` is a `PredictedRoute` (`channel {resources: [one]}`,
+  `direct`).
 - **Quality**: crosstalk-spec's `MatchClass::strongest_match` (INV-519):
   the strongest class among the matches in the order `exact`,
   `normalized`, `decoded`, `semantic`, with the carrier of the first match

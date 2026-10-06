@@ -73,7 +73,10 @@ impl ChannelResource {
     pub fn resource(&self) -> Resource {
         match self {
             Self::Url(url) => Resource::Url(url.key()),
-            Self::File { path } => Resource::File { path: path.clone() },
+            Self::File { path } => Resource::File {
+                host: None,
+                path: path.clone(),
+            },
         }
     }
 }

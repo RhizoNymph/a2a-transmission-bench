@@ -191,6 +191,7 @@ fn resources_come_from_urls_and_absolute_paths() {
     assert_eq!(
         file.as_ref().map(ChannelResource::resource),
         Some(Resource::File {
+            host: None,
             path: "/srv/data/a.txt".into()
         })
     );

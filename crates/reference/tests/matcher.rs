@@ -7,9 +7,9 @@ mod common;
 use std::collections::BTreeSet;
 
 use a2a_bench_format::check::WorldInputs;
-use a2a_bench_format::labels::{CarrierKind, Codec, MatchClass, Route};
+use a2a_bench_format::labels::{CarrierKind, Codec, MatchClass};
 use a2a_bench_format::message::Message;
-use a2a_bench_format::predictions::MatchKind;
+use a2a_bench_format::predictions::{MatchKind, PredictedRoute};
 use a2a_bench_format::resource::Resource;
 use a2a_bench_reference::{MAX_POSTINGS, ReferenceConfig, WorldOutput};
 use base64::Engine;
@@ -92,7 +92,7 @@ fn verbatim_delivery_is_an_exact_match() {
         assert_eq!((&p.from, &p.to), (&agent_of("alice"), &agent_of("bob")));
         assert_eq!(class(f), MatchClass::Exact);
         assert_eq!(p.carrier, CarrierKind::UserTurn);
-        assert_eq!(p.route, Route::Direct);
+        assert_eq!(p.route, PredictedRoute::Direct);
         assert_eq!(p.read_at.message, message.id());
         let text = inputs.text_at(&p.read_at).unwrap();
         assert!(SENTENCE.contains(text.as_ref()), "{text:?}");
@@ -298,10 +298,11 @@ fn channel_reads_route_through_the_resource() {
     assert_eq!(found[0].evidence.carrier, CarrierKind::ToolResult);
     assert_eq!(
         found[0].evidence.route,
-        Route::Channel {
-            resource: Resource::File {
+        PredictedRoute::Channel {
+            resources: vec![Resource::File {
+                host: None,
                 path: "/shared/notes.md".into()
-            }
+            }]
         }
     );
 }
@@ -326,8 +327,8 @@ fn url_reads_route_through_the_canonical_url() {
     assert_eq!(found.len(), 1);
     assert_eq!(
         found[0].evidence.route,
-        Route::Channel {
-            resource: Resource::Url("https://wiki.example/Plan?a=1&b=2".into())
+        PredictedRoute::Channel {
+            resources: vec![Resource::Url("https://wiki.example/Plan?a=1&b=2".into())]
         }
     );
 }
@@ -346,7 +347,7 @@ fn tool_results_without_a_resource_are_direct() {
     let inputs = pair.finish();
     let (_, found) = matched(&inputs);
     assert_eq!(found.len(), 1);
-    assert_eq!(found[0].evidence.route, Route::Direct);
+    assert_eq!(found[0].evidence.route, PredictedRoute::Direct);
     assert_eq!(found[0].evidence.carrier, CarrierKind::ToolResult);
 }
 
@@ -364,7 +365,7 @@ fn system_prompts_are_their_own_carrier() {
     let (_, found) = matched(&inputs);
     assert_eq!(found.len(), 1);
     assert_eq!(found[0].evidence.carrier, CarrierKind::SystemPrompt);
-    assert_eq!(found[0].evidence.route, Route::Direct);
+    assert_eq!(found[0].evidence.route, PredictedRoute::Direct);
 }
 
 #[test]

@@ -107,6 +107,8 @@ fn write_export(dir: &Path, worlds: &[World], message_order: Option<&[World]>) -
             .map(|(decl, _, exchanges)| WorldEntry {
                 key: decl.key.clone(),
                 exchanges: exchanges.len() as u64,
+                labels: None,
+                notes: BTreeMap::new(),
             })
             .collect(),
         files: FileDigests {
