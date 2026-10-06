@@ -5,13 +5,19 @@
 //! - Exports: the manifests (ignoring `source.digest`) as JSON paths, then
 //!   `messages.jsonl`, `exchanges.jsonl` and `labels.jsonl` (when both
 //!   hold labels) row by row.
-//! - Predictions: the headers as JSON paths, then the rows. With
-//!   `--normalize-ids`, predicted transmissions are compared without their
-//!   ids (P3: the reference uses its own ids).
+//! - Predictions: the headers as JSON paths, then the rows. Differences in
+//!   the header's `detector` (name, version, variant, config digest) are
+//!   reported apart as header differences: they say who predicted, not
+//!   what, and do not make the files differ. With `--normalize-ids`,
+//!   detector agents are named by the exchanges they hold (`agents`),
+//!   predicted transmissions are compared without their ids, and row order
+//!   within a world is ignored (P3: the reference uses its own ids and
+//!   credential-as-agent attribution).
 //!
 //! The report is counts plus the first N differing `(file, world, row
 //! kind, id)` tuples; never any text.
 
+mod agents;
 mod rows;
 
 use std::fmt::Write as _;
@@ -36,7 +42,8 @@ pub struct DiffArgs {
     pub a: PathBuf,
     /// Of the same kind as `a`.
     pub b: PathBuf,
-    /// Predictions: compare transmissions without their ids.
+    /// Predictions: name detector agents by their exchanges, compare
+    /// transmissions without their ids, ignore row order.
     #[arg(long)]
     pub normalize_ids: bool,
     /// How many differences to list.
@@ -103,6 +110,9 @@ pub struct Tally {
     pub order: u64,
     pub first: Vec<Difference>,
     pub cap: usize,
+    /// Predictions header paths under `/detector` that differ: reported,
+    /// never counted as differences.
+    pub header: Vec<String>,
 }
 
 impl Tally {
@@ -154,6 +164,9 @@ impl Tally {
             self.changed,
             self.order
         );
+        if !self.header.is_empty() {
+            let _ = writeln!(out, "header differences: {}", self.header.join(", "));
+        }
         for difference in &self.first {
             let world = difference
                 .world
@@ -240,7 +253,15 @@ pub fn diff(args: &DiffArgs) -> Result<Tally, DiffError> {
         }
     } else if a.is_file() && b.is_file() {
         let (ha, hb) = rows::file::<Predictions>("predictions", a, b, identity, &mut tally)?;
-        compare_json(&mut tally, "predictions", "header", &ha, &hb);
+        let mut paths = Vec::new();
+        json_paths(&ha, &hb, "", &mut paths);
+        for path in paths {
+            if path.starts_with("/detector/") || path == "/detector" {
+                tally.header.push(path);
+            } else {
+                tally.record("predictions", None, "header", &path, Change::Changed);
+            }
+        }
     } else {
         return Err(DiffError::Kinds {
             a: a.clone(),
