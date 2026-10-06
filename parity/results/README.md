@@ -158,13 +158,27 @@ counts. Per-run outputs: `p6/`.
 
 ## P7: node0 bench runs
 
-Pending: `ct-bench-detect from-export` output exports and labels cleanly
-(254 / 247 exchanges, 385 / 432 label rows, no failed worlds), but the
-completed demo-swarm export's manifest digest differs from the one the
-predictions name. The fix (a demo-swarm export keeps its capture's
-input-view manifest exactly) is on `fix/cli-parity-followups`.
+`ct-bench-detect from-export` (crosstalk 4d3d2c3) turns each saved node0
+run into a bench capture and gateway-export predictions. `a2a-bench export
+--dataset demo-swarm` labels the capture from the run's truth v2, keeping
+the capture's manifest (`fix/cli-parity-followups` d6673b1), and `a2a-bench
+score --gates gates/crosstalk-gateway-export.toml --examples 0` scores it:
 
-## P1: part text (indirect)
+| Run | Recall | Precision | FP/1k | Gates | ct-eval (7f8a2fb baseline) |
+| --- | --- | --- | --- | --- | --- |
+| 20261006T020835Z (headline) | 1.000 (55/55) | 1.000 | 0.0 | 5/5 pass | 1.000 / 1.000, 5/5 |
+| 20261006T021639Z (boilerplate) | 1.000 (50/50) | 0.883 (166 correct, 22 false) | 89.1 | 3/3 pass | 1.000 / 0.883, 89.1, 3/3 |
+
+Equal. These saved runs predate the gateway's placement reads, so
+attribution comes from the saved evidence and no `origin_at` is known; that
+is ct-eval's export path too. Future runs fetch both
+(`ct-bench-detect fetch`).
+
+## P1: part text
+
+Closed directly by P5 (ct-bench-detect checks bench part text against crosstalk-spec per part; no world failed) and indirectly by P4 below.
+
+### P4's indirect argument
 
 P4's `messages.jsonl` digests are equal on all seven converter runs (1,061,585 messages,
 including τ² full and AgentDojo full), so the bench's canonical message JSON, message ids
