@@ -11,7 +11,7 @@ use a2a_bench_format::ids::{DetectorAgent, TransmissionRef};
 use a2a_bench_format::labels::{CarrierKind, ExchangeAgent, Label, MatchClass};
 use a2a_bench_format::location::{ByteRange, Location};
 use a2a_bench_format::predictions::{
-    Attribution, ContentEvidence, MatchKind, PredictedRoute, Prediction, Quality, State,
+    Attribution, CoAccess, ContentEvidence, MatchKind, PredictedRoute, Prediction, Quality, State,
     Transmission, TransmissionFields, Unattributed,
 };
 use a2a_bench_format::resource::Resource;
@@ -277,5 +277,123 @@ fn prediction_checks() {
     assert!(matches!(
         check_predictions(&world, &rows),
         Err(PredictionError::DuplicateTransmission(_))
+    ));
+}
+
+/// The secret's location split in two: its first byte, then the rest.
+fn halves(fixture: &common::Fixture) -> (Location, Location) {
+    let whole = fixture.secret_in_result();
+    let (start, end) = (whole.range.start(), whole.range.end());
+    let first = Location {
+        range: ByteRange::new(start, start + 1).unwrap(),
+        ..whole
+    };
+    let rest = Location {
+        range: ByteRange::new(start + 1, end).unwrap(),
+        ..whole
+    };
+    (first, rest)
+}
+
+/// The fixture's predictions with the transmission's evidence replaced.
+fn with_evidence(
+    fixture: &common::Fixture,
+    matches: Vec<Location>,
+    co_access: Vec<(Location, Location)>,
+) -> Vec<Prediction> {
+    let mut rows = predictions(fixture, fixture.secret_in_result());
+    let content = !matches.is_empty();
+    let matches = matches
+        .into_iter()
+        .map(|read_at| ContentEvidence {
+            from: d("A"),
+            to: d("B"),
+            reader_exchange: fixture.b2(),
+            read_at,
+            origin_at: None,
+            kind: MatchKind::Exact,
+            carrier: CarrierKind::ToolResult,
+            route: PredictedRoute::Direct,
+        })
+        .collect();
+    let co_access = co_access
+        .into_iter()
+        .map(|(read_at, write_at)| CoAccess {
+            from: d("A"),
+            to: d("B"),
+            write_exchange: fixture.b2(),
+            write_at,
+            reader_exchange: fixture.b2(),
+            read_at,
+            resource: Resource::Url(common::PAGE.into()),
+        })
+        .collect();
+    rows[2] = Prediction::Transmission(
+        Transmission::new(TransmissionFields {
+            id: TransmissionRef::new("t1").unwrap(),
+            state: if content {
+                State::Confirmed
+            } else {
+                State::Suspected
+            },
+            quality: Some(if content {
+                Quality::Content {
+                    class: MatchClass::Exact,
+                    carrier: CarrierKind::ToolResult,
+                }
+            } else {
+                Quality::Suspected
+            }),
+            matches,
+            co_access,
+        })
+        .unwrap(),
+    );
+    rows
+}
+
+#[test]
+fn matches_must_be_sorted_by_read_location() {
+    let fixture = common::fixture();
+    let world = inputs(&fixture).unwrap();
+    let (first, rest) = halves(&fixture);
+    check_predictions(&world, &with_evidence(&fixture, vec![first, rest], vec![])).unwrap();
+    // Equal locations are sorted.
+    check_predictions(&world, &with_evidence(&fixture, vec![first, first], vec![])).unwrap();
+    assert!(matches!(
+        check_predictions(&world, &with_evidence(&fixture, vec![rest, first], vec![])),
+        Err(PredictionError::Unsorted { transmission }) if transmission.as_str() == "t1"
+    ));
+}
+
+#[test]
+fn co_access_must_be_sorted_by_read_then_write_location() {
+    let fixture = common::fixture();
+    let world = inputs(&fixture).unwrap();
+    let (first, rest) = halves(&fixture);
+    check_predictions(
+        &world,
+        &with_evidence(&fixture, vec![], vec![(first, rest), (rest, first)]),
+    )
+    .unwrap();
+    // Same read location: ordered by the write location.
+    check_predictions(
+        &world,
+        &with_evidence(&fixture, vec![], vec![(first, first), (first, rest)]),
+    )
+    .unwrap();
+    assert!(matches!(
+        check_predictions(
+            &world,
+            &with_evidence(&fixture, vec![], vec![(rest, first), (first, rest)])
+        ),
+        Err(PredictionError::Unsorted { .. })
+    ));
+    assert!(matches!(
+        check_predictions(
+            &world,
+            &with_evidence(&fixture, vec![], vec![(first, rest), (first, first)])
+        ),
+        Err(PredictionError::Unsorted { .. })
     ));
 }

@@ -11,7 +11,7 @@ use a2a_bench_format::location::{ByteRange, Location};
 use a2a_bench_format::predictions::{
     Attribution, ContentEvidence, MatchKind, PredictedRoute, Prediction, Quality, State,
 };
-use a2a_bench_reference::predict::strongest;
+use a2a_bench_reference::predict::{confirmed, strongest, transmission_ref};
 use a2a_bench_reference::{ReferenceConfig, ReferenceError, run};
 use common::{
     WorldBuilder, agent_of, detector_agent, found, matched, says, system, transmissions, user,
@@ -110,7 +110,7 @@ fn a_transmission_is_confirmed_with_its_strongest_match() {
         vec![user("go")],
         vec![says(&format!("{SENTENCE}. {OTHER}."))],
     );
-    // The normalized hit comes first in stored order, the exact one second.
+    // The normalized hit comes first in scan order, the exact one second.
     builder.exchange(
         "bob",
         2,
@@ -124,8 +124,11 @@ fn a_transmission_is_confirmed_with_its_strongest_match() {
     let inputs = builder.finish();
     let (output, found) = matched(&inputs);
     assert_eq!(transmissions(&output), 1);
-    let classes: Vec<MatchClass> = found.iter().map(|f| f.evidence.kind.class()).collect();
-    assert_eq!(classes, vec![MatchClass::Normalized, MatchClass::Exact]);
+    // Matches are stored in location order (the format's rule), which need
+    // not be scan order; both hits are there.
+    let mut classes: Vec<MatchClass> = found.iter().map(|f| f.evidence.kind.class()).collect();
+    classes.sort();
+    assert_eq!(classes, vec![MatchClass::Exact, MatchClass::Normalized]);
     let Some(Prediction::Transmission(transmission)) = output.predictions.last() else {
         panic!("a transmission row")
     };
@@ -192,6 +195,33 @@ fn the_strongest_match_is_the_first_of_the_strongest_class() {
         })
     );
     assert_eq!(strongest(&[]), None);
+}
+
+#[test]
+fn confirmed_matches_are_stored_sorted_by_read_location() {
+    // Out of location order, the first normalized match is the system
+    // prompt's; in location order (stored), it is the user turn's.
+    let matches = vec![
+        evidence(MatchKind::Normalized, CarrierKind::SystemPrompt, 2),
+        evidence(MatchKind::Normalized, CarrierKind::UserTurn, 0),
+        evidence(MatchKind::Semantic, CarrierKind::ToolResult, 1),
+    ];
+    let id = transmission_ref(ExchangeId::from_raw(1), &detector_agent("a"), "direct").unwrap();
+    let transmission = confirmed(id, matches).unwrap();
+    let fields = transmission.fields();
+    let starts: Vec<u32> = fields
+        .matches
+        .iter()
+        .map(|m| m.read_at.range.start())
+        .collect();
+    assert_eq!(starts, vec![0, 1, 2]);
+    assert_eq!(
+        fields.quality,
+        Some(Quality::Content {
+            class: MatchClass::Normalized,
+            carrier: CarrierKind::UserTurn,
+        })
+    );
 }
 
 #[test]
