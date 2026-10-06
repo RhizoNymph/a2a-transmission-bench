@@ -158,7 +158,9 @@ predictions = attributions (by agent name) ++ transmissions (production order)
   self-read and never reported, and the scorer sees a merge if the
   credential spans two true agents. A credential that is not a valid
   `DetectorAgent` (empty, or holding a control character) fails the world.
-- **Transmission**: state `confirmed`, `matches` in hit order, each
+- **Transmission**: state `confirmed`, `matches` sorted by `read_at`
+  (stable, so hits at one location keep hit order), as the format
+  requires, each
   `ContentEvidence {from, to, reader_exchange, read_at, origin_at, match,
   carrier, route}` with `origin_at` the span's location in the sender's
   response; `route` is a `PredictedRoute` (`channel {resources: [one]}`,
@@ -166,7 +168,8 @@ predictions = attributions (by agent name) ++ transmissions (production order)
 - **Quality**: crosstalk-spec's `MatchClass::strongest_match` (INV-519):
   the strongest class among the matches in the order `exact`,
   `normalized`, `decoded`, `semantic`, with the carrier of the first match
-  of that class in stored order (`predict::strongest`).
+  of that class in stored (location) order (`predict::strongest`, applied
+  after `predict::confirmed` sorts).
 - **Id**: `t:` and the hex BLAKE3, derive-key context
   `a2a-bench-reference/1 transmission`, of reader exchange ULID, sender
   name and route key, each followed by a zero byte.

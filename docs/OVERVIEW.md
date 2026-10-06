@@ -58,7 +58,7 @@ Overview:
     the crosstalk repo and depends only on a2a-bench-format.
 Features Index:
   format:
-    description: The on-disk format a2a-bench/1 - messages, exchanges, labels, predictions, manifest, framing, cross-file checks
+    description: The on-disk format a2a-bench/1 - messages, exchanges, labels, predictions, manifest, framing, cross-file checks (including location-sorted evidence in predictions)
     entry_points: [crates/format/src/lib.rs]
     depends_on: []
     doc: docs/features/format.md
