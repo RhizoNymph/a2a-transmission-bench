@@ -1,0 +1,21 @@
+[package]
+name = "a2a-bench-dataset-agentdojo"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "AgentDojo converter of a2a-transmission-bench: prompt-injection runs as worlds of a victim and a synthetic attacker."
+
+[lints]
+workspace = true
+
+[dependencies]
+a2a-bench-corpus = { version = "0.1.0", path = "../../corpus" }
+a2a-bench-format = { version = "0.1.0", path = "../../format" }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+thiserror = "=2.0.21"
+tracing = "=0.1.44"
+
+[dev-dependencies]
+tempfile = "=3.27.0"
