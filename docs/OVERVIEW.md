@@ -7,7 +7,7 @@ Overview:
     labels), runs any detector as a separate process over the inputs, and
     scores the detector's predictions against the labels with regression
     gates per detector. Status: design approved (docs/design/separation.md);
-    the format crate exists, the rest is being ported.
+    the format and score crates exist, the rest is being ported.
   subsystems:
     format: >
       a2a-bench-format. On-disk types for messages, exchanges, labels and
@@ -42,6 +42,11 @@ Features Index:
     entry_points: [crates/format/src/lib.rs]
     depends_on: []
     doc: docs/features/format.md
+  score:
+    description: Alignment rule, judge, scorer, report.json and table (full or holdout), per-detector gates, and the streaming entry point that scores an export against a predictions file
+    entry_points: [crates/score/src/lib.rs, crates/score/src/run/mod.rs, gates/]
+    depends_on: [format]
+    doc: docs/features/score.md
   separation:
     description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
     entry_points: []
