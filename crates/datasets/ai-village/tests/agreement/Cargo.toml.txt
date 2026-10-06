@@ -1,0 +1,17 @@
+[package]
+name = "ai-village-agreement"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+crosstalk-flow = { path = "<crosstalk at 7f8a2fb>/crates/flow" }
+crosstalk-spec = { path = "<crosstalk at 7f8a2fb>/spec" }
+a2a-bench-dataset-ai-village = { path = "../../crates/datasets/ai-village" }
+a2a-bench-format = { path = "../../crates/format" }
+a2a-bench-corpus = { path = "../../crates/corpus" }
+serde_json = "=1.0.151"
+tracing = "=0.1.44"
+serde = { version = "=1.0.229", features = ["derive"] }

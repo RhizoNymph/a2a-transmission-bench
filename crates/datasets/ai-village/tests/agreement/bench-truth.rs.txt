@@ -1,0 +1,87 @@
+//! The bench converter's labels and stats as JSON lines, for a counts
+//! comparison with `ct-eval truth` (local only: the lines hold dataset
+//! text, so they are never committed).
+//!
+//! Usage: bench-truth <root> window <from> <to> <out.jsonl> <stats.json>
+//!        bench-truth <root> claude-code <out.jsonl> <stats.json>
+
+use std::io::Write;
+use std::path::Path;
+
+use a2a_bench_corpus::source::TraceSource;
+use a2a_bench_dataset_ai_village::shell::locator::Loc;
+use a2a_bench_dataset_ai_village::time::Day;
+use a2a_bench_dataset_ai_village::{AiVillageSource, Mode};
+use a2a_bench_format::labels::{Label, Route, TransmissionFields};
+use serde_json::{Value, json};
+
+fn fields(world: &str, expect: &str, f: &TransmissionFields) -> Value {
+    let route = match &f.route {
+        Route::Channel { resource } => json!({
+            "kind": "channel",
+            "resource": Loc::of_site(resource).map(|l| l.to_string()),
+        }),
+        other => json!({ "kind": format!("{:?}", other.kind()).to_lowercase() }),
+    };
+    json!({
+        "expect": expect,
+        "world": world,
+        "from": f.from.as_str(),
+        "to": f.to.as_str(),
+        "sender_exchange": f.sender_exchange.map(|id| id.to_ulid()),
+        "reader_exchange": f.reader_exchange.to_ulid(),
+        "route": route,
+        "carrier": f.carrier,
+        "needs": f.needs,
+        "tier": f.tier,
+        "text": f.content.text,
+        "part": f.content.at.part,
+        "start": f.content.at.range.start(),
+        "end": f.content.at.range.end(),
+        "source_file": f.source.file(),
+        "source_path": f.source.path(),
+    })
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let root = Path::new(&args[1]);
+    let (mode, out, stats_out) = match args[2].as_str() {
+        "window" => (
+            Mode::Window {
+                from: Day::parse(&args[3]).unwrap(),
+                to: Day::parse(&args[4]).unwrap(),
+            },
+            &args[5],
+            &args[6],
+        ),
+        _ => (Mode::ClaudeCode { limit: None }, &args[3], &args[4]),
+    };
+    let mut source = AiVillageSource::open(root, mode).unwrap();
+    let mut file = std::io::BufWriter::new(std::fs::File::create(out).unwrap());
+    let mut worlds = Vec::new();
+    let mut failures = 0;
+    for world in source.worlds() {
+        let world = match world {
+            Ok(world) => world,
+            Err(error) => {
+                eprintln!("world failed: {error}");
+                failures += 1;
+                continue;
+            }
+        };
+        let key = world.key().as_str().to_owned();
+        let ids: Vec<String> = world.exchanges().iter().map(|e| e.id.to_ulid()).collect();
+        worlds.push(json!({ "key": key, "exchanges": ids.len(), "ids": ids }));
+        for label in world.labels() {
+            let row = match label {
+                Label::Transmission(t) => fields(&key, "transmission", t.fields()),
+                Label::AccessOnly(t) => fields(&key, "access_only", t.fields()),
+                _ => continue,
+            };
+            writeln!(file, "{row}").unwrap();
+        }
+    }
+    let stats = json!({ "stats": source.stats(), "worlds": worlds, "failures": failures });
+    std::fs::write(stats_out, stats.to_string()).unwrap();
+}

@@ -1,0 +1,330 @@
+//! Agreement between ct-eval's AI Village bash access tagger at crosstalk
+//! 7f8a2fb (crosstalk-flow's `ToolExtractors`, driven exactly as
+//! `access::Shell::accesses` drives it; that file is copied verbatim into
+//! `ct/`) and the bench's shell model (`a2a_bench_dataset_ai_village::shell`),
+//! over every bash call of a selection of the real dataset.
+//!
+//! Built outside the repository (`target/agreement/`, `CARGO_TARGET_DIR`
+//! inside `target/`) from `Cargo.toml.txt`, with crosstalk 7f8a2fb's
+//! `Cargo.lock` copied in, and `src/ct/` holding ct-eval's
+//! `datasets/ai_village/access/{mod,shell,payload}.rs` and `resource.rs`
+//! verbatim (`mod.rs` gains `pub mod resource;` and imports it as
+//! `self::resource`). `bench-truth.rs.txt` (`src/bin/`) dumps the bench's
+//! labels for `compare.py.txt`, which compares them with `ct-eval truth`.
+//!
+//! Usage:
+//!   ai-village-agreement <root> window <from> <to> [examples.txt]
+//!   ai-village-agreement <root> claude-code [examples.txt]
+//!
+//! Prints counts only (commands, accesses per side, agreeing and differing
+//! commands, differences by category). With `examples.txt`, writes the
+//! differing commands there for adjudication (dataset text: never commit
+//! that file).
+
+mod ct;
+
+use std::collections::{BTreeMap, HashMap};
+use std::fmt::Write as _;
+use std::path::Path;
+
+use a2a_bench_dataset_ai_village::claude_code::entries::{self, EntryKind};
+use a2a_bench_dataset_ai_village::schema::TurnRow;
+use a2a_bench_dataset_ai_village::shell::{self as bench, outcome::WriteOutcome as BenchOutcome};
+use a2a_bench_dataset_ai_village::stream::{Table, decode};
+use a2a_bench_dataset_ai_village::tables::{load_sessions, scan_turns};
+use a2a_bench_dataset_ai_village::time::{Day, Window, parse_timestamp, village_day};
+use a2a_bench_dataset_ai_village::window::calls::output_text;
+use a2a_bench_format::message::{AssistantPart, ResultContent, ToolArguments};
+use crosstalk_spec::derived::flow::access::WriteOutcome as CtOutcome;
+use crosstalk_spec::derived::flow::resource::Locator;
+
+/// One access in a notation both sides render to.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+struct Row {
+    op: String,
+    locator: String,
+    kind: String,
+}
+
+fn locator_key(locator: &Locator) -> String {
+    match locator {
+        Locator::Url {
+            scheme,
+            host,
+            path,
+            query,
+        } => match query {
+            Some(query) => format!("{scheme}://{}{path}?{query}", host.0),
+            None => format!("{scheme}://{}{path}", host.0),
+        },
+        Locator::File {
+            host: Some(host),
+            path,
+        } => format!("file://{}{path}", host.0),
+        Locator::File { host: None, path } => format!("file://{path}"),
+        Locator::Mcp { server, tool, .. } => format!("mcp://{server}/{}", tool.0),
+        Locator::Opaque { tool, key } => format!("opaque://{}/{key}", tool.0),
+        Locator::Repository { host, owner, name } => format!("repo://{}/{owner}/{name}", host.0),
+    }
+}
+
+fn ct_outcome(outcome: CtOutcome) -> &'static str {
+    match outcome {
+        CtOutcome::Delivered => "delivered",
+        CtOutcome::Rejected => "rejected",
+        CtOutcome::Unknown => "unknown",
+    }
+}
+
+fn bench_outcome(outcome: BenchOutcome) -> &'static str {
+    match outcome {
+        BenchOutcome::Delivered => "delivered",
+        BenchOutcome::Rejected => "rejected",
+        BenchOutcome::Unknown => "unknown",
+    }
+}
+
+fn ct_rows(accesses: &[ct::Access]) -> Vec<Row> {
+    accesses
+        .iter()
+        .map(|access| Row {
+            op: match &access.op {
+                ct::Op::Read => "read".to_owned(),
+                ct::Op::Write { outcome, payload } => format!(
+                    "write {} {}",
+                    ct_outcome(*outcome),
+                    match payload {
+                        ct::Payload::Unseen => "unseen".to_owned(),
+                        ct::Payload::Authored(texts) => format!("authored {texts:?}"),
+                    }
+                ),
+            },
+            locator: locator_key(&access.resource),
+            kind: access.kind.as_str().to_owned(),
+        })
+        .collect()
+}
+
+fn bench_rows(accesses: &[bench::Access]) -> Vec<Row> {
+    accesses
+        .iter()
+        .map(|access| Row {
+            op: match &access.op {
+                bench::Op::Read => "read".to_owned(),
+                bench::Op::Write { outcome, payload } => format!(
+                    "write {} {}",
+                    bench_outcome(*outcome),
+                    match payload {
+                        bench::Payload::Unseen => "unseen".to_owned(),
+                        bench::Payload::Authored(texts) => format!("authored {texts:?}"),
+                    }
+                ),
+            },
+            locator: access.locator.to_string(),
+            kind: access.kind.as_str().to_owned(),
+        })
+        .collect()
+}
+
+#[derive(Default)]
+struct Tally {
+    commands: u64,
+    commands_with_access: u64,
+    ct_accesses: u64,
+    bench_accesses: u64,
+    agreeing: u64,
+    differing: u64,
+    ct_unextracted: u64,
+    bench_unextracted: u64,
+    by_category: BTreeMap<String, u64>,
+    by_kind: BTreeMap<String, u64>,
+    examples: String,
+}
+
+/// One agent's (or session's) two shells.
+#[derive(Default)]
+struct Pair {
+    ct: ct::Shell,
+    bench: bench::Shell,
+}
+
+impl Tally {
+    fn command(&mut self, shells: &mut Pair, who: &str, turn: &str, command: &str, output: &str) {
+        self.commands += 1;
+        let ct = ct_rows(&shells.ct.accesses(command, output));
+        let bench = bench_rows(&shells.bench.accesses(command, output));
+        self.ct_accesses += ct.len() as u64;
+        self.bench_accesses += bench.len() as u64;
+        if !ct.is_empty() || !bench.is_empty() {
+            self.commands_with_access += 1;
+        }
+        for row in &ct {
+            *self
+                .by_kind
+                .entry(format!("{} {}", row.op.split(' ').next().unwrap_or(""), row.kind))
+                .or_default() += 1;
+        }
+        if ct == bench {
+            self.agreeing += 1;
+            return;
+        }
+        self.differing += 1;
+        let category = categorize(&ct, &bench);
+        *self.by_category.entry(category.clone()).or_default() += 1;
+        let _ = writeln!(
+            self.examples,
+            "=== {category} | {who} | {turn}\n--- command\n{command}\n--- output (first 600 bytes)\n{}\n--- crosstalk\n{ct:#?}\n--- bench\n{bench:#?}\n",
+            output.get(..output.len().min(600)).unwrap_or(output)
+        );
+    }
+}
+
+fn categorize(ct: &[Row], bench: &[Row]) -> String {
+    let only_ct: Vec<&Row> = ct.iter().filter(|row| !bench.contains(row)).collect();
+    let only_bench: Vec<&Row> = bench.iter().filter(|row| !ct.contains(row)).collect();
+    if only_ct.is_empty() && only_bench.is_empty() {
+        return "order or duplicates".to_owned();
+    }
+    let side = |rows: &[&Row]| {
+        let mut kinds: Vec<String> = rows
+            .iter()
+            .map(|row| format!("{} {}", row.op.split(' ').next().unwrap_or(""), row.kind))
+            .collect();
+        kinds.sort();
+        kinds.dedup();
+        kinds.join("+")
+    };
+    format!(
+        "only crosstalk [{}] / only bench [{}]",
+        side(&only_ct),
+        side(&only_bench)
+    )
+}
+
+fn window(root: &Path, from: Day, to: Day, tally: &mut Tally) {
+    let sessions = load_sessions(root).unwrap_or_else(|e| panic!("{e}"));
+    let window = Window::days(from, to).unwrap_or_else(|e| panic!("{e}"));
+    let mut buckets: BTreeMap<Day, Vec<String>> = BTreeMap::new();
+    scan_turns(root, window, |at, line| {
+        buckets
+            .entry(village_day(at))
+            .or_default()
+            .push(line.to_owned());
+    })
+    .unwrap_or_else(|e| panic!("{e}"));
+    // ct-eval's `window::tag`: per day, turns sorted by (agent, time, id),
+    // one shell per agent across the whole window.
+    let mut shells: HashMap<String, Pair> = HashMap::new();
+    for lines in buckets.values() {
+        let mut turns: Vec<_> = Vec::new();
+        for line in lines {
+            let row: TurnRow =
+                decode(Table::ComputerUseTurns, line).unwrap_or_else(|e| panic!("{e}"));
+            let (Ok(at), Some(agent)) =
+                (parse_timestamp(&row.created_at), sessions.get(&row.session_id))
+            else {
+                continue;
+            };
+            turns.push((at, agent.clone(), row));
+        }
+        turns.sort_by(|a, b| (&a.1, a.0, &a.2.id).cmp(&(&b.1, b.0, &b.2.id)));
+        for (_, agent, row) in &turns {
+            let Some(command) = row
+                .agent_action
+                .as_ref()
+                .and_then(|a| a.get("command"))
+                .and_then(serde_json::Value::as_str)
+            else {
+                continue;
+            };
+            let output = output_text(row.output.as_deref(), row.error.as_deref());
+            let pair = shells.entry(agent.clone()).or_default();
+            tally.command(pair, agent, &row.id, command, &output);
+        }
+    }
+    tally.ct_unextracted = shells.values().map(|p| p.ct.unextracted()).sum();
+    tally.bench_unextracted = shells.values().map(|p| p.bench.unextracted()).sum();
+}
+
+/// Every `Bash` call of the Claude Code agent with its result, in the
+/// order the results arrived, one shell per SDK session.
+fn claude_code(root: &Path, tally: &mut Tally) {
+    let all = entries::load(root).unwrap_or_else(|e| panic!("{e}"));
+    let mut commands: HashMap<String, String> = HashMap::new();
+    let mut shells: HashMap<String, Pair> = HashMap::new();
+    for entry in &all {
+        match &entry.kind {
+            EntryKind::Assistant { parts, .. } => {
+                for part in parts {
+                    if let AssistantPart::ToolCall(call) = part
+                        && call.name == "Bash"
+                        && let ToolArguments::Json(json) = &call.arguments
+                        && let Ok(value) = serde_json::from_str::<serde_json::Value>(json.as_str())
+                        && let Some(command) = value.get("command").and_then(|c| c.as_str())
+                    {
+                        commands.insert(call.call_id.clone(), command.to_owned());
+                    }
+                }
+            }
+            EntryKind::ToolResults(results) => {
+                for (_, result) in results {
+                    let Some(command) = commands.remove(&result.call_id) else {
+                        continue;
+                    };
+                    let output: Vec<&str> = result
+                        .content
+                        .iter()
+                        .filter_map(|c| match c {
+                            ResultContent::Text { text } => Some(text.as_str()),
+                            _ => None,
+                        })
+                        .collect();
+                    let output = output.join("\n");
+                    let pair = shells.entry(entry.session.clone()).or_default();
+                    tally.command(pair, &entry.session, &entry.row, &command, &output);
+                }
+            }
+            _ => {}
+        }
+    }
+    tally.ct_unextracted = shells.values().map(|p| p.ct.unextracted()).sum();
+    tally.bench_unextracted = shells.values().map(|p| p.bench.unextracted()).sum();
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let root = Path::new(args.get(1).map(String::as_str).unwrap_or_default());
+    let mut tally = Tally::default();
+    let examples = match args.get(2).map(String::as_str) {
+        Some("window") => {
+            let day = |at: usize| {
+                Day::parse(args.get(at).map(String::as_str).unwrap_or_default())
+                    .unwrap_or_else(|e| panic!("{e}"))
+            };
+            window(root, day(3), day(4), &mut tally);
+            args.get(5)
+        }
+        Some("claude-code") => {
+            claude_code(root, &mut tally);
+            args.get(3)
+        }
+        _ => panic!("usage: <root> window <from> <to> [examples] | <root> claude-code [examples]"),
+    };
+    println!("commands                 {}", tally.commands);
+    println!("commands with an access  {}", tally.commands_with_access);
+    println!("accesses crosstalk       {}", tally.ct_accesses);
+    println!("accesses bench           {}", tally.bench_accesses);
+    println!("agreeing commands        {}", tally.agreeing);
+    println!("differing commands       {}", tally.differing);
+    println!("unextracted crosstalk    {}", tally.ct_unextracted);
+    println!("unextracted bench        {}", tally.bench_unextracted);
+    for (kind, count) in &tally.by_kind {
+        println!("crosstalk accesses: {kind:<20} {count}");
+    }
+    for (category, count) in &tally.by_category {
+        println!("difference: {category}: {count}");
+    }
+    if let Some(path) = examples {
+        std::fs::write(path, &tally.examples).unwrap_or_else(|e| panic!("{e}"));
+    }
+}
