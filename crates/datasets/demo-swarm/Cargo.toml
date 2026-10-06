@@ -1,0 +1,23 @@
+[package]
+name = "a2a-bench-dataset-demo-swarm"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "demo-swarm labelling for a2a-transmission-bench: crosstalk demo swarm runs labelled from the swarm's ground truth (truth v2)."
+
+[lints]
+workspace = true
+
+[dependencies]
+a2a-bench-corpus = { version = "0.1.0", path = "../../corpus" }
+a2a-bench-format = { version = "0.1.0", path = "../../format" }
+a2a-bench-resource = { version = "0.1.0", path = "../../resource" }
+blake3 = "=1.8.7"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+thiserror = "=2.0.21"
+tracing = "=0.1.44"
+
+[dev-dependencies]
+tempfile = "=3.27.0"

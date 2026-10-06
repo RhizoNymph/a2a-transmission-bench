@@ -4,6 +4,7 @@ members = [
     "crates/corpus",
     "crates/datasets/agentdojo",
     "crates/datasets/cipher",
+    "crates/datasets/demo-swarm",
     "crates/datasets/lmcache",
     "crates/datasets/open-swe",
     "crates/datasets/salt",
