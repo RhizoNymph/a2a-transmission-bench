@@ -1,0 +1,26 @@
+[package]
+name = "a2a-bench-corpus"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "The corpus model of a2a-transmission-bench: the world builder, the virtual clock, trace sources, splits and the export writer."
+
+[lints]
+workspace = true
+
+[dependencies]
+a2a-bench-format = { version = "0.1.0", path = "../format" }
+blake3 = "=1.8.7"
+parquet = { version = "=60.0.0", default-features = false, features = ["json", "snap"], optional = true }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+thiserror = "=2.0.21"
+toml = "=1.1.6"
+tracing = "=0.1.44"
+
+[dev-dependencies]
+tempfile = "=3.27.0"
+
+[features]
+parquet = ["dep:parquet"]

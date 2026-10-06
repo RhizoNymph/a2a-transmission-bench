@@ -7,7 +7,7 @@ Overview:
     labels), runs any detector as a separate process over the inputs, and
     scores the detector's predictions against the labels with regression
     gates per detector. Status: design approved (docs/design/separation.md);
-    the format crate exists, the rest is being ported.
+    the format and corpus crates exist, the rest is being ported.
   subsystems:
     format: >
       a2a-bench-format. On-disk types for messages, exchanges, labels and
@@ -17,10 +17,15 @@ Overview:
       a2a-bench-resource. The neutral resource canonicaliser (URLs, forge
       repositories, repo files, threads, collections) used by converters for
       labels and by the scorer for predicted channels.
+    corpus: >
+      a2a-bench-corpus. The corpus model converters build on: the world
+      builder (checked worlds), the virtual pace clock, streaming trace
+      sources, the export writer and input view, datasets.toml and the
+      dev/holdout splits, plus shared converter helpers.
     datasets: >
       a2a-bench-datasets. One converter per dataset (salt, agentdojo, tau2,
       collusion-wiki, swarm-traces, open-swe, lmcache, swe-splice, cipher,
-      ai-village, demo-swarm), the world builder and the virtual pace clock.
+      ai-village, demo-swarm), each a TraceSource built on corpus.
     reference: >
       a2a-bench-reference. The naive reference matcher, shipped as the
       a2a-reference detector binary.
@@ -29,7 +34,8 @@ Overview:
     cli: >
       a2a-bench-cli. The a2a-bench binary (export, validate, run, score, diff).
   data_flow: >
-    dataset files -> a2a-bench export -> export dir (manifest, messages,
+    dataset files -> converter (TraceSource of checked Worlds) ->
+    corpus::export -> export dir (manifest, messages,
     exchanges, labels). The runner hands a detector only the input view
     (manifest without label counts, messages, exchanges); the detector writes
     predictions.jsonl. a2a-bench score reads labels, exchanges and
@@ -42,6 +48,11 @@ Features Index:
     entry_points: [crates/format/src/lib.rs]
     depends_on: []
     doc: docs/features/format.md
+  corpus:
+    description: World builder, virtual clock, trace sources, export writer and input view, datasets.toml, dev/holdout splits, converter helpers
+    entry_points: [crates/corpus/src/lib.rs, crates/corpus/src/export/mod.rs, crates/corpus/src/world/builder.rs]
+    depends_on: [format]
+    doc: docs/features/corpus.md
   separation:
     description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
     entry_points: []
