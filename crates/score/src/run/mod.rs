@@ -26,6 +26,7 @@ use a2a_bench_format::ids::{
     AgentKey, DatasetId, DetectorAgent, Digest, TransmissionRef, WorldKey,
 };
 use a2a_bench_format::jsonl::{FileKind, FileReader, HeaderFields, Keyed, WorldSection};
+use a2a_bench_format::manifest::FileDigests;
 use a2a_bench_format::predictions::WorldStatus;
 
 pub use error::{FileName, RunError};
@@ -49,6 +50,10 @@ pub struct ScoreOptions {
     /// The manifest digest the predictions must name; `None` checks
     /// nothing (the caller has no manifest).
     pub manifest_digest: Option<Digest>,
+    /// The trailer digests the manifest records for the export's files
+    /// (`manifest.files`); `None` checks nothing. The labels digest is
+    /// checked when the manifest has one.
+    pub file_digests: Option<FileDigests>,
 }
 
 impl Default for ScoreOptions {
@@ -57,6 +62,7 @@ impl Default for ScoreOptions {
             example_cap: DEFAULT_EXAMPLES,
             canonicalizer: Box::new(AsGiven),
             manifest_digest: None,
+            file_digests: None,
         }
     }
 }
@@ -202,6 +208,23 @@ fn no_more<K: FileKind>(section: Option<WorldSection<K>>, file: FileName) -> Res
     }
 }
 
+/// After its last world, `reader`'s trailer digest must be `expected`.
+fn same_digest<K: FileKind, R: BufRead>(
+    reader: &FileReader<K, R>,
+    file: FileName,
+    expected: Digest,
+) -> Result<(), RunError> {
+    match reader.trailer() {
+        Some(trailer) if trailer.digest == expected => Ok(()),
+        Some(trailer) => Err(RunError::FileDigest {
+            file,
+            manifest: expected,
+            trailer: trailer.digest,
+        }),
+        None => Err(RunError::MissingTrailer { file }),
+    }
+}
+
 fn same_dataset(file: FileName, expected: &DatasetId, got: &DatasetId) -> Result<(), RunError> {
     if expected == got {
         Ok(())
@@ -216,7 +239,8 @@ fn same_dataset(file: FileName, expected: &DatasetId, got: &DatasetId) -> Result
 
 /// Scores a run read from `streams` (module docs). Every file is read to
 /// its trailer, so a truncated or altered file is an error, never a smaller
-/// score.
+/// score; with `options.file_digests`, the export files' trailer digests
+/// must also be the manifest's.
 pub fn score_streams<M: BufRead, E: BufRead, L: BufRead, P: BufRead>(
     streams: Streams<M, E, L, P>,
     options: ScoreOptions,
@@ -242,6 +266,7 @@ pub fn score_streams<M: BufRead, E: BufRead, L: BufRead, P: BufRead>(
         });
     }
     let detector = predictions.header().detector.clone();
+    let file_digests = options.file_digests;
     let mut scorer = Scorer::with_canonicalizer(options.example_cap, options.canonicalizer);
     let mut summary = RunSummary::new(dataset.clone(), detector, Scorer::new(0).finish());
     while let Some(exchange_section) = next(&mut exchanges, FileName::Exchanges)? {
@@ -329,6 +354,13 @@ pub fn score_streams<M: BufRead, E: BufRead, L: BufRead, P: BufRead>(
         next(&mut predictions, FileName::Predictions)?,
         FileName::Predictions,
     )?;
+    if let Some(digests) = file_digests {
+        same_digest(&messages, FileName::Messages, digests.messages)?;
+        same_digest(&exchanges, FileName::Exchanges, digests.exchanges)?;
+        if let Some(expected) = digests.labels {
+            same_digest(&labels, FileName::Labels, expected)?;
+        }
+    }
     summary.score = scorer.finish();
     Ok(summary)
 }

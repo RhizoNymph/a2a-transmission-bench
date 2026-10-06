@@ -12,10 +12,10 @@ use a2a_bench_format::files::Coverage;
 use a2a_bench_format::ids::{DetectorAgent, ExchangeId, TransmissionRef};
 use a2a_bench_format::labels::{CarrierKind, ExpectedTransmission, Label, MatchClass, Route, Tier};
 use a2a_bench_format::location::Location;
-use a2a_bench_format::manifest::{Converter, FileDigests, Manifest, Source, Split, WorldEntry};
+use a2a_bench_format::manifest::{Converter, Manifest, Source, Split, WorldEntry};
 use a2a_bench_format::predictions::{
-    Attribution, ContentEvidence, MatchKind, Prediction as Row, Quality, State, Transmission,
-    TransmissionFields, Unattributed, WorldStatus,
+    Attribution, ContentEvidence, MatchKind, PredictedRoute, Prediction as Row, Quality, State,
+    Transmission, TransmissionFields, Unattributed, WorldStatus,
 };
 use a2a_bench_format::version::FORMAT;
 use a2a_bench_score::report::{Disclosure, Report};
@@ -85,7 +85,7 @@ fn found(scene: &Scene, from: &str) -> Row {
                 origin_at: None,
                 kind: MatchKind::Exact,
                 carrier: CarrierKind::UserTurn,
-                route: Route::Direct,
+                route: PredictedRoute::Direct,
             }],
             co_access: Vec::new(),
         })
@@ -312,8 +312,17 @@ fn reports_are_byte_identical_across_runs() {
     assert!(first.ends_with('\n'));
 }
 
+/// A manifest over `worlds`, recording the trailer digests of the export
+/// files [`common::files`] writes for them.
 fn manifest(worlds: &[&Built]) -> Manifest {
     let zero = a2a_bench_format::ids::Digest::from_bytes([0; 32]);
+    let digests = files(
+        &worlds
+            .iter()
+            .map(|built| (*built, WorldStatus::Scored, Vec::new()))
+            .collect::<Vec<_>>(),
+    )
+    .digests;
     Manifest {
         format: FORMAT,
         dataset: common::dataset(),
@@ -335,13 +344,11 @@ fn manifest(worlds: &[&Built]) -> Manifest {
             .map(|built| WorldEntry {
                 key: built.key.clone(),
                 exchanges: u64::try_from(built.exchanges.len()).unwrap(),
+                labels: Some(u64::try_from(built.labels.len()).unwrap()),
+                notes: BTreeMap::new(),
             })
             .collect(),
-        files: FileDigests {
-            messages: zero,
-            exchanges: zero,
-            labels: Some(zero),
-        },
+        files: digests,
     }
 }
 
@@ -388,6 +395,79 @@ fn an_export_directory_is_scored_against_its_manifest() {
         matches!(error, Some(RunError::ManifestDigest { .. })),
         "{error:?}"
     );
+}
+
+#[test]
+fn export_files_whose_trailer_digests_are_not_the_manifests_are_refused() {
+    let (one, two) = (scene("w1"), scene("w2"));
+    let manifest = manifest(&[&one.built]);
+    let digest = manifest.digest().unwrap();
+    let dir = tempfile::tempdir().unwrap();
+    let score = || {
+        score_export(
+            dir.path(),
+            &dir.path().join("predictions.jsonl"),
+            ScoreOptions::default(),
+        )
+    };
+    let files = common::files_for(&[(&one.built, WorldStatus::Scored, Vec::new())], digest);
+    // Another export's files: same worlds, no transmission labels.
+    let mut other = scene("w1");
+    other
+        .built
+        .labels
+        .retain(|label| matches!(label, Label::ExchangeAgent(_)));
+    let foreign = common::files_for(&[(&other.built, WorldStatus::Scored, Vec::new())], digest);
+    assert_ne!(foreign.digests.labels, files.digests.labels);
+
+    let mut mixed = common::files_for(
+        &[(&one.built, WorldStatus::Scored, attributed(&one))],
+        digest,
+    );
+    mixed.labels.clone_from(&foreign.labels);
+    write_export(dir.path(), &manifest, &mixed);
+    let error = score().err();
+    assert!(
+        matches!(
+            error,
+            Some(RunError::FileDigest {
+                file: FileName::Labels,
+                ..
+            })
+        ),
+        "{error:?}"
+    );
+
+    // A manifest recording other messages and exchanges digests.
+    let mut stale = manifest.clone();
+    stale.files = common::files(&[(&two.built, WorldStatus::Scored, Vec::new())]).digests;
+    stale.files.labels = None;
+    let files = common::files_for(
+        &[(&one.built, WorldStatus::Scored, attributed(&one))],
+        stale.digest().unwrap(),
+    );
+    write_export(dir.path(), &stale, &files);
+    let error = score().err();
+    assert!(
+        matches!(
+            error,
+            Some(RunError::FileDigest {
+                file: FileName::Messages,
+                ..
+            })
+        ),
+        "{error:?}"
+    );
+
+    // Without a labels digest only messages and exchanges are checked.
+    let mut no_labels = manifest.clone();
+    no_labels.files.labels = None;
+    let files = common::files_for(
+        &[(&one.built, WorldStatus::Scored, attributed(&one))],
+        no_labels.digest().unwrap(),
+    );
+    write_export(dir.path(), &no_labels, &files);
+    assert_eq!(score().unwrap().score.total(&Selector::default()).found, 1);
 }
 
 #[test]

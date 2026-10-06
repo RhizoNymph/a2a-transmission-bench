@@ -2,8 +2,9 @@
 //! expects. Every count derives from it.
 
 use a2a_bench_format::labels::{Exemption, ExpectedTransmission, NegativeControl, Route};
+use a2a_bench_format::predictions::PredictedRoute;
 
-use crate::canon::{Canonicalize, same_resource};
+use crate::canon::Canonicalize;
 use crate::predict::Prediction;
 
 /// Whether `prediction` reports the transmission `expected` labels.
@@ -15,8 +16,8 @@ use crate::predict::Prediction;
 ///    not in a later exchange that merely still carries it;
 /// 3. overlapping content locations: the matched reader text shares at least
 ///    one byte with the labelled text (same message, same part);
-/// 4. for a label routed through a channel, a predicted channel on the same
-///    resource, compared after `canon`. Other route kinds do not have to
+/// 4. for a label routed through a channel, a predicted channel one of whose
+///    resources is the label's resource, compared after `canon`. Other route kinds do not have to
 ///    agree: a detector that finds the content but routes it differently is
 ///    still credited, and the per-route breakdown shows the disagreement.
 ///
@@ -35,10 +36,13 @@ pub fn aligns(
         && same_channel(&label.route, &prediction.route, canon)
 }
 
-fn same_channel(expected: &Route, predicted: &Route, canon: &dyn Canonicalize) -> bool {
+fn same_channel(expected: &Route, predicted: &PredictedRoute, canon: &dyn Canonicalize) -> bool {
     match (expected, predicted) {
-        (Route::Channel { resource: label }, Route::Channel { resource }) => {
-            same_resource(canon, label, resource)
+        (Route::Channel { resource: label }, PredictedRoute::Channel { resources }) => {
+            let label = canon.canonical(label);
+            resources
+                .iter()
+                .any(|resource| canon.canonical(resource) == label)
         }
         (Route::Channel { .. }, _) => false,
         (Route::Delegation { .. } | Route::Direct | Route::Unobserved, _) => true,

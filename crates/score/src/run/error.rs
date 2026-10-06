@@ -51,6 +51,14 @@ pub enum RunError {
     },
     #[error("the predictions were made on manifest {predictions}, the export's is {export}")]
     ManifestDigest { export: Digest, predictions: Digest },
+    #[error("{file}'s trailer digest is {trailer}, the manifest records {manifest}")]
+    FileDigest {
+        file: FileName,
+        manifest: Digest,
+        trailer: Digest,
+    },
+    #[error("{file} has no trailer")]
+    MissingTrailer { file: FileName },
     #[error("{file} is of dataset {got}, the export is {expected}")]
     DatasetMismatch {
         file: FileName,

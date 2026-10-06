@@ -24,6 +24,7 @@ use a2a_bench_format::labels::{
     NegativeReason, Route, Tier, TransmissionFields,
 };
 use a2a_bench_format::location::{ByteRange, Location};
+use a2a_bench_format::manifest::FileDigests;
 use a2a_bench_format::message::{
     AssistantPart, Body, Message, ResultContent, SystemPart, ToolArguments, ToolCall,
     ToolExecution, ToolOutcome, ToolPart, ToolResult, UserPart,
@@ -241,6 +242,7 @@ impl Draft {
             response: Response {
                 messages: response.iter().map(|m| m.id()).collect(),
                 stop: None,
+                error: None,
             },
             fidelity: Fidelity::Exact,
             source,
@@ -324,6 +326,8 @@ pub struct Files {
     pub exchanges: Vec<u8>,
     pub labels: Vec<u8>,
     pub predictions: Vec<u8>,
+    /// The export files' trailer digests, as a manifest records them.
+    pub digests: FileDigests,
 }
 
 pub fn detector() -> DetectorInfo {
@@ -386,10 +390,18 @@ pub fn files_for(worlds: &[(&Built, WorldStatus, Vec<Row>)], manifest_digest: Di
             predictions.row(row).unwrap();
         }
     }
+    let (messages, messages_trailer) = messages.finish().unwrap();
+    let (exchanges, exchanges_trailer) = exchanges.finish().unwrap();
+    let (labels, labels_trailer) = labels.finish().unwrap();
     Files {
-        messages: messages.finish().unwrap().0,
-        exchanges: exchanges.finish().unwrap().0,
-        labels: labels.finish().unwrap().0,
+        messages,
+        exchanges,
+        labels,
         predictions: predictions.finish().unwrap().0,
+        digests: FileDigests {
+            messages: messages_trailer.digest,
+            exchanges: exchanges_trailer.digest,
+            labels: Some(labels_trailer.digest),
+        },
     }
 }

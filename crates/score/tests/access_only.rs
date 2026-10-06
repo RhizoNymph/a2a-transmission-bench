@@ -12,7 +12,7 @@ use a2a_bench_format::labels::{
     CarrierKind, ExpectedAccess, InvalidLabel, Label, Route, Tier, TransmissionFields,
 };
 use a2a_bench_format::location::Location;
-use a2a_bench_format::predictions::Quality;
+use a2a_bench_format::predictions::{PredictedRoute, Quality};
 use a2a_bench_format::resource::Resource;
 use a2a_bench_score::class::EvidenceClass;
 use a2a_bench_score::predict::Prediction;
@@ -33,6 +33,7 @@ struct Scene {
 
 fn file() -> Resource {
     Resource::File {
+        host: None,
         path: "/landlord-notices.txt".into(),
     }
 }
@@ -95,7 +96,9 @@ fn prediction(scene: &Scene, class: EvidenceClass) -> Prediction {
         from: scene.attacker.clone(),
         to: scene.victim.clone(),
         reader_exchange: scene.reads,
-        route: Route::Channel { resource: file() },
+        route: PredictedRoute::Channel {
+            resources: vec![file()],
+        },
         carrier: CarrierKind::ToolResult,
         class,
         quality,

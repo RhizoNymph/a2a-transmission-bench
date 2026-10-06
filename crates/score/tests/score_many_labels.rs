@@ -9,7 +9,7 @@ mod common;
 use a2a_bench_format::ids::{AgentKey, ExchangeId, TransmissionRef};
 use a2a_bench_format::labels::{CarrierKind, ExpectedTransmission, Label, MatchClass, Route, Tier};
 use a2a_bench_format::location::Location;
-use a2a_bench_format::predictions::Quality;
+use a2a_bench_format::predictions::{PredictedRoute, Quality};
 use a2a_bench_score::class::EvidenceClass;
 use a2a_bench_score::predict::Prediction;
 use a2a_bench_score::score::{Scorer, Selector};
@@ -78,7 +78,7 @@ fn prediction(scene: &Scene, read_at: Location) -> Prediction {
         from: scene.attacker.clone(),
         to: scene.victim.clone(),
         reader_exchange: scene.reads,
-        route: Route::Direct,
+        route: PredictedRoute::Direct,
         carrier: CarrierKind::UserTurn,
         class: EvidenceClass::Exact,
         quality: Quality::Content {

@@ -23,9 +23,11 @@ mod agents;
 use serde::{Deserialize, Serialize};
 
 use a2a_bench_format::ids::{AgentKey, DetectorAgent, ExchangeId, TransmissionRef};
-use a2a_bench_format::labels::{CarrierKind, Label, Route};
+use a2a_bench_format::labels::{CarrierKind, Label};
 use a2a_bench_format::location::Location;
-use a2a_bench_format::predictions::{Prediction as Row, Quality, State, Transmission};
+use a2a_bench_format::predictions::{
+    PredictedRoute, Prediction as Row, Quality, State, Transmission,
+};
 
 pub use agents::{AgentMap, AgentMapError, exchange_agents};
 
@@ -39,7 +41,7 @@ pub struct Prediction {
     pub from: AgentKey,
     pub to: AgentKey,
     pub reader_exchange: ExchangeId,
-    pub route: Route,
+    pub route: PredictedRoute,
     pub carrier: CarrierKind,
     pub class: EvidenceClass,
     /// The transmission's quality: its strongest match's class and carrier,
@@ -110,8 +112,8 @@ pub fn from_transmission(
                 from: agent(&access.from)?,
                 to: agent(&access.to)?,
                 reader_exchange: access.reader_exchange,
-                route: Route::Channel {
-                    resource: access.resource.clone(),
+                route: PredictedRoute::Channel {
+                    resources: vec![access.resource.clone()],
                 },
                 carrier: CarrierKind::ToolResult,
                 class,

@@ -14,6 +14,7 @@ use a2a_bench_format::labels::{
     MatchClass, MatchNeed, Route, Tier,
 };
 use a2a_bench_format::location::Location;
+use a2a_bench_format::predictions::PredictedRoute;
 use a2a_bench_format::predictions::Quality;
 use a2a_bench_score::class::EvidenceClass;
 use a2a_bench_score::predict::Prediction;
@@ -123,7 +124,7 @@ fn exact(
         from: from.clone(),
         to: to.clone(),
         reader_exchange: reader,
-        route: Route::Direct,
+        route: PredictedRoute::Direct,
         carrier: CarrierKind::UserTurn,
         class: EvidenceClass::Exact,
         quality: Quality::Content {

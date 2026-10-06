@@ -15,8 +15,8 @@ use a2a_bench_format::labels::{
 };
 use a2a_bench_format::location::Location;
 use a2a_bench_format::predictions::{
-    Attribution, ContentEvidence, MatchKind, Prediction as Row, Quality, State, Transmission,
-    TransmissionFields,
+    Attribution, ContentEvidence, MatchKind, PredictedRoute, Prediction as Row, Quality, State,
+    Transmission, TransmissionFields,
 };
 use a2a_bench_format::resource::Resource;
 use a2a_bench_score::canon::Canonicalize;
@@ -50,6 +50,7 @@ struct Scene {
 
 fn file() -> Resource {
     Resource::File {
+        host: None,
         path: "/shared/findings.md".into(),
     }
 }
@@ -146,7 +147,7 @@ fn prediction(scene: &Scene, transmission: u32) -> Prediction {
         from: scene.bob.clone(),
         to: scene.alice.clone(),
         reader_exchange: scene.reads,
-        route: Route::Direct,
+        route: PredictedRoute::Direct,
         carrier: CarrierKind::UserTurn,
         class: EvidenceClass::Exact,
         quality: Quality::Content {
@@ -230,7 +231,7 @@ fn class_and_carrier_do_not_decide_alignment() {
     let mut p = prediction(&scene, 0);
     p.class = EvidenceClass::Semantic;
     p.carrier = CarrierKind::ToolResult;
-    p.route = Route::Unobserved;
+    p.route = PredictedRoute::Unobserved;
     assert!(aligns(&p, positive(&scene), &AsGiven));
 }
 
@@ -243,14 +244,63 @@ fn channel_labels_need_the_same_resource() {
         !aligns(&p, expected, &AsGiven),
         "a direct route is not the channel"
     );
-    p.route = Route::Channel {
-        resource: Resource::File {
+    p.route = PredictedRoute::Channel {
+        resources: vec![Resource::File {
+            host: None,
             path: "/other.md".into(),
-        },
+        }],
     };
     assert!(!aligns(&p, expected, &AsGiven));
-    p.route = Route::Channel { resource: file() };
+    p.route = PredictedRoute::Channel {
+        resources: vec![file()],
+    };
     assert!(aligns(&p, expected, &AsGiven));
+}
+
+#[test]
+fn a_channel_label_aligns_with_any_of_the_predicted_resources() {
+    let scene = scene(complete(), true);
+    let expected = positive(&scene);
+    let other = Resource::File {
+        host: None,
+        path: "/other.md".into(),
+    };
+    let mut p = prediction(&scene, 0);
+    p.route = PredictedRoute::Channel {
+        resources: vec![other.clone(), file()],
+    };
+    assert!(
+        aligns(&p, expected, &AsGiven),
+        "the second resource is the label's"
+    );
+    p.route = PredictedRoute::Channel {
+        resources: vec![Resource::Url("https://example.com/other".into()), other],
+    };
+    assert!(
+        !aligns(&p, expected, &AsGiven),
+        "no resource is the label's"
+    );
+    p.route = PredictedRoute::Channel {
+        resources: Vec::new(),
+    };
+    assert!(
+        !aligns(&p, expected, &AsGiven),
+        "an empty channel names nothing"
+    );
+    p.route = PredictedRoute::Channel {
+        resources: vec![
+            Resource::File {
+                host: None,
+                path: "/SHARED/Findings.md".into(),
+            },
+            Resource::Url("https://example.com/other".into()),
+        ],
+    };
+    assert!(!aligns(&p, expected, &AsGiven));
+    assert!(
+        aligns(&p, expected, &FoldCase),
+        "each resource is canonicalised"
+    );
 }
 
 /// Folds a file path's case: a stand-in for the resource canonicaliser.
@@ -259,7 +309,8 @@ struct FoldCase;
 impl Canonicalize for FoldCase {
     fn canonical<'r>(&self, resource: &'r Resource) -> Cow<'r, Resource> {
         match resource {
-            Resource::File { path } => Cow::Owned(Resource::File {
+            Resource::File { host, path } => Cow::Owned(Resource::File {
+                host: host.clone(),
                 path: path.to_lowercase(),
             }),
             other => Cow::Borrowed(other),
@@ -272,10 +323,11 @@ fn resources_are_compared_after_the_canonicaliser() {
     let scene = scene(complete(), true);
     let expected = positive(&scene);
     let mut p = prediction(&scene, 0);
-    p.route = Route::Channel {
-        resource: Resource::File {
+    p.route = PredictedRoute::Channel {
+        resources: vec![Resource::File {
+            host: None,
             path: "/SHARED/Findings.md".into(),
-        },
+        }],
     };
     assert!(!aligns(&p, expected, &AsGiven), "as given, they differ");
     assert!(aligns(&p, expected, &FoldCase));
@@ -402,7 +454,7 @@ fn transmission(scene: &Scene, id: u32, read_at: Location, kinds: &[MatchKind]) 
             origin_at: None,
             kind: kind.clone(),
             carrier: CarrierKind::UserTurn,
-            route: Route::Direct,
+            route: PredictedRoute::Direct,
         })
         .collect();
     let strongest = kinds.iter().map(MatchKind::class).min().unwrap();

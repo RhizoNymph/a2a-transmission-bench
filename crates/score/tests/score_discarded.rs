@@ -19,6 +19,7 @@ use a2a_bench_format::labels::{
     CarrierKind, ExpectedTransmission, Label, MatchClass, NegativeReason, Route, RouteKind, Tier,
 };
 use a2a_bench_format::location::Location;
+use a2a_bench_format::predictions::PredictedRoute;
 use a2a_bench_format::predictions::Quality;
 use a2a_bench_format::resource::Resource;
 use a2a_bench_score::AsGiven;
@@ -49,6 +50,7 @@ struct Scene {
 
 fn page() -> Resource {
     Resource::File {
+        host: None,
         path: "/pages/queue-backpressure".into(),
     }
 }
@@ -118,7 +120,9 @@ fn confirmed(scene: &Scene) -> Prediction {
         from: scene.bob.clone(),
         to: scene.alice.clone(),
         reader_exchange: scene.first,
-        route: Route::Channel { resource: page() },
+        route: PredictedRoute::Channel {
+            resources: vec![page()],
+        },
         carrier: CarrierKind::ToolResult,
         class: EvidenceClass::Exact,
         quality: Quality::Content {

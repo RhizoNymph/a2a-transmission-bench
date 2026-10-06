@@ -9,8 +9,8 @@ mod common;
 use std::path::Path;
 
 use a2a_bench_format::ids::{DatasetId, TransmissionRef};
-use a2a_bench_format::labels::{CarrierKind, MatchClass, NegativeReason, Route, Tier};
-use a2a_bench_format::predictions::Quality;
+use a2a_bench_format::labels::{CarrierKind, MatchClass, NegativeReason, Tier};
+use a2a_bench_format::predictions::{PredictedRoute, Quality};
 use a2a_bench_score::class::EvidenceClass;
 use a2a_bench_score::predict::Prediction;
 use a2a_bench_score::report::gates::{Check, GateError, GateStatus, Gates};
@@ -165,7 +165,7 @@ fn score() -> Score {
         from: bob.clone(),
         to: alice.clone(),
         reader_exchange: reader,
-        route: Route::Direct,
+        route: PredictedRoute::Direct,
         carrier: CarrierKind::UserTurn,
         class: EvidenceClass::Exact,
         quality: Quality::Content {

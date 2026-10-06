@@ -7,11 +7,11 @@
 mod common;
 
 use a2a_bench_format::ids::{AgentKey, DetectorAgent, ExchangeId, TransmissionRef};
-use a2a_bench_format::labels::{CarrierKind, MatchClass, Route, RouteKind};
+use a2a_bench_format::labels::{CarrierKind, MatchClass, RouteKind};
 use a2a_bench_format::location::Location;
 use a2a_bench_format::predictions::{
-    Attribution, CoAccess, ContentEvidence, MatchKind, Prediction as Row, Quality, State,
-    Transmission, TransmissionFields, Unattributed,
+    Attribution, CoAccess, ContentEvidence, MatchKind, PredictedRoute, Prediction as Row, Quality,
+    State, Transmission, TransmissionFields, Unattributed,
 };
 use a2a_bench_format::resource::Resource;
 use a2a_bench_score::class::EvidenceClass;
@@ -89,8 +89,8 @@ fn content(scene: &Scene, from: &str, kind: MatchKind) -> ContentEvidence {
         origin_at: Some(scene.write_at),
         kind,
         carrier: CarrierKind::ToolResult,
-        route: Route::Channel {
-            resource: Resource::Url(PAGE.into()),
+        route: PredictedRoute::Channel {
+            resources: vec![Resource::Url(PAGE.into())],
         },
     }
 }
@@ -245,8 +245,8 @@ fn access_states_make_one_prediction_per_co_access() {
         assert_eq!(p.carrier, CarrierKind::ToolResult);
         assert_eq!(
             p.route,
-            Route::Channel {
-                resource: Resource::Url(PAGE.into())
+            PredictedRoute::Channel {
+                resources: vec![Resource::Url(PAGE.into())]
             }
         );
         assert_eq!(p.reader_exchange, scene.b2);

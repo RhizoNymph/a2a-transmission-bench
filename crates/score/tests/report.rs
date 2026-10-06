@@ -9,7 +9,7 @@ use a2a_bench_format::ids::{DetectorAgent, TransmissionRef, WorldKey};
 use a2a_bench_format::labels::{
     CarrierKind, ExpectedTransmission, Label, MatchClass, NegativeReason, Route, Tier,
 };
-use a2a_bench_format::predictions::Quality;
+use a2a_bench_format::predictions::{PredictedRoute, Quality};
 use a2a_bench_score::class::EvidenceClass;
 use a2a_bench_score::predict::Prediction;
 use a2a_bench_score::report::gates::Gates;
@@ -63,7 +63,7 @@ fn summary() -> RunSummary {
         from: alice,
         to: bob,
         reader_exchange: b1,
-        route: Route::Direct,
+        route: PredictedRoute::Direct,
         carrier: CarrierKind::SystemPrompt,
         class: EvidenceClass::Exact,
         quality: Quality::Content {

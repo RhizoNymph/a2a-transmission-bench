@@ -42,6 +42,7 @@ rules mean what they meant there (crosstalk `docs/features/eval.md`,
 ```text
 run::score_export(export dir, predictions path, ScoreOptions)
   read manifest.json ──▶ Manifest::digest ──▶ options.manifest_digest
+                     ──▶ manifest.files   ──▶ options.file_digests
   run::score_streams(Streams { messages, exchanges, labels, predictions })
     FileReader::open × 4 (headers: file kind, format) ─ datasets equal, predictions' manifest_digest equal
     loop over exchanges.jsonl's worlds (the export's order):
@@ -62,6 +63,8 @@ run::score_export(export dir, predictions path, ScoreOptions)
                             violations / access_only_under_controls / sources / examples
             per positive label: expected, found | missed (+ suspected)
     every file read to its trailer; extra worlds ─▶ ExtraWorld
+    with options.file_digests: FileReader::trailer().digest of messages and
+      exchanges (and labels when the manifest has its digest) ─ differs ─▶ FileDigest
   ─▶ RunSummary { dataset, detector, score, failures, unscored, unknown_detected_agents }
 
 Gates: GateSearch::from_env(--gates).load() ─▶ Gates::for_run(detector.name, detector.variant)
@@ -85,7 +88,7 @@ Report::new(summary, outcomes, Disclosure) ─▶ to_json (report.json), table::
   prediction per content match, of the match's class, carrier and route,
   at its `read_at`, with its `origin_at`. Suspected and discarded make one
   per co-access: writer to reader, at the read's exchange and `read_at`,
-  carrier `tool_result`, route `channel {resource}`, origin the write's
+  carrier `tool_result`, route `channel {resources: [resource]}`, origin the write's
   `write_at`, class `suspected` or `discarded`. Detected and
   awaiting-content make none. Every prediction carries the transmission's
   `quality`.
@@ -108,8 +111,10 @@ Report::new(summary, outcomes, Disclosure) ─▶ to_json (report.json), table::
 
 Alignment (`score::align::aligns`): same sender and reader, same reader
 exchange, overlapping reader locations (same message and part, a shared
-byte), and for a channel label a channel prediction on the same resource
-after the canonicaliser.
+byte), and for a channel label a channel prediction (`PredictedRoute::Channel
+{resources}`) one of whose resources equals the label's resource, each
+compared after the canonicaliser. An empty resource list aligns with no
+channel label.
 
 ## Files
 
@@ -133,8 +138,8 @@ after the canonicaliser.
 | `src/report/gates/parse.rs` | strict gates-file reading | `GateError`, `InvalidGate` |
 | `src/report/gates/search.rs` | where gates come from | `GateSearch`, `GatesFrom`, `GatesLocation`, `GATES_ENV`, `REPO_GATES` |
 | `src/run/mod.rs` | the streaming entry point | `score_streams`, `Streams`, `ScoreOptions`, `RunSummary`, `FailedWorld`, `WorldFailure`, `Unscored`, `UnknownDetected`, `DEFAULT_EXAMPLES` |
-| `src/run/export.rs` | an export directory | `score_export` |
-| `src/run/error.rs` | run errors | `RunError`, `FileName` |
+| `src/run/export.rs` | an export directory | `score_export` (manifest digest and file trailer digests checked) |
+| `src/run/error.rs` | run errors | `RunError` (incl. `FileDigest`, `MissingTrailer`), `FileName` |
 | `gates/reference.toml` | ct-eval's detector-less gates (9) | |
 | `gates/crosstalk-live.toml` | ct-eval's `detector = "live"` gates (20; variants `forwarding-off`, `forwarding-on`) | |
 | `gates/crosstalk-gateway-export.toml` | ct-eval's `gateway-export` gates (8) | |
@@ -165,7 +170,11 @@ after the canonicaliser.
   predictions, merged attribution) and an unscored world (`no_consumers`)
   are never scored as zero; their labels are not counted. A broken export
   (inputs or labels failing their checks, world order, framing,
-  truncation, a foreign manifest digest) fails the whole run.
+  truncation, a foreign manifest digest, an export file whose trailer
+  digest is not the one `manifest.files` records) fails the whole run.
+- **Manifest notes are not reported.** The manifest's per-world `labels`
+  counts and converter `notes` are not read: the report's shape is
+  ct-eval's, and adding them is a report change, not a format one.
 - **Determinism.** Every list in the score and report comes from ordered
   maps (`BTreeMap` by derived `Ord`); predictions are judged in row order.
   Equal inputs give byte-identical `report.json` (tested).
