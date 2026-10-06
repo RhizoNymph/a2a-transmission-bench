@@ -14,7 +14,7 @@ use a2a_bench_format::message::{AssistantPart, Body, Message, UserPart};
 use crate::schema::Run;
 use crate::tally::Tally;
 use crate::truth::{Attacker, RunLabels};
-use crate::{ATTACKER, AgentDojoError, DATASET, VICTIM, files, messages};
+use crate::{ATTACKER, AgentDojoError, DATASET, UNCARRIED_CONTROL, VICTIM, files, messages};
 
 /// Pipeline-name suffixes naming a defense, not a model.
 const DEFENSES: &[&str] = &[
@@ -103,7 +103,7 @@ pub fn convert_run(run: &Run, file: &str, pace: Pace) -> Result<Loaded, AgentDoj
         exchanges.push((index, builder.exchange(draft)?));
     }
     let mut tally = Tally::default();
-    let labels = RunLabels {
+    let labelled = RunLabels {
         file,
         run,
         conversation: &conversation,
@@ -115,9 +115,10 @@ pub fn convert_run(run: &Run, file: &str, pace: Pace) -> Result<Loaded, AgentDoj
         exchanges: &exchanges,
     }
     .label(&mut tally)?;
-    for label in labels {
+    for label in labelled.labels {
         builder.label(label)?;
     }
+    builder.add_note(UNCARRIED_CONTROL, labelled.uncarried);
     tracing::debug!(
         file,
         attack = run.attack_type.as_deref().unwrap_or("none"),

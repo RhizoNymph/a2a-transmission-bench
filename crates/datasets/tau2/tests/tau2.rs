@@ -15,7 +15,8 @@ use a2a_bench_dataset_tau2::prompts::{
 };
 use a2a_bench_dataset_tau2::time::parse_time;
 use a2a_bench_dataset_tau2::{
-    AGENT, DATASET, Options, USER, VERSION, convert_simulation, load_results, source,
+    AGENT, DATASET, Options, UNCARRIED_CONTROL, USER, VERSION, convert_simulation, load_results,
+    source,
 };
 use a2a_bench_format::exchange::{Driven, Exchange, Fidelity};
 use a2a_bench_format::files::Coverage;
@@ -341,6 +342,7 @@ fn the_greeting_is_boilerplate_and_tool_results_are_shared_sources() {
     // left out.
     let shared = controls(&world, NegativeReason::SharedSource);
     assert_eq!(shared.len(), 2);
+    assert_eq!(world.notes().get(UNCARRIED_CONTROL).copied(), Some(1));
     assert_eq!(shared.iter().filter(|c| c.to.as_str() == AGENT).count(), 1);
     for control in shared {
         assert_eq!(control.tier, Tier::Structural);
@@ -507,7 +509,10 @@ fn options_record_the_selection() {
         options.settings(),
         BTreeMap::from([
             ("limit".to_owned(), Setting::Int(200)),
-            ("include[0]".to_owned(), Setting::Text("airline".into())),
+            (
+                "include".to_owned(),
+                Setting::List(vec![Setting::Text("airline".into())]),
+            ),
         ])
     );
 }
@@ -535,4 +540,22 @@ fn the_fixtures_export() {
         export(&mut source, out.path(), info, &Split::Unsplit).unwrap_or_else(|e| panic!("{e}"));
     assert!(exported.failures.is_empty());
     assert_eq!(exported.manifest.worlds.len(), 3);
+    // The one shared-source control no exchange carries (simulation 0's
+    // result 11) is counted in its world's notes.
+    let noted: Vec<_> = exported
+        .manifest
+        .worlds
+        .iter()
+        .map(|w| w.notes.get(UNCARRIED_CONTROL).copied())
+        .collect();
+    assert_eq!(noted.iter().flatten().sum::<u64>(), 1);
+    assert_eq!(
+        exported
+            .manifest
+            .worlds
+            .iter()
+            .find(|w| !w.notes.is_empty())
+            .map(|w| w.key.clone()),
+        Some(world(FILE, 0).key().clone())
+    );
 }

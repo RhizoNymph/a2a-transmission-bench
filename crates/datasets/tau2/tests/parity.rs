@@ -41,7 +41,7 @@ fn route(route: &Route) -> Value {
             resource: Resource::Url(url),
         } => json!({"kind": "channel", "url": url}),
         Route::Channel {
-            resource: Resource::File { path },
+            resource: Resource::File { host: None, path },
         } => json!({"kind": "channel", "file": path}),
         other => panic!("unexpected route {other:?}"),
     }

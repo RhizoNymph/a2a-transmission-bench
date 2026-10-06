@@ -45,3 +45,6 @@ pub const VERSION: u32 = 1;
 pub const VICTIM: &str = "victim";
 /// The synthetic attacker's name in attacked worlds.
 pub const ATTACKER: &str = "attacker";
+/// The manifest note counting controls left out because no exchange of the
+/// world carries their prompt.
+pub const UNCARRIED_CONTROL: &str = "uncarried_control";

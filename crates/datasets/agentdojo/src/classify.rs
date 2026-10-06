@@ -22,7 +22,7 @@ use std::ops::Range;
 
 use serde::{Deserialize, Serialize};
 
-use a2a_bench_format::labels::{Codec, MatchNeed};
+use a2a_bench_format::labels::MatchNeed;
 
 /// How a copy of an injection reached the tool output, weakest first.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -49,12 +49,8 @@ impl Arrival {
         match self {
             Self::Exact => MatchNeed::Exact,
             Self::Whitespace => MatchNeed::Normalized,
-            Self::JsonString => MatchNeed::Decoded {
-                codecs: vec![Codec::JsonString],
-            },
-            Self::YamlString => MatchNeed::Decoded {
-                codecs: vec![Codec::YamlString],
-            },
+            Self::JsonString => MatchNeed::json_string(),
+            Self::YamlString => MatchNeed::yaml_string(),
         }
     }
 }

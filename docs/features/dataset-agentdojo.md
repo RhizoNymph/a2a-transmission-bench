@@ -65,13 +65,15 @@ TraceSource::worlds()         for each kept run, in order:
           per distinct injection text, per occurrence (classify::Output):
             transmission attacker→victim, reader = first victim exchange after it,
             route = route::expected_route(answered call), carrier tool_result,
-            needs = arrival need (Unobserved{sender medium unobserved} on a channel),
-            tier construction | out_of_reach, source /messages/<i>/injections/<vector>/<copy>
+            needs = arrival need (MatchNeed::sender_medium_unobserved on a channel),
+            tier = needs.tier(construction), source /messages/<i>/injections/<vector>/<copy>
         boilerplate: per system/user message with text: control attacker→victim,
             no reader exchange, at = whole part in the victim's first exchange
-            carrying it (left out when none does), source /messages/<i>
+            carrying it (left out and counted when none does), source /messages/<i>
         indicators::second_hop (tally only)
-      builder.label(…) per label, finish(Complete{Construction})
+        ──▶ Labelled {labels, uncarried}
+      builder.label(…) per label, add_note("uncarried_control", uncarried),
+        finish(Complete{Construction})
   tally.add(run tally)
 ```
 
@@ -121,8 +123,8 @@ numbering.
 
 | File | Role | Key exports |
 | --- | --- | --- |
-| `crates/datasets/agentdojo/src/lib.rs` | crate root, constants | `DATASET`, `VERSION`, `VICTIM`, `ATTACKER` |
-| `src/options.rs` | selection flags and their manifest record | `Options` (`limit`, `include`, `settings`) |
+| `crates/datasets/agentdojo/src/lib.rs` | crate root, constants | `DATASET`, `VERSION`, `VICTIM`, `ATTACKER`, `UNCARRIED_CONTROL` |
+| `src/options.rs` | selection flags and their manifest record (`limit`, and the includes as one `include` `Setting::List`) | `Options` (`limit`, `include`, `settings`) |
 | `src/source.rs` | the dataset as a `TraceSource` | `source`, `AgentDojoSource` (`files`, `tally`, `files_read`, `pace`) |
 | `src/convert.rs` | one run to one world | `load_world`, `convert_run`, `model_of`, `Loaded` |
 | `src/error.rs` | the converter's errors | `AgentDojoError` |
@@ -132,7 +134,7 @@ numbering.
 | `src/classify.rs` | how an injection arrived | `Arrival`, `Occurrence`, `Output`, `occurrences` |
 | `src/route.rs` | expected route of a read | `expected_route`, `parse_url`, `normalize_path` |
 | `src/location.rs` | locations, first carrying exchange | (crate-private) |
-| `src/truth/mod.rs` | labels | `RunLabels`, `Attacker`, `SENDER_MEDIUM_UNOBSERVED` |
+| `src/truth/mod.rs` | labels (the format's `MatchNeed` helpers and `SENDER_MEDIUM_UNOBSERVED`) | `RunLabels`, `Attacker`, `Labelled` |
 | `src/truth/indicators.rs` | the second hop | `second_hop`, `indicators` |
 | `src/tally.rs` | arrival and second-hop counts | `Tally`, `ArrivalCounts`, `SecondHop` |
 | `tests/agentdojo.rs` | ct-eval's tests on bench types, plus pacing, ids, numbering, selection, export | |
@@ -182,7 +184,7 @@ numbering.
 
 | Difference | Why |
 | --- | --- |
-| A boilerplate control on a prompt no victim exchange carries is left out (its `t<n>` stays unused). Real data: 44 controls in 22 runs that have no assistant message at all; none in the documented selection. | A bench location names an exchange that carries its message; ct-eval's control names only the message. crosstalk's golden export refuses these worlds (`Gap::UncarriedLocation`); a control no exchange carries guards no prediction, so leaving it out changes no score. |
+| A boilerplate control on a prompt no victim exchange carries is left out (its `t<n>` stays unused) and counted in the world's manifest note `uncarried_control` (`UNCARRIED_CONTROL`). Real data: 44 controls in 22 runs that have no assistant message at all; none in the documented selection. | A bench location names an exchange that carries its message; ct-eval's control names only the message. crosstalk's golden export refuses these worlds (`Gap::UncarriedLocation`); a control no exchange carries guards no prediction, so leaving it out changes no score. |
 | A control with no reader exchange is placed in the victim's first exchange carrying the prompt. | ct-eval's control names a message, not an exchange; this is the golden export's placement. Its `reader_exchange` stays absent, so it still covers every exchange. |
 | Labels have ids `t<n>`. | The format needs ids; this is the golden export's numbering. |
 | No token usage, protocol or transport on exchanges. | The format has no such fields. |

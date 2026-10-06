@@ -21,7 +21,8 @@
 //! place is in the victim's first exchange that carries the prompt, as
 //! crosstalk's golden export places it; a prompt no victim exchange
 //! carries (a user turn after the last assistant message) has no place a
-//! bench location can name, and its control is left out.
+//! bench location can name, and its control is left out and counted in the
+//! world's `uncarried_control` note.
 //!
 //! **Ids.** Label `t<n>` is crosstalk-eval's `n`-th expectation of the
 //! world (the golden export's numbering): positives first, then controls.
@@ -49,9 +50,12 @@ use crate::route::expected_route;
 use crate::schema::Run;
 use crate::tally::Tally;
 
-/// The `Unobserved` reason of content read from a medium its sender never
-/// wrote (crosstalk-eval's `SENDER_MEDIUM_UNOBSERVED`).
-pub const SENDER_MEDIUM_UNOBSERVED: &str = "sender medium unobserved (INV-963)";
+/// A run's labels, and how many controls it left out because no victim
+/// exchange carries their prompt (the world's `uncarried_control` note).
+pub struct Labelled {
+    pub labels: Vec<Label>,
+    pub uncarried: u64,
+}
 
 /// The attacker and its one exchange.
 pub struct Attacker<'a> {
@@ -98,18 +102,24 @@ impl RunLabels<'_> {
     }
 
     /// The run's labels; `tally` gets its slots, labels and second hop.
-    pub fn label(&self, tally: &mut Tally) -> Result<Vec<Label>, AgentDojoError> {
+    pub fn label(&self, tally: &mut Tally) -> Result<Labelled, AgentDojoError> {
         tally.runs += 1;
         let Some(attacker) = &self.attacker else {
-            return Ok(Vec::new());
+            return Ok(Labelled {
+                labels: Vec::new(),
+                uncarried: 0,
+            });
         };
         tally.attacked_runs += 1;
         let mut out = Vec::new();
         let mut ids = Numbering::default();
         let first_read = self.injections(attacker, tally, &mut ids, &mut out)?;
-        self.boilerplate(attacker, &mut ids, &mut out)?;
+        let uncarried = self.boilerplate(attacker, &mut ids, &mut out)?;
         indicators::second_hop(self.run, first_read, tally);
-        Ok(out)
+        Ok(Labelled {
+            labels: out,
+            uncarried,
+        })
     }
 
     /// Labels every copy of every injection in a tool output the victim
@@ -159,11 +169,7 @@ impl RunLabels<'_> {
                     let at = location(reader_exchange, message, 0, found.start, found.end)?;
                     let content = text.get(found.start..found.end).unwrap_or_default();
                     let needs = need(&route, found.arrival.need());
-                    let tier = if needs.out_of_reach() {
-                        Tier::OutOfReach
-                    } else {
-                        Tier::Construction
-                    };
+                    let tier = needs.tier(Tier::Construction);
                     out.push(Label::Transmission(ExpectedTransmission::new(
                         TransmissionFields {
                             id: ids.next()?,
@@ -200,13 +206,14 @@ impl RunLabels<'_> {
     }
 
     /// The victim's system prompt and user turns: harness text, never the
-    /// attacker's.
+    /// attacker's. Returns how many controls it left out, uncarried.
     fn boilerplate(
         &self,
         attacker: &Attacker<'_>,
         ids: &mut Numbering,
         out: &mut Vec<Label>,
-    ) -> Result<(), AgentDojoError> {
+    ) -> Result<u64, AgentDojoError> {
+        let mut uncarried = 0;
         let carriers = Carriers {
             exchanges: self.exchanges,
             conversation: &self.conversation.messages,
@@ -234,6 +241,7 @@ impl RunLabels<'_> {
                     label = %id,
                     "left out a boilerplate control no victim exchange carries"
                 );
+                uncarried += 1;
                 continue;
             };
             out.push(Label::NegativeControl(NegativeControl::new(
@@ -251,7 +259,7 @@ impl RunLabels<'_> {
                 },
             )?));
         }
-        Ok(())
+        Ok(uncarried)
     }
 }
 
@@ -262,10 +270,7 @@ impl RunLabels<'_> {
 /// it arrives `Direct` in the tool result, as `arrival` needs.
 fn need(route: &Route, arrival: MatchNeed) -> MatchNeed {
     match route {
-        Route::Channel { .. } => MatchNeed::Unobserved {
-            reason: SENDER_MEDIUM_UNOBSERVED.to_owned(),
-            arrival: class(&arrival),
-        },
+        Route::Channel { .. } => MatchNeed::sender_medium_unobserved(class(&arrival)),
         _ => arrival,
     }
 }

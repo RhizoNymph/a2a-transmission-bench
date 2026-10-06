@@ -7,14 +7,15 @@ use std::path::{Path, PathBuf};
 
 use a2a_bench_corpus::clock::Pace;
 use a2a_bench_corpus::export::{FilesRead, ManifestInfo, export};
-use a2a_bench_corpus::source::{TraceSource, WorldFilter};
+use a2a_bench_corpus::source::{InMemory, TraceSource, WorldFilter};
 use a2a_bench_corpus::split::Selection as Split;
 use a2a_bench_corpus::world::World;
 use a2a_bench_dataset_agentdojo::classify::{Arrival, occurrences};
 use a2a_bench_dataset_agentdojo::files::discover;
 use a2a_bench_dataset_agentdojo::schema::Run;
 use a2a_bench_dataset_agentdojo::{
-    ATTACKER, DATASET, Loaded, Options, VERSION, VICTIM, convert_run, load_world, source,
+    ATTACKER, DATASET, Loaded, Options, UNCARRIED_CONTROL, VERSION, VICTIM, convert_run,
+    load_world, source,
 };
 use a2a_bench_format::exchange::{Driven, Exchange, Fidelity};
 use a2a_bench_format::files::Coverage;
@@ -487,6 +488,7 @@ fn each_injection_read_is_a_construction_label_from_the_attacker() {
         wrapped.route,
         Route::Channel {
             resource: Resource::File {
+                host: None,
                 path: "/notes.txt".into()
             }
         }
@@ -666,18 +668,19 @@ fn options_record_the_selection() {
         options.settings(),
         BTreeMap::from([
             ("limit".to_owned(), Setting::Int(5)),
-            ("include[0]".to_owned(), Setting::Text("attack=none".into())),
-            ("include[1]".to_owned(), Setting::Text("suite=slack".into())),
+            (
+                "include".to_owned(),
+                Setting::List(vec![
+                    Setting::Text("attack=none".into()),
+                    Setting::Text("suite=slack".into()),
+                ]),
+            ),
         ])
     );
 }
 
-#[test]
-fn the_fixtures_export_and_read_back() {
-    let out = tempfile::tempdir().unwrap();
-    let mut source =
-        source(&root(), &Options::default(), Pace::DEFAULT).unwrap_or_else(|e| panic!("{e}"));
-    let info = ManifestInfo {
+fn manifest_info() -> ManifestInfo {
+    ManifestInfo {
         dataset: DatasetId::new(DATASET).unwrap(),
         dataset_version: VERSION,
         source: Source {
@@ -691,11 +694,20 @@ fn the_fixtures_export_and_read_back() {
         },
         selection: Options::default().settings(),
         pace: Pace::DEFAULT.settings(),
-    };
-    let exported =
-        export(&mut source, out.path(), info, &Split::Unsplit).unwrap_or_else(|e| panic!("{e}"));
+    }
+}
+
+#[test]
+fn the_fixtures_export_and_read_back() {
+    let out = tempfile::tempdir().unwrap();
+    let mut source =
+        source(&root(), &Options::default(), Pace::DEFAULT).unwrap_or_else(|e| panic!("{e}"));
+    let exported = export(&mut source, out.path(), manifest_info(), &Split::Unsplit)
+        .unwrap_or_else(|e| panic!("{e}"));
     assert!(exported.failures.is_empty());
     assert_eq!(exported.manifest.worlds.len(), 4);
+    // Every fixture prompt is carried: nothing is left out.
+    assert!(exported.manifest.worlds.iter().all(|w| w.notes.is_empty()));
     let digest = source.files_read().digest(&root()).unwrap();
     let mut again = FilesRead::new();
     for file in [ATTACKED, BENIGN, GOAL, DETECTED] {
@@ -780,6 +792,19 @@ fn a_prompt_no_victim_exchange_carries_has_no_control() {
         .collect();
     // ct-eval's third control (`t2`) is the unread turn.
     assert_eq!(ids, vec!["t0", "t1"]);
+    // The left-out control is counted, and the manifest carries the count.
+    assert_eq!(
+        loaded.world.notes().get(UNCARRIED_CONTROL).copied(),
+        Some(1)
+    );
+    let out = tempfile::tempdir().unwrap();
+    let mut memory = InMemory::new(DatasetId::new(DATASET).unwrap(), vec![loaded.world]);
+    let exported = export(&mut memory, out.path(), manifest_info(), &Split::Unsplit)
+        .unwrap_or_else(|e| panic!("{e}"));
+    assert_eq!(
+        exported.manifest.worlds[0].notes,
+        BTreeMap::from([(UNCARRIED_CONTROL.to_owned(), 1)])
+    );
 }
 
 #[test]

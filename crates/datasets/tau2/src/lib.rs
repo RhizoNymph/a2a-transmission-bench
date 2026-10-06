@@ -40,3 +40,6 @@ pub const VERSION: u32 = 1;
 pub const AGENT: &str = "agent";
 /// The user simulator's name in every world that has one.
 pub const USER: &str = "user";
+/// The manifest note counting controls left out because no exchange of the
+/// world carries their message.
+pub const UNCARRIED_CONTROL: &str = "uncarried_control";

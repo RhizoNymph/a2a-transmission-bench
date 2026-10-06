@@ -14,7 +14,7 @@ use crate::schema::{RawMessage, Results};
 use crate::time::parse_time;
 use crate::truth::{Participant, SimulationLabels};
 use crate::views::{Side, View, view};
-use crate::{AGENT, DATASET, Tau2Error, USER, files, prompts};
+use crate::{AGENT, DATASET, Tau2Error, UNCARRIED_CONTROL, USER, files, prompts};
 
 /// Reads one results file.
 pub fn load_results(root: &Path, relative: &Path) -> Result<Results, Tau2Error> {
@@ -86,7 +86,7 @@ pub fn convert_simulation(results: &Results, file: &str, index: usize) -> Result
         )?),
         None => None,
     };
-    let labels = SimulationLabels {
+    let labelled = SimulationLabels {
         file,
         simulation: index,
         messages,
@@ -96,9 +96,10 @@ pub fn convert_simulation(results: &Results, file: &str, index: usize) -> Result
         user_prompt: &user_prompt,
     }
     .label()?;
-    for label in labels {
+    for label in labelled.labels {
         builder.label(label)?;
     }
+    builder.add_note(UNCARRIED_CONTROL, labelled.uncarried);
     Ok(builder.finish(Coverage::Complete {
         tier: Tier::Structural,
     })?)

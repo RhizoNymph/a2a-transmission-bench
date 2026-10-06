@@ -17,8 +17,8 @@ pub struct Options {
 }
 
 impl Options {
-    /// The manifest's `selection`: `limit` when set, and each include as
-    /// `include[<n>]` (ct-eval's golden export writes them so).
+    /// The manifest's `selection`: `limit` when set, and the includes, in
+    /// order, as one `include` list when there are any.
     pub fn settings(&self) -> BTreeMap<String, Setting> {
         let mut settings = BTreeMap::new();
         if let Some(limit) = self.limit {
@@ -27,8 +27,11 @@ impl Options {
                 Setting::Int(i64::try_from(limit).unwrap_or(i64::MAX)),
             );
         }
-        for (at, entry) in self.include.iter().enumerate() {
-            settings.insert(format!("include[{at}]"), Setting::Text(entry.clone()));
+        if !self.include.is_empty() {
+            settings.insert(
+                "include".to_owned(),
+                Setting::List(self.include.iter().cloned().map(Setting::Text).collect()),
+            );
         }
         settings
     }

@@ -30,6 +30,7 @@ pub fn expected_route(call: Option<&RawCall>) -> Route {
         "read_file" => argument("file_path")
             .filter(|path| !path.is_empty())
             .map(|path| Resource::File {
+                host: None,
                 path: normalize_path(&format!("/{path}")),
             }),
         _ => None,

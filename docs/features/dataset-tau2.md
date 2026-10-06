@@ -69,7 +69,9 @@ TraceSource::worlds()   one results file parsed at a time
           tool result (requestor user|assistant) with text, both sides present:
             shared_source control peer→reader, reader exchange = next one (or none),
             at = whole text in the reader exchange, else in the reader's first
-            exchange carrying it, else left out
+            exchange carrying it, else left out and counted
+          ──▶ Labelled {labels, uncarried}
+        builder.label(…) per label, add_note("uncarried_control", uncarried)
         finish(Complete{Structural})
 ```
 
@@ -115,8 +117,8 @@ the golden export's numbering.
 
 | File | Role | Key exports |
 | --- | --- | --- |
-| `crates/datasets/tau2/src/lib.rs` | crate root, constants | `DATASET`, `VERSION`, `AGENT`, `USER` |
-| `src/options.rs` | selection flags and their manifest record | `Options` (`limit`, `include`, `settings`) |
+| `crates/datasets/tau2/src/lib.rs` | crate root, constants | `DATASET`, `VERSION`, `AGENT`, `USER`, `UNCARRIED_CONTROL` |
+| `src/options.rs` | selection flags and their manifest record (`limit`, and the includes as one `include` `Setting::List`) | `Options` (`limit`, `include`, `settings`) |
 | `src/source.rs` | the dataset as a `TraceSource` | `source`, `Tau2Source` (`files`, `files_read`) |
 | `src/convert.rs` | one simulation to one world | `load_results`, `convert_simulation` |
 | `src/error.rs` | the converter's errors | `Tau2Error` |
@@ -125,7 +127,7 @@ the golden export's numbering.
 | `src/prompts.rs` | system prompt reconstruction | `agent_system_prompt`, `user_system_prompt`, `scenario_text`, `AGENT_INSTRUCTION` |
 | `src/time.rs` | ISO times | `parse_time`, `TimeError` |
 | `src/views.rs` | each side's messages | `view`, `View`, `Side`, `Entry` |
-| `src/truth.rs` | labels | `SimulationLabels`, `Participant` |
+| `src/truth.rs` | labels | `SimulationLabels`, `Participant`, `Labelled` |
 | `tests/tau2.rs` | ct-eval's tests on bench types, plus time checks, ids, numbering, selection, export | |
 | `tests/parity.rs` | every fixture label equals ct-eval's, field by field | |
 | `tests/fixtures/*.json` | ct-eval's synthetic results files (generated, not dataset bytes) | |
@@ -165,7 +167,7 @@ the golden export's numbering.
 
 | Difference | Why |
 | --- | --- |
-| A shared-source control on a tool result no exchange of its reader carries (read after the reader's last call) is left out; its `t<n>` stays unused. Real data: none (all 10,832 simulations); the synthetic fixture has one. | A bench location names an exchange carrying its message; ct-eval's control names only the message. The golden export refuses such worlds (`Gap::UncarriedLocation`); a control no exchange carries guards no prediction. |
+| A shared-source control on a tool result no exchange of its reader carries (read after the reader's last call) is left out; its `t<n>` stays unused, and it is counted in the world's manifest note `uncarried_control` (`UNCARRIED_CONTROL`). Real data: none (all 10,832 simulations); the synthetic fixture has one. | A bench location names an exchange carrying its message; ct-eval's control names only the message. The golden export refuses such worlds (`Gap::UncarriedLocation`); a control no exchange carries guards no prediction. |
 | Such a control's place, when a reader exchange carries the message, is the first one. | The golden export's placement; `reader_exchange` stays absent. |
 | Labels have ids `t<n>`. | The format needs ids; the golden export's numbering. |
 | No token usage, protocol or transport on exchanges. | The format has no such fields. |

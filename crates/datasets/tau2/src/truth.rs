@@ -24,7 +24,7 @@
 //!   reader's last call has no reader exchange: its place is the reader's
 //!   first exchange carrying the message (crosstalk's golden export's
 //!   rule), and when there is none the bench cannot place it and the
-//!   control is left out.
+//!   control is left out, counted in the world's `uncarried_control` note.
 //!
 //! **Ids.** Label `t<n>` is crosstalk-eval's `n`-th expectation of the
 //! world (the golden export's numbering); a left-out control keeps its
@@ -100,6 +100,13 @@ pub struct SimulationLabels<'a> {
     pub user_prompt: &'a str,
 }
 
+/// A simulation's labels, and how many controls it left out because no
+/// exchange of their reader carries the message.
+pub struct Labelled {
+    pub labels: Vec<Label>,
+    pub uncarried: u64,
+}
+
 /// Numbers labels in crosstalk-eval's truth order.
 #[derive(Default)]
 struct Numbering(usize);
@@ -139,8 +146,9 @@ impl SimulationLabels<'_> {
         )
     }
 
-    pub fn label(&self) -> Result<Vec<Label>, Tau2Error> {
+    pub fn label(&self) -> Result<Labelled, Tau2Error> {
         let mut out = Vec::new();
+        let mut uncarried = 0;
         let mut ids = Numbering::default();
         let agent_prompt = collapse(self.agent_prompt);
         let user_prompt = collapse(self.user_prompt);
@@ -150,11 +158,18 @@ impl SimulationLabels<'_> {
                     self.turn(Side::Agent, raw, message, &agent_prompt, &mut ids, &mut out)?;
                 }
                 "user" => self.turn(Side::User, raw, message, &user_prompt, &mut ids, &mut out)?,
-                "tool" => self.tool_result(raw, message, &mut ids, &mut out)?,
+                "tool" => {
+                    if !self.tool_result(raw, message, &mut ids, &mut out)? {
+                        uncarried += 1;
+                    }
+                }
                 _ => {}
             }
         }
-        Ok(out)
+        Ok(Labelled {
+            labels: out,
+            uncarried,
+        })
     }
 
     fn turn(
@@ -218,26 +233,28 @@ impl SimulationLabels<'_> {
         Ok(())
     }
 
+    /// A tool result's `SharedSource` control; `false` when the control
+    /// was left out because no exchange of its reader carries it.
     fn tool_result(
         &self,
         raw: usize,
         message: &RawMessage,
         ids: &mut Numbering,
         out: &mut Vec<Label>,
-    ) -> Result<(), Tau2Error> {
+    ) -> Result<bool, Tau2Error> {
         let side = if message.requestor.as_deref() == Some("user") {
             Side::User
         } else {
             Side::Agent
         };
         let (Some(reader), Some(peer)) = (self.side(side), self.side(side.peer())) else {
-            return Ok(());
+            return Ok(true);
         };
         if message.text().is_none_or(|text| text.trim().is_empty()) {
-            return Ok(());
+            return Ok(true);
         }
         let Some(entry) = reader.view.entry(raw) else {
-            return Ok(());
+            return Ok(true);
         };
         let id = ids.next()?;
         let reader_exchange = reader.reader_exchange(raw);
@@ -250,7 +267,7 @@ impl SimulationLabels<'_> {
                 label = %id,
                 "left out a shared-source control no exchange of its reader carries"
             );
-            return Ok(());
+            return Ok(false);
         };
         let at = whole(place, &entry.message, raw)?;
         out.push(Label::NegativeControl(NegativeControl::new(
@@ -267,7 +284,7 @@ impl SimulationLabels<'_> {
                 source: self.source(raw),
             },
         )?));
-        Ok(())
+        Ok(true)
     }
 }
 
