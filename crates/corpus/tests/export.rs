@@ -4,6 +4,7 @@
 
 mod common;
 
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -277,4 +278,47 @@ fn the_input_view_never_holds_labels() {
         input_view(&dir.path().join("nothing"), &dir.path().join("v2")),
         Err(ExportError::NotAnExport(_))
     ));
+}
+
+#[test]
+fn worlds_record_their_label_counts_and_notes() {
+    let mut worlds = three_worlds();
+    worlds[1].add_note("uncarried_control", 2);
+    let expected: Vec<(Option<u64>, BTreeMap<String, u64>)> = worlds
+        .iter()
+        .map(|w| (Some(w.labels().len() as u64), w.notes().clone()))
+        .collect();
+    let dir = ok(tempfile::tempdir());
+    let out = dir.path().join("x");
+    let exported = ok(export(
+        &mut InMemory::new(dataset(), worlds),
+        &out,
+        info("r1"),
+        &Selection::Unsplit,
+    ));
+    let manifest = ok(read_manifest(&out));
+    assert_eq!(manifest, exported.manifest);
+    assert_eq!(
+        manifest
+            .worlds
+            .iter()
+            .map(|w| (w.labels, w.notes.clone()))
+            .collect::<Vec<_>>(),
+        expected
+    );
+    assert_eq!(manifest.worlds[1].notes.get("uncarried_control"), Some(&2));
+    assert!(manifest.worlds[0].notes.is_empty());
+    // The label counts are the rows labels.jsonl holds per world.
+    let mut labels = reader::<Labels>(&out, LABELS_FILE);
+    for entry in &manifest.worlds {
+        let section = ok(labels.next_world()).unwrap_or_else(|| panic!("labels ended early"));
+        assert_eq!(entry.labels, Some(section.rows.len() as u64));
+    }
+    // Both are truth: the input view drops them.
+    let view = ok(input_view(&out, &dir.path().join("view")));
+    assert!(
+        view.worlds
+            .iter()
+            .all(|w| w.labels.is_none() && w.notes.is_empty())
+    );
 }

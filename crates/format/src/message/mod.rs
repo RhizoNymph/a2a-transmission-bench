@@ -10,8 +10,8 @@ use crate::ids::{Digest, MessageId};
 use crate::json::Json;
 
 pub use part::{
-    AssistantPart, ResultContent, SystemPart, ToolArguments, ToolCall, ToolExecution, ToolOutcome,
-    ToolPart, ToolResult, UserPart,
+    AssistantPart, MediaKind, ResultContent, SystemPart, ToolArguments, ToolCall, ToolExecution,
+    ToolOutcome, ToolPart, ToolResult, UserPart,
 };
 pub use text::{NoPartText, TOOL_RESULT_SEPARATOR};
 

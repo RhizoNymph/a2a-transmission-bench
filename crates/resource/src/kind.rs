@@ -25,8 +25,9 @@ impl ResourceKind {
     }
 }
 
-/// The kind of a shared resource; `None` for a file on one agent's own
-/// filesystem or an opaque key (a tool's resource, an invalid-host URL).
+/// The kind of a shared resource; `None` for a file (on one agent's own
+/// filesystem or a named host), an MCP tool's resource or an opaque key (a
+/// tool's resource, an invalid-host URL).
 pub fn kind(resource: &Resource) -> Option<ResourceKind> {
     match resource {
         Resource::Repository(_) => Some(ResourceKind::Repository),
@@ -34,6 +35,6 @@ pub fn kind(resource: &Resource) -> Option<ResourceKind> {
         Resource::Thread { .. } | Resource::Collection { .. } | Resource::Url(_) => {
             Some(ResourceKind::Url)
         }
-        Resource::File { .. } | Resource::Opaque { .. } => None,
+        Resource::File { .. } | Resource::Mcp { .. } | Resource::Opaque { .. } => None,
     }
 }

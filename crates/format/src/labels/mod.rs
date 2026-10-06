@@ -12,7 +12,8 @@ use crate::location::Location;
 
 pub use kinds::{
     CarrierKind, ClusterKind, Codec, DelegationDirection, ExemptionReason, MatchClass, MatchNeed,
-    NegativeReason, Route, RouteKind, Tier,
+    NegativeReason, Route, RouteKind, SENDER_MEDIUM_UNOBSERVED, TWO_STRING_LEVELS, Tier,
+    json_escapes,
 };
 
 /// Why a label row is invalid on its own.
@@ -273,7 +274,8 @@ impl From<Exemption> for ExemptionFields {
 pub struct ClusterFields {
     pub id: LabelId,
     pub agents: Vec<AgentKey>,
-    pub kind: ClusterKind,
+    /// `cluster`, not `kind`: rows are tagged by `kind`.
+    pub cluster: ClusterKind,
     pub tier: Tier,
     pub source: SourceRef,
 }

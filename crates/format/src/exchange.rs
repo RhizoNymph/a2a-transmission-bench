@@ -92,6 +92,9 @@ pub struct Response {
     pub messages: Vec<MessageId>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stop: Option<String>,
+    /// Why the call failed, when it did; `messages` may then be empty.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
 }
 
 /// One model call.
