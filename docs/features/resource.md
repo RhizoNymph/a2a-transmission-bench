@@ -59,8 +59,8 @@ canonical_remote(text) ─▶ repository::remote ─▶ repository(host, owner, 
 
 canonicalize(resource) = step(step(…)) until unchanged (at most 16 steps)
   step: Repository/RepoFile/Thread/Collection ─▶ repository(..) on the parts; RepoFile path rooted, resolved
-        Thread pull ─▶ issue; Url(text) ─▶ canonical_url(text) (unchanged when it is no URL)
-        File absolute path ─▶ resolved; Opaque unchanged
+        Url(text) ─▶ canonical_url(text) (unchanged when it is no URL)
+        File absolute path ─▶ resolved (host kept); Mcp, Opaque unchanged
 ```
 
 ## Rules
@@ -186,22 +186,27 @@ except for a repository that `repository` folds only part of the way: a
 host with several `www.` prefixes, a name ending in an upper-case `.GIT`,
 which is lower-cased after the suffix check, or in `.git.git`):
 repositories through `repository` (unchanged when invalid); a repository
-file's path rooted at `/` and resolved; thread kind `pull` is `issue`;
-`Url(text)` is `canonical_url(text)` (unchanged when it is no URL); an
-absolute `File` path resolved; `Opaque` unchanged. Collections keep their
+file's path rooted at `/` and resolved; `Url(text)` is
+`canonical_url(text)` (unchanged when it is no URL); an absolute `File`
+path resolved, its `host` kept; `Mcp` and `Opaque` unchanged. The format
+has no `pull` thread kind: a GitHub pull request is an `issue` thread (one
+number space and conversation), so there is nothing to fold. Collections keep their
 kind: `pulls` (GitHub) and `merge_requests` (GitLab) are different pages.
 `kind`: `repository` → repository; `repo_file` → repo file; `thread`,
-`collection`, `url` → url; `file`, `opaque` → none (a file only one
-agent's machine holds; a tool's key).
+`collection`, `url` → url; `file`, `mcp`, `opaque` → none (a file on one
+agent's machine or a named host; an MCP tool's resource; a tool's key), as
+crosstalk's AI Village converter treats `Locator::File`, `Locator::Mcp`
+and `Locator::Opaque`.
 
 ## Spec table
 
 Every row is a test (`tests/spec.rs` reads this table), and every input of
 `canonical_url`, `normalized_url` and `canonical_remote` is also one of the
 parity vectors. Outputs are written `repository <host>/<owner>/<name>`,
-`repo_file <repo> <path>`, `thread <repo> <issue|pull|merge_request> <N>`,
+`repo_file <repo> <path>`, `thread <repo> <issue|merge_request> <N>`,
 `collection <repo> <issues|pulls|merge_requests>`, `url <text>`,
-`file <path>`, `opaque <tool> <key>`, `error <reason>`; `canonicalize` and
+`file <path>`, `file @<host> <path>`, `mcp <server> <tool> [<target>]`,
+`opaque <tool> <key>`, `error <reason>`; `canonicalize` and
 `kind` take inputs in the same notation. Rows marked † are crosstalk
 behaviour that looks surprising; they are kept in version 1 for parity.
 
@@ -306,7 +311,7 @@ behaviour that looks surprising; they are kept in version 1 for parity.
 | `canonicalize` | `repository www.www.example.com/o/n` | `repository example.com/o/n` |
 | `canonicalize` | `repository github.com/o+x/n` | `repository github.com/o+x/n` |
 | `canonicalize` | `repo_file github.com/O/n src/./lib.rs` | `repo_file github.com/o/n /src/lib.rs` |
-| `canonicalize` | `thread github.com/o/n pull 7` | `thread github.com/o/n issue 7` |
+| `canonicalize` | `thread GitHub.com/O/N issue 7` | `thread github.com/o/n issue 7` |
 | `canonicalize` | `thread gitlab.com/g/p merge_request 4` | `thread gitlab.com/g/p merge_request 4` |
 | `canonicalize` | `collection GitHub.com/O/N pulls` | `collection github.com/o/n pulls` |
 | `canonicalize` | `url https://github.com/o/n/pull/7` | `thread github.com/o/n issue 7` |
@@ -315,6 +320,8 @@ behaviour that looks surprising; they are kept in version 1 for parity.
 | `canonicalize` | `url not a url` | `url not a url` |
 | `canonicalize` | `file /shared/./notes/../a.md` | `file /shared/a.md` |
 | `canonicalize` | `file notes.md` | `file notes.md` |
+| `canonicalize` | `file @box-1 /srv/./a.md` | `file @box-1 /srv/a.md` |
+| `canonicalize` | `mcp wiki page Main Page` | `mcp wiki page Main Page` |
 | `canonicalize` | `opaque memory_write Key One` | `opaque memory_write Key One` |
 | `kind` | `repository github.com/o/n` | `repository` |
 | `kind` | `repo_file github.com/o/n /a` | `repo_file` |
@@ -322,6 +329,8 @@ behaviour that looks surprising; they are kept in version 1 for parity.
 | `kind` | `collection github.com/o/n issues` | `url` |
 | `kind` | `url https://example.com/` | `url` |
 | `kind` | `file /home/a/x` | `none` |
+| `kind` | `file @box-1 /srv/a.md` | `none` |
+| `kind` | `mcp village chat` | `none` |
 | `kind` | `opaque <url> http://xn--/path` | `none` |
 <!-- spec-table:end -->
 

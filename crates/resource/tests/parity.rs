@@ -141,7 +141,12 @@ fn repository_is_fixed(resource: &Resource) -> bool {
         | Resource::Collection {
             repository: repo, ..
         } => repo,
-        Resource::Url(_) | Resource::File { .. } | Resource::Opaque { .. } => return true,
+        Resource::Url(_)
+        | Resource::File { .. }
+        | Resource::Mcp { .. }
+        | Resource::Opaque { .. } => {
+            return true;
+        }
     };
     repository(&repo.host, &repo.owner, &repo.name).as_ref() == Ok(repo)
 }

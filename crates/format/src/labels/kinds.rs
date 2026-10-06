@@ -89,7 +89,72 @@ pub enum MatchNeed {
     },
 }
 
+/// The `Undecodable` codec name of text escaped two string levels deep.
+pub const TWO_STRING_LEVELS: &str = "json_string+json_string";
+
+/// The `Unobserved` reason of content read from a medium its sender never
+/// wrote (INV-963 in crosstalk).
+pub const SENDER_MEDIUM_UNOBSERVED: &str = "sender medium unobserved (INV-963)";
+
+/// Whether writing `text` as a JSON string's contents changes it: it holds a
+/// quote, a backslash or a control character.
+pub fn json_escapes(text: &str) -> bool {
+    text.chars()
+        .any(|ch| matches!(ch, '"' | '\\' | '\u{0}'..='\u{1f}'))
+}
+
 impl MatchNeed {
+    /// Text serialised once as a JSON string.
+    pub fn json_string() -> Self {
+        Self::Decoded {
+            codecs: vec![Codec::JsonString],
+        }
+    }
+
+    /// Text serialised once as a YAML scalar.
+    pub fn yaml_string() -> Self {
+        Self::Decoded {
+            codecs: vec![Codec::YamlString],
+        }
+    }
+
+    /// Text a writer put inside a JSON string (tool-call arguments) and a
+    /// reader received raw: decoded once when escaping changes it, exact
+    /// otherwise.
+    pub fn through_json_string(text: &str) -> Self {
+        if json_escapes(text) {
+            Self::json_string()
+        } else {
+            Self::Exact
+        }
+    }
+
+    /// Text that arrives only after two string levels are undone: out of reach.
+    pub fn two_string_levels() -> Self {
+        Self::Undecodable {
+            codec: TWO_STRING_LEVELS.to_owned(),
+        }
+    }
+
+    /// Content read from a medium its sender never wrote, arriving as
+    /// `arrival` would: out of reach.
+    pub fn sender_medium_unobserved(arrival: MatchClass) -> Self {
+        Self::Unobserved {
+            reason: SENDER_MEDIUM_UNOBSERVED.to_owned(),
+            arrival,
+        }
+    }
+
+    /// The tier a label with this need gets: out of reach when the need is,
+    /// `in_reach` otherwise.
+    pub fn tier(&self, in_reach: Tier) -> Tier {
+        if self.out_of_reach() {
+            Tier::OutOfReach
+        } else {
+            in_reach
+        }
+    }
+
     /// Whether no detector is required to find a label with this need.
     pub const fn out_of_reach(&self) -> bool {
         matches!(self, Self::Undecodable { .. } | Self::Unobserved { .. })
