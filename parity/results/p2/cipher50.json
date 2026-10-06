@@ -1,0 +1,154 @@
+{
+  "run": "cipher50",
+  "a": "baseline",
+  "b": "bench",
+  "result": "equal",
+  "compared_values": 75,
+  "differences": [],
+  "baseline": {
+    "detector": "reference",
+    "totals": {
+      "worlds": 400,
+      "agents": 800,
+      "exchanges": 1000,
+      "expectations": 400,
+      "negative_controls": 0,
+      "predictions": 86
+    },
+    "overall": {
+      "expected": 200,
+      "found": 86,
+      "missed": 114,
+      "suspected": 0,
+      "predicted": 86,
+      "correct": 86,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.43
+    },
+    "out_of_reach": {
+      "expected": 200,
+      "found": 0,
+      "missed": 200,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": 0.0
+    },
+    "forwarding": {
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    "access_only": {
+      "labels": 0,
+      "expected": 200,
+      "recall": 0.0,
+      "expected_access": 0,
+      "found_access": 0,
+      "access_recall": null
+    },
+    "rows": 7,
+    "transmissions": 4,
+    "violations": {},
+    "access_only_under_controls": {},
+    "fp_per_1k": null,
+    "false_positives": null,
+    "gates": {
+      "other_dataset": 9
+    },
+    "failed_worlds": 0,
+    "unscored": {
+      "worlds": 0,
+      "ingested": 0
+    },
+    "unknown_detected_agent": 0
+  },
+  "bench": {
+    "detector": "reference",
+    "totals": {
+      "worlds": 400,
+      "agents": 800,
+      "exchanges": 1000,
+      "expectations": 400,
+      "negative_controls": 0,
+      "predictions": 86
+    },
+    "overall": {
+      "expected": 200,
+      "found": 86,
+      "missed": 114,
+      "suspected": 0,
+      "predicted": 86,
+      "correct": 86,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.43
+    },
+    "out_of_reach": {
+      "expected": 200,
+      "found": 0,
+      "missed": 200,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": 0.0
+    },
+    "forwarding": {
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    "access_only": {
+      "labels": 0,
+      "expected": 200,
+      "recall": 0.0,
+      "expected_access": 0,
+      "found_access": 0,
+      "access_recall": null
+    },
+    "rows": 7,
+    "transmissions": 4,
+    "violations": {},
+    "access_only_under_controls": {},
+    "fp_per_1k": null,
+    "false_positives": null,
+    "gates": {
+      "other_dataset": 9
+    },
+    "failed_worlds": 0,
+    "unscored": {
+      "worlds": 0,
+      "ingested": 0
+    },
+    "unknown_detected_agent": 0
+  }
+}

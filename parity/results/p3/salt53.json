@@ -1,0 +1,141 @@
+{
+  "run": "salt53",
+  "result": "equal",
+  "bench_diff_normalize_ids": {
+    "worlds": 53,
+    "rows_a": 4335,
+    "rows_b": 4335,
+    "differences": 8673,
+    "only_a": 4335,
+    "only_b": 4335,
+    "changed": 3,
+    "order": 0
+  },
+  "predictions_modulo_agent_ids": {
+    "run": "salt53",
+    "a": "golden",
+    "b": "bench",
+    "result": "equal",
+    "detectors": {
+      "golden": {
+        "name": "reference",
+        "version": "9707b1d58227fd8ba37ca6d6478097494fcef4ee",
+        "variant": "default"
+      },
+      "bench": {
+        "name": "reference",
+        "version": "0.1.0",
+        "variant": "max-postings-50",
+        "config_digest": "7acb2f5b7ea11c954ba3acea7b18946f859680125cdb4dc0e772f29ce904c576"
+      }
+    },
+    "worlds": 53,
+    "worlds_equal": 53,
+    "worlds_only_a": 0,
+    "worlds_only_b": 0,
+    "world_order_differs": 0,
+    "status_differs": 0,
+    "partition_differs": 0,
+    "attribution_rows": {
+      "golden": 91,
+      "bench": 91
+    },
+    "unattributed_rows": {
+      "golden": 0,
+      "bench": 0
+    },
+    "transmissions": {
+      "golden": 4244,
+      "bench": 4244,
+      "matched": 4244,
+      "only_golden": 0,
+      "only_bench": 0,
+      "only_golden_by_state": {},
+      "only_bench_by_state": {}
+    },
+    "first": []
+  },
+  "score_vs_p2": {
+    "result": "equal",
+    "compared_values": 85,
+    "differences": []
+  },
+  "score": {
+    "detector": "reference",
+    "totals": {
+      "worlds": 53,
+      "agents": 106,
+      "exchanges": 11796,
+      "expectations": 3850,
+      "negative_controls": 12951,
+      "predictions": 13616
+    },
+    "overall": {
+      "expected": 2909,
+      "found": 2824,
+      "missed": 85,
+      "suspected": 0,
+      "predicted": 10978,
+      "correct": 6398,
+      "false_positive": 4580,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.5828019675715066,
+      "recall": 0.9707803368855277
+    },
+    "out_of_reach": {
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    "forwarding": {
+      "expected": 941,
+      "found": 738,
+      "missed": 203,
+      "suspected": 0,
+      "predicted": 2638,
+      "correct": 2638,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.7842720510095643
+    },
+    "access_only": {
+      "labels": 0,
+      "expected": 2909,
+      "recall": 0.0,
+      "expected_access": 0,
+      "found_access": 0,
+      "access_recall": null
+    },
+    "rows": 12,
+    "transmissions": 6,
+    "violations": {
+      "salt/rejected_send": 160,
+      "salt/shared_source": 12,
+      "salt/boilerplate": 89
+    },
+    "access_only_under_controls": {},
+    "fp_per_1k": 388.26720922346556,
+    "false_positives": 4580,
+    "gates": {
+      "pass": 5,
+      "other_dataset": 4
+    },
+    "failed_worlds": 0,
+    "unscored": {
+      "worlds": 0,
+      "ingested": 0
+    },
+    "unknown_detected_agent": 0
+  }
+}

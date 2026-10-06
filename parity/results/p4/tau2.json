@@ -1,0 +1,79 @@
+{
+  "run": "tau2",
+  "result": "equal (byte-identical files; manifest differs only in ignored fields and split_list)",
+  "bench_diff": {
+    "file_worlds": 32496,
+    "rows_a": 1321530,
+    "rows_b": 1321530,
+    "differences": 2,
+    "only_a": 0,
+    "only_b": 0,
+    "changed": 2,
+    "order": 0
+  },
+  "manifest_paths_changed": [
+    "/converter/git",
+    "/selection/split_list"
+  ],
+  "ignored": [
+    "/converter/git"
+  ],
+  "considered": [
+    "/selection/split_list"
+  ],
+  "file_digests_equal": {
+    "messages": true,
+    "exchanges": true,
+    "labels": true
+  },
+  "manifest_worlds_equal": true,
+  "worlds": 10832,
+  "golden": {
+    "source_revision": "5bfa7e37b36656b37dc6d022156be6563c1007f3",
+    "selection": {},
+    "pace": {}
+  },
+  "bench": {
+    "source_revision": "5bfa7e37b36656b37dc6d022156be6563c1007f3",
+    "selection": {
+      "split_list": "none"
+    },
+    "pace": {}
+  },
+  "labels_modulo_ids": {
+    "a": "golden",
+    "b": "bench",
+    "result": "equal modulo ids",
+    "worlds": 10832,
+    "worlds_equal": 10832,
+    "world_keys_differ": 0,
+    "world_rows_differ": 0,
+    "rows": {
+      "golden": {
+        "exchange_agent": 264793,
+        "negative_control": 106465,
+        "transmission": 119256
+      },
+      "bench": {
+        "exchange_agent": 264793,
+        "negative_control": 106465,
+        "transmission": 119256
+      }
+    },
+    "matched_without_id": {
+      "exchange_agent": 264793,
+      "negative_control": 106465,
+      "transmission": 119256
+    },
+    "ids_of_matched_rows": {
+      "equal": 225721,
+      "differ": 0
+    },
+    "only_golden": {},
+    "only_bench": {},
+    "paired_fields_differ": {},
+    "unpaired_golden": {},
+    "unpaired_bench": {},
+    "first_differing_worlds": []
+  }
+}

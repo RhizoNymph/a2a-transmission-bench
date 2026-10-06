@@ -1,0 +1,102 @@
+{
+  "run": "agentdojo",
+  "result": "equal (byte-identical files; manifest differs only in ignored fields and split_list)",
+  "bench_diff": {
+    "file_worlds": 6777,
+    "rows_a": 54401,
+    "rows_b": 54401,
+    "differences": 2,
+    "only_a": 0,
+    "only_b": 0,
+    "changed": 2,
+    "order": 0
+  },
+  "manifest_paths_changed": [
+    "/converter/git",
+    "/selection/split_list"
+  ],
+  "ignored": [
+    "/converter/git"
+  ],
+  "considered": [
+    "/selection/split_list"
+  ],
+  "file_digests_equal": {
+    "messages": true,
+    "exchanges": true,
+    "labels": true
+  },
+  "manifest_worlds_equal": true,
+  "worlds": 2259,
+  "golden": {
+    "source_revision": "089ed468cf3ed0322acc66b0211f26d9d90dbf60",
+    "selection": {
+      "include": [
+        "pipeline=gpt-4o-2024-05-13",
+        "pipeline=claude-3-5-sonnet-20241022",
+        "pipeline=gemini-1.5-pro-002",
+        "attack=important_instructions",
+        "attack=none"
+      ]
+    },
+    "pace": {
+      "max_ms": 5000,
+      "min_ms": 1000,
+      "seed": 0
+    }
+  },
+  "bench": {
+    "source_revision": "089ed468cf3ed0322acc66b0211f26d9d90dbf60",
+    "selection": {
+      "include": [
+        "pipeline=gpt-4o-2024-05-13",
+        "pipeline=claude-3-5-sonnet-20241022",
+        "pipeline=gemini-1.5-pro-002",
+        "attack=important_instructions",
+        "attack=none"
+      ],
+      "split_list": "none"
+    },
+    "pace": {
+      "max_ms": 5000,
+      "min_ms": 1000,
+      "seed": 0
+    }
+  },
+  "labels_modulo_ids": {
+    "a": "golden",
+    "b": "bench",
+    "result": "equal modulo ids",
+    "worlds": 2259,
+    "worlds_equal": 2259,
+    "world_keys_differ": 0,
+    "world_rows_differ": 0,
+    "rows": {
+      "golden": {
+        "exchange_agent": 11235,
+        "transmission": 2683,
+        "negative_control": 3774
+      },
+      "bench": {
+        "exchange_agent": 11235,
+        "transmission": 2683,
+        "negative_control": 3774
+      }
+    },
+    "matched_without_id": {
+      "exchange_agent": 11235,
+      "transmission": 2683,
+      "negative_control": 3774
+    },
+    "ids_of_matched_rows": {
+      "equal": 6457,
+      "differ": 0
+    },
+    "only_golden": {},
+    "only_bench": {},
+    "paired_fields_differ": {},
+    "unpaired_golden": {},
+    "unpaired_bench": {},
+    "first_differing_worlds": []
+  }
+}
