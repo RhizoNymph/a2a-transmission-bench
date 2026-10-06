@@ -156,6 +156,24 @@ the whole history and repeat most messages (SALT, AI Village).
   provider material is never part text and is not even stored: call ids
   stay (they pair calls and results) but are excluded from text,
   signatures and encrypted reasoning are dropped to `reasoning_opaque`.
+  Visible reasoning that carries a signature (SALT's signed
+  `thinking_blocks`) is `reasoning` with its text, signature dropped; it
+  is not `reasoning_opaque`.
+- **Normalisation rules every converter follows**, because part indices
+  are only comparable if messages split identically:
+  - tool results are their own `tool`-role messages, one per result
+    block, in order; a provider user message that mixes tool results and
+    text becomes the tool messages first, then a user message with the
+    rest (crosstalk's Anthropic normaliser does exactly this, and spec
+    `UserPart` has no tool result);
+  - system content stays **inline, in its original position** in the
+    request's message list, never hoisted (Claude Code reminders and
+    crosstalk's `--claude-code-shape` send mid-array system turns, and
+    demo-swarm truth indexes the wire array including them);
+  - message boundaries and part order are the provider's, so a
+    location translates to and from crosstalk's `PartRef` mechanically.
+- `unknown` keeps no raw bytes. A detector cannot see unknown blocks,
+  as the gateway cannot use them either.
 - **Canonical JSON** is RFC 8785 with exact numbers (a number keeps its
   decimal digits instead of going through an IEEE double), the same rule
   as crosstalk-spec's `CanonicalJson`. Tool-call arguments are stored as
@@ -170,18 +188,25 @@ the whole history and repeat most messages (SALT, AI Village).
 ```json
 {"kind":"world","key":"trace-0007","agents":[{"key":"alice","driven":"model","model":"gpt-4o"},{"key":"bob","driven":"scripted"}]}
 {"kind":"exchange","id":"01J…","world":"trace-0007","at_us":1767225601000000,
- "client":{"credential":"k:3f2a…","session":null,"vendor":"openai","model":"gpt-4o"},
- "request":{"system":["<mid>"],"messages":["<mid>","<mid>"],"tools":[{"name":"http_request","description":"…","schema":{…}}]},
+ "client":{"credential":"k:3f2a…","session":null,"turn":null,"vendor":"openai","model":"gpt-4o"},
+ "request":{"messages":["<mid system>","<mid>","<mid>"],"tools":[{"name":"http_request","description":"…","schema":{…}}]},
  "response":{"messages":["<mid>"],"stop":"tool_use"},
  "fidelity":"exact","source":{"file":"…","path":"/episodes/2/messages/14"}}
 ```
 
 - `world` rows declare agents first; exchanges follow in time order
   (`at_us`, microseconds since the Unix epoch, strictly increasing per
-  agent; a sender's exchange precedes the reader's).
+  agent; a sender's exchange precedes the reader's). A derived
+  `ExchangeId`'s ULID time is `at_us / 1000` (milliseconds); the pace's
+  1 s minimum step keeps that collision-free.
+- `request.messages` is one ordered list, system messages inline (§3.3).
+- `request.tools` is optional and absent when the dataset does not
+  record schemas (SALT, AgentDojo); converters never invent them.
 - `client` is **only what a proxy in front of the model would observe**:
   an opaque stable credential fingerprint, a session/conversation header
-  if the dataset has one, vendor and model. It is not the agent. Several
+  if the dataset has one and the request's 0-based ordinal in it
+  (`turn`; demo-swarm joins on session + turn), vendor and model. It is
+  not the agent. Several
   agents may share a credential (demo-swarm key groups), so detectors
   must attribute exchanges themselves, as a gateway does.
 - The true agent of each exchange is in `labels.jsonl` (`exchange_agent`
@@ -209,7 +234,10 @@ spec's `MessageHash`.
 
 **Tiers**: `construction`, `structural`, `heuristic`, `judged`,
 `out_of_reach`, `forwarding`, with today's meaning: the last two are
-reported apart and never move `overall`.
+reported apart and never move `overall` or access-only recall.
+
+An `exemption` is scoped to its reader exchange and location, never to
+the whole world.
 
 Every label row is built through checked constructors, and read back
 through the same checks: sender ≠ reader, both in the world; content text
@@ -233,8 +261,21 @@ is on a channel; `needs` agrees with `tier` (`MatchNeed::out_of_reach`).
 - `attribution` rows give the detector's agents as sets of exchanges.
   The scorer maps each detector agent to the true agent of its exchanges.
   A split (several detector agents for one true agent) is fine; a merge
-  (one detector agent over two true agents) fails the world, exactly as
-  `AgentMapError::Merged` does today.
+  (one detector agent over two true agents) fails the world with a typed
+  failure naming the ids, exactly as `AgentMapError::Merged` does today.
+- Detector agent ids must be canonical, resolved through any merges at
+  write time, so attribution rows hold no aliases.
+- Attribution may be partial. A detector that cannot tie a sender to
+  exchanges writes `{"kind":"unattributed","world":…,"agent":…}`. The
+  scorer then reports that agent's predictions as `unknown_detected_agent`
+  (today's swarm diagnostic) instead of failing the world. This is the
+  gateway-export path's case: a `ContentMatch` names `origin_agent` but
+  not an origin exchange, so a sender that is never a reader or accessor
+  cannot be placed over HTTP today. Channel routes are covered by the
+  write access's exchange; direct and unobserved routes are not.
+  crosstalk-side fix (asked of crosstalk-impl, not a bench concern): an
+  HTTP read of exchange placements (`POST /placements`) or of span
+  records (`POST /spans` → origin exchange).
 - A `transmission` has a `state`: `confirmed | classified | aggregated`
   (content evidence), `suspected | discarded` (co-access only). It
   becomes one prediction per content evidence, or per co-access, as
@@ -398,9 +439,29 @@ The fix has two parts:
    accesses and lists disagreements by kind. Disagreements are findings
    for crosstalk (or the bench), not silent label changes.
 
-Labels are produced in two versions (§8): `ai-village@1` ports L5's
-tables as they are at the pinned commit, so the first export reproduces
-#100's labels exactly (parity); `ai-village@2` adds the shell fixes the
+Labels are produced in two versions (§8). `ai-village@1` ports L5's
+behaviour as it is at a pinned crosstalk-flow commit, so the first export
+reproduces #100's labels exactly (parity). That is more than tables,
+because #100 drives crosstalk-flow's stateful `ConversationContext` call
+by call (`access::Shell::accesses`). The port covers:
+
+1. the command → operation and locator tables, with `SitesConfig`'s
+   forge and Pages hosts;
+2. `ConversationContext::observe`'s state transitions: cwd tracking,
+   clone and checkout binding directories to repositories
+   (`repos().locate(dir)`), and resolving relative paths against the cwd
+   and bound repositories (this is where hidden heuristics live, e.g.
+   `cd` into an unknown directory);
+3. #100's own additions: one persistent shell per agent started at
+   `HOME`, `~` expansion, and printed-remote binding (`To`/`From
+   <remote>`) followed by re-extracting the same command;
+4. `payload::authored`, which decides which typed text is a write's
+   content;
+5. the `kind()` filter, which keeps only shared resources.
+
+`@1` is done when the agreement report (below) over the full week shows
+no differences, or only a short adjudicated list.
+`ai-village@2` `ai-village@2` then adds the shell fixes the
 neutral table implies (failed `&&` chains, `To <url>` precedence). The
 number for crosstalk is expected to move between them; that move is the
 point of the split, and is reported, not hidden.
@@ -420,8 +481,9 @@ URL canonicalisation in `resolve.rs` uses the bench canonicaliser.
 
 `gates.toml` moves to `gates/<detector>.toml` in the bench:
 `gates/reference.toml` (today's detector-less gates),
-`gates/crosstalk-live.toml` (`detector = "live"`, forwarding on and off
-as two `variant`s), `gates/crosstalk-gateway-export.toml` (demo-swarm
+`gates/crosstalk-live.toml` (`detector = "live"`; today's
+`forwarding = "on"` selector, #99, becomes the `variant` selector, so
+forwarding-on gates never apply to a forwarding-off run and the reverse), `gates/crosstalk-gateway-export.toml` (demo-swarm
 headline and boilerplate). Semantics are unchanged (recall/precision
 `min`, violations/`fp_per_1k` `max`, a gate on a dataset the run did not
 score is skipped). A gate change is a bench PR, reviewed in the bench.
@@ -472,8 +534,9 @@ reproduced: SALT 0.854/0.955 is crosstalk-impl's measurement on
 `fix/l4-nearer-source`; crosstalk-rollouts' last confirmed SALT figure is
 0.856/0.810 at `c3cd7f2`. So before any porting:
 
-1. Pick one crosstalk commit (staging after #98 merges, or `8708a20` on
-   top of `bc37b2d`), release build.
+1. Pick one crosstalk commit, release build. Recommended (crosstalk-rollouts):
+   staging once #105 (gate calibration) and #98 (the single dismissed
+   rule) have landed.
 2. Run ct-eval at it with the documented selections and record every
    `report.json`, plus the dataset revisions (HF snapshot hashes, git
    HEADs), in the bench repo as `parity/baseline-<sha>/` (reports only;
@@ -498,8 +561,11 @@ Add `ct-eval export --format a2a-bench/1` to crosstalk's current crate:
 it writes today's converters' worlds and labels, and `ct-eval run
 --predictions-out` writes today's predictions, in the bench format. This
 is the only new code in crosstalk before the split, and it is a pure
-serialisation of existing types (crosstalk-rollouts' area; I'd write it
-with them). It turns every later stage into a byte diff.
+serialisation of existing types. crosstalk-rollouts takes it once
+`a2a-bench-format` has a first commit to pin. It translates spec
+`PartRef { MessageHash, index }` to bench `{ MessageId, part }`, which
+is mechanical because the bench keeps the spec's message boundaries and
+part order (§3.3). It turns every later stage into a byte diff.
 
 ### 7.2 Stages
 
@@ -580,8 +646,9 @@ touches every crate's registration. Acceptable; resolved at merge.
    strengthens the credibility argument; it costs a split policy.
 2. **Repo publishing.** Creating a GitHub remote (public or private, which
    org) is outward-facing; not done.
-3. **Crosstalk dependency direction.** The adapter depends on
-   `a2a-bench-format` by git tag. Acceptable, or should crosstalk vendor
-   a copy of the format crate?
-4. **Baseline commit.** Wait for #98 to merge into staging and pin that,
-   or pin `8708a20` now?
+3. **Crosstalk dependency direction.** The adapter (and, for the
+   transition, ct-eval's golden exporter) depends on `a2a-bench-format`
+   by a pinned git revision. Recommended over mirroring the structs in
+   crosstalk, which would drift. Acceptable?
+4. **Baseline commit.** Recommended: staging after #105 and #98 land.
+   Or pin now and re-baseline later?
