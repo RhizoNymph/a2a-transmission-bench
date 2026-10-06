@@ -11,7 +11,8 @@ scores its predictions and diffs exports or predictions for parity. Design:
 - `export`: dispatch to each converter crate's `source(...)` with its
   `Options` built from ct-eval's flags and defaults; `corpus::export`; the
   source digest of the files read; converter version and bench commit;
-  source revision detection and pinning; dev and holdout splits; the
+  source revision detection (HF snapshot, HF `--local-dir` metadata, git
+  HEAD, else `unknown`) and pinning; dev and holdout splits; the
   holdout commitment file. demo-swarm through its own entry point.
 - `validate`: every format check over an export (or an input view) and,
   optionally, a predictions file. Counts only.
@@ -21,7 +22,11 @@ scores its predictions and diffs exports or predictions for parity. Design:
 - `score`: the scorer with the bench's resource canonicaliser, gates,
   `report.json` / `report.txt`, exit 2 on a failed gate.
 - `diff`: two exports or two predictions files, world by world and row by
-  row, for parity stages P1–P5.
+  row, for parity stages P1–P5. With `--normalize-ids`, predictions'
+  detector agents are named by the exchanges they hold and transmissions
+  compared without ids (P3).
+- Revision spelling: a directory with no revision is `unknown`, as in
+  crosstalk's golden export.
 
 ## Non-scope
 
@@ -43,8 +48,9 @@ a2a-bench export --dataset <id> --out <dir> [--root <data root>] [--dataset-dir 
                  [--config datasets.toml] [--splits <dir>] [--version N]
                  [--split dev|holdout --release <detector>@<tag>] [--allow-revision]
                  [dataset flags…]
-a2a-bench export --dataset demo-swarm --inputs <dir> --truth <truth.jsonl> --out <dir>
+a2a-bench export --dataset demo-swarm --inputs <capture dir> --truth <truth.jsonl> --out <dir>
                  [--run-lead-ms N] [--run-slack-ms N]
+                 (capture dir: messages.jsonl, exchanges.jsonl, manifest.json)
 a2a-bench validate <export dir> [--predictions <file>]
 a2a-bench input-view <export dir> <dest>
 a2a-bench run --export <dir> --detector-cmd "<program> [args…]" --out <dir>
@@ -89,14 +95,17 @@ times and record no pace.
 export
   --version ≠ converter VERSION ─▶ refused
   --split/--release: dev needs none, holdout needs <detector>@<tag> (Release)
-  demo-swarm ─▶ Inputs {root: deepest dir holding inputs and truth, truth, messages, exchanges}
-             ─▶ demo_swarm::write_export(…, converter, source path = --inputs) (revision = run id)
+  demo-swarm ─▶ Inputs {root: deepest dir holding inputs and truth, truth, messages, exchanges, manifest}
+             ─▶ demo_swarm::write_export(…, bench converter): manifest = the capture's manifest.json
+                (source, converter, selection, revision = run id) + labels; bench provenance in diagnostics.json
   holdout ─▶ --out outside any git repository (enclosing_repository), else refused
   datasets.toml (--config, else the repo's, else DEFAULT) ─▶ data root (--root overrides)
   dataset dir = --dataset-dir, else root / datasets.<id>.path; source.path = that path as configured
   source_revision(dir, data root): HF snapshots/<hash> of the resolved path
+                                   │ HF local dir: first line (commit) of every .cache/huggingface/download/**/*.metadata
+                                   │   one commit ─▶ it; several ─▶ "mixed" + warn; lines not a 40-hex commit skipped
                                    │ git HEAD of the enclosing work tree, unless it is at or above the data root
-                                   │ "unversioned"
+                                   │ "unknown"
   check_pin(datasets.<id>.revision, actual, --allow-revision): differs ─▶ refused (or warn + record actual)
   Selection::dev(splits, id, n) (Unsplit without a list) | Selection::holdout(splits, id, n, release)
   datasets::export
@@ -134,10 +143,17 @@ diff
                                 ─▶ messages, exchanges, labels (when both have them)
   both files ─▶ predictions
   per file: headers ─▶ JSON paths; worlds matched by key in lockstep (unmatched held until their pair comes)
+    predictions header paths under /detector (name, version, variant, config_digest) ─▶ Tally.header
+      (listed as "header differences", never counted: they do not make the files differ)
     world rows compared; rows keyed (kind, id | exchange | agent), compared as JSON text
-    --normalize-ids: predicted transmissions keyed by the digest of the row without its id
+    --normalize-ids, per world:
+      agents::canonicalize: each attributed agent ─▶ "~<smallest exchange id>" (exchanges sorted),
+        renamed in attribution, unattributed, matches[].from/to, co_access[].from/to;
+        an agent with no attribution row keeps its name
+      predicted transmissions keyed by the digest of the row without its id
+      row order within a world not compared
     only in a / only in b / changed / row order / world order
-  ─▶ Tally {counts, first N (change, file, world, kind, id)}
+  ─▶ Tally {counts, header paths, first N (change, file, world, kind, id)}
 ```
 
 ## Files
@@ -150,7 +166,7 @@ diff
 | `src/args.rs` | the clap command line | `Cli`, `Command` |
 | `src/repo.rs` | the checkout's paths and identity | `BENCH_GIT`, `CONVERTER_VERSION`, `root`, `datasets_config`, `splits_dir`, `converter` |
 | `src/canon.rs` | the scorer's seam filled with `a2a_bench_resource::canonicalize` | `ResourceCanon` |
-| `src/revision.rs` | a dataset dir's revision, the pin | `Revision`, `UNVERSIONED`, `source_revision`, `check_pin`, `Pin`, `RevisionError` |
+| `src/revision.rs` | a dataset dir's revision (HF snapshot, HF local dir, git, unknown), the pin | `Revision` (`HfSnapshot`, `HfLocalDir`, `Mixed`, `Git`, `Unknown`), `UNKNOWN`, `MIXED`, `HF_DOWNLOAD_CACHE`, `source_revision`, `check_pin`, `Pin`, `RevisionError` |
 | `src/holdout.rs` | commitment, commit file, release and repository rules | `COMMIT_CONTEXT`, `commitment`, `commit_path`, `record_or_check`, `Committed`, `outside_repository`, `run_release`, `tagged_detector`, `HoldoutError` |
 | `src/safe.rs` | error text without dataset text | `read_error` |
 | `src/datasets/mod.rs` | the datasets | `DatasetName` (`id`, `version`, `paced`) |
@@ -163,12 +179,14 @@ diff
 | `src/commands/score.rs` | `score` | `ScoreArgs`, `ScoreRequest`, `score`, `detector_of`, `ScoreError`, `NO_EXAMPLES_DATASET` |
 | `src/commands/diff/mod.rs` | `diff`: entry, manifests and headers, report | `DiffArgs`, `diff`, `Tally` (`render`, `equal`), `Difference`, `Change`, `DiffError`, `DEFAULT_FIRST` |
 | `src/commands/diff/rows.rs` | one file's worlds and rows | (internal) `file`, `json_paths` |
+| `src/commands/diff/agents.rs` | `--normalize-ids`: detector agents named by their smallest exchange | (internal) `canonicalize` |
 | `src/bin/a2a-bench/main.rs` | parsing, printing, exit codes, logging (anyhow only here) | |
 | `tests/common/mod.rs` | the binaries (`a2a-reference` found beside `a2a-bench`, built with `$CARGO` if missing), fixtures, scratch dirs inside and outside git | |
 | `tests/e2e.rs` | export → validate → run → score → gates on SALT; reruns byte-identical; input view; tampering; diff; every fixture converter; flags; pins | |
 | `tests/holdout.rs` | holdout refusals, commitment, release runs, aggregate reports | |
 | `tests/canon.rs` | channel resources differing only in canonical form align | |
-| `tests/units.rs` | revisions (HF symlink, git guard), pins, commitment, flags, names | |
+| `tests/units.rs` | revisions (HF symlink, HF local dir common and mixed, git guard, unknown), pins, commitment, flags, names |
+| `tests/diff_agents.rs` | `diff --normalize-ids`: same split under other names diffs empty, another split differs, header-only differences reported apart | |
 
 ## Invariants and constraints
 
@@ -181,9 +199,10 @@ diff
   byte-identical directories (tested). The manifest's source digest covers
   exactly the files the converter read (`files_read`), relative to the
   dataset dir; `converter.git` is the build's commit.
-- **Revisions.** HF snapshot hash (from the resolved path), else the git
-  HEAD of the enclosing work tree when it is below the data root, else
-  `unversioned`. A pinned revision that differs refuses the export without
+- **Revisions.** HF snapshot hash (from the resolved path), else the
+  commit an `hf download --local-dir` tree's metadata files share (`mixed`,
+  with a warning, when they disagree), else the git HEAD of the enclosing
+  work tree when it is below the data root, else `unknown`. A pinned revision that differs refuses the export without
   `--allow-revision`; the manifest always records the actual revision.
 - **Holdout (design §9.2).** Only `--split holdout --release
   <detector>@<tag>` exports it; never inside a git repository; needs a dev
@@ -194,6 +213,11 @@ diff
   equal to the export's release, a detector whose header `version` is the
   tag, and an output outside any git repository, and write an aggregate
   report (`Disclosure::Holdout`). A dev export refuses `--holdout-release`.
+- **`diff --normalize-ids` names agents by exchange sets.** Exchange sets
+  are disjoint within a world, so `~<smallest exchange>` is unique; two
+  detectors that split exchanges into agents identically diff empty
+  whatever their agent and transmission ids. Detector header fields are
+  reported, never counted.
 - **The input view never holds `labels.jsonl`** (built by
   `corpus::input_view`, checked again by `run`).
 - **The detector contract.** `<program> --input <dir> --output <file>`
@@ -213,9 +237,9 @@ pins), outputs under `target/smoke/`. Counts only.
 
 | Selection | Worlds | Exchanges | Label rows | Transmissions / controls | Revision | Export time | Validate |
 | --- | ---: | ---: | ---: | --- | --- | ---: | --- |
-| `salt --limit 8` | 8 | 1,184 | 2,827 | 200 / 1,443 | unversioned | 3.3 s | valid |
+| `salt --limit 8` | 8 | 1,184 | 2,827 | 200 / 1,443 | unknown (now HF local dir `2eba8f37…`) | 3.3 s | valid |
 | `agentdojo --limit 10` | 10 | 48 | 72 | 8 / 16 | git `089ed46` | 10.4 s | valid |
-| `collusion-wiki --demo` | 5 | 156 | 353 | 134 / 63 | unversioned | 0.8 s | valid |
+| `collusion-wiki --demo` | 5 | 156 | 353 | 134 / 63 | unknown | 0.8 s | valid |
 
 The SALT and wiki counts equal the converters' ct-eval comparisons
 (dataset-salt.md `--limit 8`; dataset-wiki.md `--demo`: 5 worlds, 33
@@ -234,3 +258,15 @@ The reference gates were calibrated on SALT `--limit 265` and full
 AgentDojo selections, so small selections are expected to miss them.
 Scoring the SALT predictions again with `score` gives a byte-identical
 `report.json`, and `validate --predictions` passes on each run.
+
+## demo-swarm parity on node0's saved runs (2026-10-06, P7)
+
+Captures and predictions from `ct-bench-detect from-export`, truth from
+the runs, `score --gates gates/crosstalk-gateway-export.toml --examples
+0`. The export's input view is the capture's manifest, so the predictions'
+`manifest_digest` matches and they score; `validate --predictions` passes.
+
+| Run | Recall | Precision | FP / 1k exchanges | Gates |
+| --- | --- | --- | --- | --- |
+| `20261006T020835Z` (headline) | 1.000 (55 / 55) | 1.000 (55 correct, 0 false) | 0.0 | 5 pass, exit 0 |
+| `20261006T021639Z` (boilerplate) | 1.000 (50 / 50) | 0.883 (166 correct, 22 false) | 89.1 | 3 pass, exit 0 |

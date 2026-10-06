@@ -44,12 +44,19 @@ pub enum PredictionError {
     },
     #[error("transmission {0} appears twice")]
     DuplicateTransmission(TransmissionRef),
+    #[error(
+        "transmission {transmission}: matches are not sorted by read_at, or co-access by (read_at, write_at)"
+    )]
+    Unsorted { transmission: TransmissionRef },
 }
 
 /// Checks `predictions` against `inputs`: attributions name world exchanges,
 /// each exchange at most once; every agent evidence names is attributed or
 /// declared unattributed; every location resolves and sits in the exchange
-/// its row names.
+/// its row names; a transmission's matches are sorted by `read_at` and its
+/// co-accesses by `(read_at, write_at)` (non-decreasing, by `Location`'s
+/// order). Order is semantic: the quality row takes the carrier of the
+/// first match of the strongest class.
 pub fn check_predictions(
     inputs: &WorldInputs,
     predictions: &[Prediction],
@@ -95,6 +102,18 @@ pub fn check_predictions(
         let id = &fields.id;
         if !ids.insert(id) {
             return Err(PredictionError::DuplicateTransmission(id.clone()));
+        }
+        let sorted = fields
+            .matches
+            .windows(2)
+            .all(|pair| pair[0].read_at <= pair[1].read_at)
+            && fields.co_access.windows(2).all(|pair| {
+                (pair[0].read_at, pair[0].write_at) <= (pair[1].read_at, pair[1].write_at)
+            });
+        if !sorted {
+            return Err(PredictionError::Unsorted {
+                transmission: id.clone(),
+            });
         }
         let known = |agent: &DetectorAgent| {
             if agents.contains(agent) {

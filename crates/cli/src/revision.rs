@@ -3,36 +3,58 @@
 //!
 //! - **HF snapshot**: the directory's resolved path (symlinks followed)
 //!   holds `snapshots/<hash>`; the revision is `<hash>`.
+//! - **HF local dir**: the directory was written by `hf download
+//!   --local-dir`, which leaves `.cache/huggingface/download/**/*.metadata`
+//!   (first line the commit, then the etag and a timestamp). The revision is
+//!   the commit they share; when they disagree it is [`MIXED`] (and a
+//!   warning). A metadata file whose first line is not a commit is skipped.
 //! - **git clone**: the directory is in a git work tree whose `HEAD`
 //!   resolves; the revision is that commit. A work tree at or above the data
 //!   root is not a dataset's clone (the root may sit in an unrelated
 //!   repository) and is ignored.
-//! - otherwise [`UNVERSIONED`].
+//! - otherwise [`UNKNOWN`] (the spelling crosstalk's golden export uses).
 //!
 //! A pinned revision that differs from the actual one refuses the export
 //! unless the caller allows it; the actual revision is what the manifest
 //! records either way.
 
+use std::collections::BTreeSet;
 use std::fmt;
+use std::fs::File;
+use std::io::{BufRead, BufReader, Read};
 use std::path::{Component, Path, PathBuf};
 use std::process::Command;
 
-/// The revision of a directory that is neither an HF snapshot nor a clone.
-pub const UNVERSIONED: &str = "unversioned";
+/// The revision of a directory that is neither an HF download nor a clone.
+pub const UNKNOWN: &str = "unknown";
+
+/// The revision of an HF local dir whose files come from several commits.
+pub const MIXED: &str = "mixed";
+
+/// Where `hf download --local-dir` keeps its per-file metadata.
+pub const HF_DOWNLOAD_CACHE: &str = ".cache/huggingface/download";
 
 /// Where a dataset directory's revision came from.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Revision {
     HfSnapshot(String),
+    /// The commit every metadata file of an HF local dir names.
+    HfLocalDir(String),
+    /// An HF local dir whose metadata files name these commits (sorted,
+    /// two or more).
+    Mixed {
+        commits: Vec<String>,
+    },
     Git(String),
-    Unversioned,
+    Unknown,
 }
 
 impl Revision {
     pub fn as_str(&self) -> &str {
         match self {
-            Self::HfSnapshot(hash) | Self::Git(hash) => hash,
-            Self::Unversioned => UNVERSIONED,
+            Self::HfSnapshot(hash) | Self::HfLocalDir(hash) | Self::Git(hash) => hash,
+            Self::Mixed { .. } => MIXED,
+            Self::Unknown => UNKNOWN,
         }
     }
 }
@@ -54,6 +76,11 @@ pub enum RevisionError {
         "datasets.toml pins revision {pinned:?}, the dataset is at {actual:?}; pass --allow-revision to export it anyway"
     )]
     Mismatch { pinned: String, actual: String },
+    #[error("reading the HF download metadata {path}: {source}")]
+    Metadata {
+        path: PathBuf,
+        source: std::io::Error,
+    },
 }
 
 /// How the actual revision compares with the pin.
@@ -82,8 +109,85 @@ pub fn source_revision(
     if let Some(hash) = hf_snapshot(&resolved) {
         return Ok(Revision::HfSnapshot(hash));
     }
+    if let Some(revision) = hf_local_dir(&resolved)? {
+        if let Revision::Mixed { commits } = &revision {
+            tracing::warn!(dir = %resolved.display(), commits = ?commits, "HF download metadata names several commits; revision recorded as mixed");
+        }
+        return Ok(revision);
+    }
     let root = data_root.and_then(|root| root.canonicalize().ok());
-    Ok(git_head(&resolved, root.as_deref()).map_or(Revision::Unversioned, Revision::Git))
+    Ok(git_head(&resolved, root.as_deref()).map_or(Revision::Unknown, Revision::Git))
+}
+
+/// The commits named by an HF local dir's metadata files: `None` when
+/// there is no download cache or no file in it names a commit.
+fn hf_local_dir(dir: &Path) -> Result<Option<Revision>, RevisionError> {
+    let cache = dir.join(HF_DOWNLOAD_CACHE);
+    if !cache.is_dir() {
+        return Ok(None);
+    }
+    let mut commits = BTreeSet::new();
+    let mut pending = vec![cache];
+    while let Some(dir) = pending.pop() {
+        let entries = std::fs::read_dir(&dir).map_err(|source| RevisionError::Metadata {
+            path: dir.clone(),
+            source,
+        })?;
+        for entry in entries {
+            let entry = entry.map_err(|source| RevisionError::Metadata {
+                path: dir.clone(),
+                source,
+            })?;
+            let path = entry.path();
+            let kind = entry
+                .file_type()
+                .map_err(|source| RevisionError::Metadata {
+                    path: path.clone(),
+                    source,
+                })?;
+            if kind.is_dir() {
+                pending.push(path);
+            } else if kind.is_file() && path.extension().is_some_and(|ext| ext == "metadata") {
+                match metadata_commit(&path)? {
+                    Some(commit) => {
+                        commits.insert(commit);
+                    }
+                    None => {
+                        tracing::debug!(path = %path.display(), "HF download metadata names no commit; skipped");
+                    }
+                }
+            }
+        }
+    }
+    let mut commits: Vec<String> = commits.into_iter().collect();
+    Ok(match commits.len() {
+        0 => None,
+        1 => commits.pop().map(Revision::HfLocalDir),
+        _ => Some(Revision::Mixed { commits }),
+    })
+}
+
+/// The commit on the first line of a metadata file, if it is one (40
+/// lowercase hex digits).
+fn metadata_commit(path: &Path) -> Result<Option<String>, RevisionError> {
+    let file = File::open(path).map_err(|source| RevisionError::Metadata {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    let mut line = String::new();
+    BufReader::new(file)
+        .take(256)
+        .read_line(&mut line)
+        .map_err(|source| RevisionError::Metadata {
+            path: path.to_path_buf(),
+            source,
+        })?;
+    let line = line.trim_end();
+    let is_commit = line.len() == 40
+        && line
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte));
+    Ok(is_commit.then(|| line.to_owned()))
 }
 
 /// The `<hash>` of the last `snapshots/<hash>` in `path`.

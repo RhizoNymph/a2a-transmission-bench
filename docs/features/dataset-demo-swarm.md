@@ -25,8 +25,9 @@ is a legitimate label source (design §5.3).
   checks it, and the typed join-diagnostics table, written as
   `diagnostics.json` beside the labels.
 - A `TraceSource` of the one labelled world, and `write_export`, which
-  completes the export (the corpus export writer, then
-  `diagnostics.json`).
+  completes the export (the corpus export writer, the capture's manifest
+  kept as the export's input view, then `diagnostics.json` with the
+  bench's labelling provenance).
 
 ## Non-scope
 
@@ -47,6 +48,7 @@ is a legitimate label source (design §5.3).
 <run>/truth.jsonl       the swarm's ground truth (v2)
 <run>/messages.jsonl    the capture: bench messages, one world
 <run>/exchanges.jsonl   the capture: bench exchanges, one world
+<run>/manifest.json     the capture: its manifest, an input view (no labels digest, counts or notes)
 ```
 
 What the capture must be (the contract with crosstalk's adapter):
@@ -66,11 +68,20 @@ What the capture must be (the contract with crosstalk's adapter):
   as canonical JSON (the format's normalisation rules), so a result's part
   text is exactly the page body the truth hashes.
 
+- `manifest.json` is the input view the adapter's predictions name
+  (`Manifest::digest`): dataset the truth's, version `@1`, exactly the
+  truth's world, `selection` equal to the margins used here
+  (`run_lead_ms`, `run_slack_ms`), and file digests and exchange count
+  that are the capture's own.
+
 The capture may hold more than the run: exchanges outside the run window
 (an earlier run reusing the seed's session ids), exchanges of sessions no
 truth row names, and exchanges without a session. None of them is
 exported; they are counted (`capture` in `diagnostics.json`), and the
-outside ones of truth sessions reported.
+outside ones of truth sessions reported. Such a capture labels, but
+`write_export` refuses it (`NotTheCapture`): its export's input view would
+not be the capture's manifest, so the capture's predictions could not be
+scored against it. The adapter's captures hold exactly the run.
 
 ## Data and control flow
 
@@ -102,12 +113,20 @@ DemoSwarmSource::open(Inputs, Options)
   FilesRead: truth, messages, exchanges
 
 TraceSource::worlds() ──▶ the one World
-write_export(inputs, out_dir, options, converter, source_path)
-  ManifestInfo {dataset, version 1, source {path, revision = header.run, digest},
-                selection = Options::settings(), pace = {}}
+write_export(inputs, out_dir, options, bench converter)
+  DemoSwarmSource::open (above)
+  capture_manifest::read(inputs.manifest) ── missing or not a manifest ─▶ CaptureManifest {Read}
+  capture_manifest::check: an input view; dataset = truth's; version 1; worlds = [truth world];
+                           selection = Options::settings()          ─ else ─▶ CaptureManifest {…}
+  Labelling {bench: converter, truth {path as given, BLAKE3 of its bytes}}
+  ManifestInfo = the capture's {dataset, version, source, converter, selection, pace}
   corpus::export(source, out_dir, info, Unsplit) ──▶ messages, exchanges, labels,
                                                     manifest (world notes = diagnostics by failure)
-  write_diagnostics ──▶ diagnostics.json
+  manifest.selection, split = the capture's (drops the split's split_list)
+  capture_manifest::differences(manifest.input_view(), capture)
+      any ─▶ manifest.json removed, NotTheCapture {top-level paths}
+  write_manifest ──▶ manifest.json (input view = the capture's; same digest)
+  write_diagnostics(…, labelling) ──▶ diagnostics.json {labelling, report…}
 ```
 
 ### The join (per row)
@@ -159,6 +178,7 @@ exchange is kept without it (`invalid_label`, writer side,
 | `src/truth_file.rs` | reading a truth file with line numbers | `read`, `TruthFile`, `Row`, `Numbered`, `DeliveryKind`, `TruthFileError` |
 | `src/window.rs` | the run window and the split | `RunWindow` (`of`, `contains`), `Margins`, `DEFAULT_LEAD_MS`, `DEFAULT_SLACK_MS`, `truth_sessions`, `split`, `Split`, `Reused` |
 | `src/capture.rs` | reading and checking the adapter's files | `read`, `Capture`, `CaptureError` |
+| `src/capture_manifest.rs` | the capture's manifest: read, checked, compared with the export's input view | `CAPTURE_MANIFEST_FILE`, `read`, `check`, `differences`, `CaptureManifestError` |
 | `src/sessions.rs` | exchanges by session, ordinals | `Sessions` (`index`, `get`), `Session` (`at`, `ordinal`) |
 | `src/locate.rs` | tool results and `PUT` calls in exchanges | `tool_result`, `write_call`, `FoundResult`, `FoundCall`, `LocateError`, `MessageIndex` |
 | `src/resolve/mod.rs` | agents, claims, the row loop | `AgentIndex`, `ResolveCounts` |
@@ -167,7 +187,7 @@ exchange is kept without it (`invalid_label`, writer side,
 | `src/resolve/check.rs` | one label against the world | (crate-internal `Checker`) |
 | `src/diagnostics.rs` | the typed join-diagnostics table | `Diagnostic`, `Diagnostics` (`table`, `by_failure`, `render`, `named`), `DiagnosticCount`, `JoinFailure`, `RowKind`, `Side`, `Effect` |
 | `src/label.rs` | labelling one capture | `label`, `Labelled` (`report`), `CaptureCounts`, `DiagnosticsReport`, `LabelError` |
-| `src/source.rs` | trace source, export, diagnostics file | `DemoSwarmSource` (`open`, `labelled`, `into_labelled`, `files_read`, `run`), `Inputs` (`in_dir`), `write_export`, `write_diagnostics`, `read_truth`, `DIAGNOSTICS_FILE`, `Error` |
+| `src/source.rs` | trace source, export, diagnostics file | `DemoSwarmSource` (`open`, `labelled`, `into_labelled`, `files_read`, `run`), `Inputs` (`in_dir`; `truth`, `messages`, `exchanges`, `manifest`), `write_export`, `write_diagnostics`, `Labelling`, `TruthRef`, `read_truth`, `DIAGNOSTICS_FILE`, `Error` |
 | `tests/swarm_truth/` | ported ct-eval tests over a synthetic capture (`fixture.rs`; `truth`, `join`, `window`, `sessions`, `scenario`, `export`) | |
 | `tests/real_truth.rs` | ignored: row counts of a real truth file (`DEMO_SWARM_TRUTH`) | |
 
@@ -176,6 +196,14 @@ exchange is kept without it (`invalid_label`, writer side,
 - **Labels are the truth's.** Nothing a detector computes is used; the
   resource is the bench canonicaliser's `normalized_url`, which is
   parity-tested to equal crosstalk-flow's `url_locator`.
+- **The bench only adds truth.** The export's manifest is the capture's
+  `manifest.json` plus `files.labels` and each world's `labels` and
+  `notes`; its `input_view()` equals the capture's manifest and its
+  `digest()` is the one the capture's predictions name (tested; on the
+  two saved node0 runs `score` accepts the adapter's predictions). Source,
+  converter, selection and pace are the capture's; the bench's own
+  version and commit and the truth file's path and BLAKE3 are in
+  `diagnostics.json` under `labelling`, never in the manifest.
 - **Exchange ids are the gateway's**, carried; exchanges are copied from
   the capture verbatim (client included). A capture holding exactly the
   run gives back its `messages.jsonl` byte for byte.

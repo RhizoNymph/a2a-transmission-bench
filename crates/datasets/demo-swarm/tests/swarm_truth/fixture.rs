@@ -32,18 +32,25 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::path::{Path, PathBuf};
 
-use a2a_bench_dataset_demo_swarm::Inputs;
+use std::collections::BTreeMap;
+
+use a2a_bench_corpus::export::write_manifest;
 use a2a_bench_dataset_demo_swarm::schema::HexDigest;
+use a2a_bench_dataset_demo_swarm::{Inputs, MODEL, Options, VERSION};
+use a2a_bench_format::exchange::{AgentDecl, Driven};
 use a2a_bench_format::exchange::{Client, Exchange, Fidelity, Request, Response, WorldDecl};
 use a2a_bench_format::files::{ExchangeRow, Exchanges, MessageRow, Messages, WorldOnly};
+use a2a_bench_format::ids::{AgentKey, Digest};
 use a2a_bench_format::ids::{DatasetId, ExchangeId, MessageId, SourceRef, WorldKey};
 use a2a_bench_format::json::CanonicalJson;
 use a2a_bench_format::jsonl::{BasicHeader, FileWriter};
+use a2a_bench_format::manifest::{Converter, FileDigests, Manifest, Source, Split, WorldEntry};
 use a2a_bench_format::message::{
     AssistantPart, Body, Message, ResultContent, SystemPart, ToolArguments, ToolCall,
     ToolExecution, ToolOutcome, ToolPart, ToolResult, UserPart,
 };
 use a2a_bench_format::time::Timestamp;
+use a2a_bench_format::version::FORMAT;
 use serde_json::json;
 
 pub const WORLD: &str = "swarm-fixture";
@@ -501,6 +508,48 @@ pub fn write_as(
 
 /// Writes `messages.jsonl` and `exchanges.jsonl` of one world into `dir`,
 /// declaring no agents (the adapter does not know them).
+/// The capture's run id and directory as its manifest records them.
+pub const RUN: &str = "01J00000000000000000000000";
+pub const CAPTURE_PATH: &str = "bench-runs/fixture";
+
+/// The agents the capture declares, as the adapter declares the truth's.
+pub const AGENTS: [&str; 3] = ["a001", "a002", "a003"];
+
+/// The capture's manifest (an input view), as the adapter writes it.
+pub fn capture_manifest(
+    dataset: &DatasetId,
+    world: &WorldKey,
+    exchanges: usize,
+    files: FileDigests,
+) -> Manifest {
+    Manifest {
+        format: FORMAT,
+        dataset: dataset.clone(),
+        dataset_version: VERSION,
+        split: Split::Dev,
+        source: Source {
+            path: CAPTURE_PATH.to_owned(),
+            revision: RUN.to_owned(),
+            digest: Digest::from_bytes([7; 32]),
+        },
+        converter: Converter {
+            version: "ct-bench-detect 0.1.0".to_owned(),
+            git: "fixture".to_owned(),
+        },
+        selection: Options::default().settings(),
+        pace: BTreeMap::new(),
+        worlds: vec![WorldEntry {
+            key: world.clone(),
+            exchanges: exchanges as u64,
+            labels: None,
+            notes: BTreeMap::new(),
+        }],
+        files,
+    }
+}
+
+/// Writes the capture: `messages.jsonl`, `exchanges.jsonl` (declaring
+/// [`AGENTS`]) and `manifest.json`.
 pub fn write_capture(
     dir: &Path,
     dataset: &DatasetId,
@@ -526,7 +575,7 @@ pub fn write_capture(
             .row(&MessageRow::Message(held.clone()))
             .unwrap_or_else(|error| panic!("{error}"));
     }
-    writer.finish().unwrap_or_else(|error| panic!("{error}"));
+    let (_, messages_trailer) = writer.finish().unwrap_or_else(|error| panic!("{error}"));
     let mut writer = FileWriter::<Exchanges, _>::new(
         create("exchanges.jsonl"),
         &BasicHeader::new::<Exchanges>(dataset.clone()),
@@ -535,7 +584,14 @@ pub fn write_capture(
     writer
         .world(&WorldDecl {
             key: world.clone(),
-            agents: Vec::new(),
+            agents: AGENTS
+                .iter()
+                .map(|name| AgentDecl {
+                    key: AgentKey::new(*name).unwrap_or_else(|error| panic!("{error}")),
+                    driven: Driven::Model,
+                    model: Some(MODEL.to_owned()),
+                })
+                .collect(),
         })
         .unwrap_or_else(|error| panic!("{error}"));
     for exchange in exchanges {
@@ -543,5 +599,16 @@ pub fn write_capture(
             .row(&ExchangeRow::Exchange(exchange.clone()))
             .unwrap_or_else(|error| panic!("{error}"));
     }
-    writer.finish().unwrap_or_else(|error| panic!("{error}"));
+    let (_, exchanges_trailer) = writer.finish().unwrap_or_else(|error| panic!("{error}"));
+    let manifest = capture_manifest(
+        dataset,
+        world,
+        exchanges.len(),
+        FileDigests {
+            messages: messages_trailer.digest,
+            exchanges: exchanges_trailer.digest,
+            labels: None,
+        },
+    );
+    write_manifest(dir, &manifest).unwrap_or_else(|error| panic!("{error}"));
 }

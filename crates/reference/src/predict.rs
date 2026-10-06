@@ -5,7 +5,8 @@
 //! INV-519 `flow.quality.strongest-match`): a confirmed transmission's
 //! quality is the strongest class among its content matches, in the order
 //! `exact`, `normalized`, `decoded`, `semantic`, with the carrier of the
-//! first match of that class in stored order.
+//! first match of that class in stored order. Matches are stored sorted
+//! by `read_at` (the format's rule), so that order is the location order.
 
 use a2a_bench_format::ids::{DetectorAgent, Digest, ExchangeId, TransmissionRef};
 use a2a_bench_format::labels::MatchClass;
@@ -66,12 +67,15 @@ pub fn transmission_ref(
     TransmissionRef::new(format!("t:{}", digest.to_hex())).map_err(ReferenceError::TransmissionRef)
 }
 
-/// A confirmed transmission of `matches` (non-empty, in stored order), with
-/// the quality of its strongest match.
+/// A confirmed transmission of `matches` (non-empty), stored sorted by
+/// `read_at` as the format requires (stable, so matches at one location
+/// keep their order), with the quality of its strongest match in that
+/// order.
 pub fn confirmed(
     id: TransmissionRef,
-    matches: Vec<ContentEvidence>,
+    mut matches: Vec<ContentEvidence>,
 ) -> Result<Transmission, ReferenceError> {
+    matches.sort_by_key(|evidence| evidence.read_at);
     let quality = strongest(&matches);
     Ok(Transmission::new(TransmissionFields {
         id,

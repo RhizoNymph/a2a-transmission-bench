@@ -8,8 +8,8 @@ use std::path::Path;
 
 use a2a_bench_corpus::export::read_manifest;
 use a2a_bench_dataset_demo_swarm::{
-    CaptureError, DIAGNOSTICS_FILE, DemoSwarmSource, Error, HEADLINE, Options, VERSION,
-    write_export,
+    CaptureError, CaptureManifestError, DIAGNOSTICS_FILE, DemoSwarmSource, Error, HEADLINE,
+    Options, VERSION, write_export,
 };
 use a2a_bench_format::check::{WorldInputs, check_labels};
 use a2a_bench_format::exchange::Exchange;
@@ -43,14 +43,8 @@ fn exported(name: &str, truth: &[serde_json::Value]) -> (fixture::Written, std::
     std::fs::create_dir_all(&run).unwrap();
     let written = fixture::write(&run, truth);
     let out = dir.join("export");
-    write_export(
-        &written.inputs,
-        &out,
-        &Options::default(),
-        converter(),
-        "bench-runs/fixture",
-    )
-    .expect("the export is written");
+    write_export(&written.inputs, &out, &Options::default(), converter())
+        .expect("the export is written");
     (written, out)
 }
 
@@ -254,4 +248,134 @@ fn the_manifest_notes_the_diagnostics_by_failure() {
     // Both are truth: the input view drops them.
     let view = manifest.input_view();
     assert!(view.worlds[0].notes.is_empty() && view.worlds[0].labels.is_none());
+}
+
+#[test]
+fn the_export_keeps_the_captures_manifest_as_its_input_view() {
+    let (written, out) = exported("export-capture-manifest", &fixture::truth_rows());
+    let capture = read_manifest(&written.dir).unwrap();
+    let manifest = read_manifest(&out).unwrap();
+    assert_eq!(manifest.input_view(), capture);
+    assert_eq!(manifest.digest().unwrap(), capture.digest().unwrap());
+    // The capture's provenance, not the bench's.
+    assert_eq!(manifest.converter, capture.converter);
+    assert_eq!(manifest.source, capture.source);
+    assert_eq!(manifest.selection, capture.selection);
+    assert!(!manifest.selection.contains_key("split_list"));
+    // The bench adds only truth.
+    assert!(manifest.files.labels.is_some());
+    assert!(manifest.worlds[0].labels.is_some());
+}
+
+#[test]
+fn the_diagnostics_record_the_labelling_provenance() {
+    let (written, out) = exported("export-provenance", &fixture::truth_rows());
+    let text = std::fs::read_to_string(out.join(DIAGNOSTICS_FILE)).unwrap();
+    let report: serde_json::Value = serde_json::from_str(&text).unwrap();
+    let labelling = &report["labelling"];
+    assert_eq!(labelling["bench"]["version"], "0.1.0");
+    assert_eq!(labelling["bench"]["git"], "test");
+    let truth = written.dir.join("truth.jsonl");
+    // As the inputs give it: relative to the run directory here.
+    assert_eq!(labelling["truth"]["path"], "truth.jsonl");
+    let digest = blake3::hash(&std::fs::read(&truth).unwrap()).to_hex();
+    assert_eq!(labelling["truth"]["blake3"], digest.as_str());
+}
+
+fn refused(name: &str, damage: impl FnOnce(&Path)) -> Error {
+    let dir = fixture::dir(name);
+    let run = dir.join("run");
+    std::fs::create_dir_all(&run).unwrap();
+    let written = fixture::write(&run, &fixture::truth_rows());
+    damage(&written.dir);
+    write_export(
+        &written.inputs,
+        &dir.join("export"),
+        &Options::default(),
+        converter(),
+    )
+    .expect_err("the export is refused")
+}
+
+#[test]
+fn a_capture_without_a_valid_manifest_is_refused() {
+    let missing = refused("capture-manifest-missing", |dir| {
+        std::fs::remove_file(dir.join("manifest.json")).unwrap();
+    });
+    assert!(
+        matches!(
+            missing,
+            Error::CaptureManifest {
+                problem: CaptureManifestError::Read(_),
+                ..
+            }
+        ),
+        "{missing:?}"
+    );
+    let garbled = refused("capture-manifest-garbled", |dir| {
+        std::fs::write(dir.join("manifest.json"), "{\"format\":").unwrap();
+    });
+    assert!(
+        matches!(
+            garbled,
+            Error::CaptureManifest {
+                problem: CaptureManifestError::Read(_),
+                ..
+            }
+        ),
+        "{garbled:?}"
+    );
+    let edit = |name: &str, change: fn(&mut a2a_bench_format::manifest::Manifest)| {
+        refused(name, |dir| {
+            let mut manifest = read_manifest(dir).unwrap();
+            change(&mut manifest);
+            a2a_bench_corpus::export::write_manifest(dir, &manifest).unwrap();
+        })
+    };
+    let labelled = edit("capture-manifest-labelled", |m| {
+        m.worlds[0].labels = Some(1);
+    });
+    assert!(
+        matches!(
+            labelled,
+            Error::CaptureManifest {
+                problem: CaptureManifestError::NotAnInputView,
+                ..
+            }
+        ),
+        "{labelled:?}"
+    );
+    let other_world = edit("capture-manifest-world", |m| {
+        m.worlds[0].key = a2a_bench_format::ids::WorldKey::new("swarm-other").unwrap();
+    });
+    assert!(
+        matches!(
+            other_world,
+            Error::CaptureManifest {
+                problem: CaptureManifestError::Worlds,
+                ..
+            }
+        ),
+        "{other_world:?}"
+    );
+    let other_selection = edit("capture-manifest-selection", |m| {
+        m.selection
+            .insert("run_lead_ms".to_owned(), Setting::Int(1));
+    });
+    assert!(
+        matches!(
+            other_selection,
+            Error::CaptureManifest {
+                problem: CaptureManifestError::Selection,
+                ..
+            }
+        ),
+        "{other_selection:?}"
+    );
+    // A manifest whose file digests are not the capture's files: the
+    // export's input view would differ from it.
+    let stale = edit("capture-manifest-stale", |m| {
+        m.files.exchanges = a2a_bench_format::ids::Digest::from_bytes([9; 32]);
+    });
+    assert!(matches!(stale, Error::NotTheCapture { .. }), "{stale:?}");
 }

@@ -290,9 +290,10 @@ fn resolve(path: &Path) -> Result<PathBuf, DatasetError> {
 }
 
 /// Exports a labelled demo-swarm run: the capture in `flags.inputs`
-/// (`messages.jsonl`, `exchanges.jsonl`) and `flags.truth`. The source
-/// digest is taken relative to the deepest directory holding both; the
-/// revision is the swarm run id.
+/// (`messages.jsonl`, `exchanges.jsonl`, `manifest.json`) and
+/// `flags.truth`. The manifest is the capture's plus truth (source,
+/// converter, selection are the capture's); the bench's version and the
+/// truth's path and BLAKE3 go to `diagnostics.json`.
 pub fn export_demo_swarm(flags: &DatasetFlags, out: &Path) -> Result<ExportSummary, DatasetError> {
     flags.check(DatasetName::DemoSwarm)?;
     let missing = |flag| {
@@ -311,15 +312,14 @@ pub fn export_demo_swarm(flags: &DatasetFlags, out: &Path) -> Result<ExportSumma
         truth: truth_abs,
         messages: inputs_abs.join("messages.jsonl"),
         exchanges: inputs_abs.join("exchanges.jsonl"),
+        manifest: inputs_abs.join(demo_swarm::CAPTURE_MANIFEST_FILE),
     };
     let defaults = demo_swarm::Options::default();
     let options = demo_swarm::Options {
         run_lead_ms: flags.run_lead_ms.unwrap_or(defaults.run_lead_ms),
         run_slack_ms: flags.run_slack_ms.unwrap_or(defaults.run_slack_ms),
     };
-    let source_path = inputs_dir.display().to_string();
-    let exported =
-        demo_swarm::write_export(&inputs, out, &options, repo::converter(), &source_path)?;
+    let exported = demo_swarm::write_export(&inputs, out, &options, repo::converter())?;
     Ok(ExportSummary {
         manifest: exported.manifest,
         failed: Vec::new(),

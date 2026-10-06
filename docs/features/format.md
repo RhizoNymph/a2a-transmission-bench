@@ -84,6 +84,13 @@ Every JSONL file is:
   `PredictedRoute`: a channel names **every** resource the detector's channel
   holds, and a channel label aligns when one of them equals the label's
   resource after canonicalisation.
+  Evidence order is normative: a transmission's `matches` are sorted by
+  `read_at` and its `co_access` by `(read_at, write_at)`, non-decreasing in
+  `Location`'s order (exchange, message, part, range); `check_predictions`
+  refuses anything else as `PredictionError::Unsorted`. Order is semantic,
+  not cosmetic: the quality row takes the carrier of the first match of
+  the strongest class, so two files holding the same matches in another
+  order could report another carrier.
 - **resources**: `repository`, `repo_file` (absolute path), `thread`
   (`issue` covers GitHub issues and pull requests, one number space;
   `merge_request`), `collection`, `url`, `file {host?, path}`,
@@ -207,7 +214,9 @@ It identifies exactly what was read; the dataset's own revision is
   one declared model-driven agent, each agent's exchanges strictly
   increasing; locations resolve on character boundaries; label text equals
   the text at its location; predictions attribute each exchange at most
-  once and name only attributed or declared-unattributed agents.
+  once, name only attributed or declared-unattributed agents, and store
+  each transmission's matches sorted by `read_at` and co-accesses by
+  `(read_at, write_at)`.
 - **Determinism.** Writing the same rows gives the same bytes; every map
   that reaches output is ordered.
 - **Versioning.** Changing part text, canonical JSON, id derivation, a

@@ -254,16 +254,26 @@ is on a channel; `needs` agrees with `tier` (`MatchNeed::out_of_reach`).
 
 ### 3.6 `predictions.jsonl`: what a detector writes
 
+The row shapes are those of `crates/format/src/predictions.rs` (see
+[../features/format.md](../features/format.md)). Rows carry no `world`
+field (they sit in their world's section) and no `evidence` list: content
+matches and co-accesses are separate lists.
+
 ```json
-{"kind":"header","format":"a2a-bench/1","detector":{"name":"crosstalk-live","version":"<git sha>","variant":"forwarding-off","config_digest":"…"},"export":{"dataset":"salt","manifest_digest":"…"}}
-{"kind":"world","key":"trace-0007","status":"scored"}
-{"kind":"attribution","world":"trace-0007","agent":"d:01J…","exchanges":["01J…","01J…"]}
-{"kind":"transmission","world":"trace-0007","id":"t:…","state":"confirmed","quality":{"class":"exact","carrier":"user_turn"},
- "evidence":[
-   {"type":"content","from":"d:01J…","reader_exchange":"01J…","read_at":{…location…},"origin_at":{…location…},"class":"decoded","codecs":["json_string"],"carrier":"user_turn","route":"direct"},
-   {"type":"co_access","from":"d:01J…","write_exchange":"01J…","write_at":{…},"reader_exchange":"01J…","read_at":{…},"resource":{…}}
+{"kind":"header","format":"a2a-bench/1","file":"predictions","dataset":"salt","detector":{"name":"crosstalk-live","version":"<git sha>","variant":"forwarding-off","config_digest":"…"},"manifest_digest":"…"}
+{"kind":"world","key":"trace-0007","status":{"status":"scored"}}
+{"kind":"attribution","agent":"d:01J…","exchanges":["01J…","01J…"]}
+{"kind":"unattributed","agent":"d:01K…"}
+{"kind":"transmission","id":"t:…","state":"confirmed","quality":{"kind":"content","class":"decoded","carrier":"user_turn"},
+ "matches":[
+   {"from":"d:01J…","to":"d:01K…","reader_exchange":"01J…","read_at":{"exchange":"01J…","message":"…","part":0,"range":{"start":0,"end":42}},
+    "origin_at":{…location…},"match":{"class":"decoded","codecs":["json_string"]},"carrier":"user_turn","route":{"kind":"direct"}},
+   {"from":"d:01J…","to":"d:01K…","reader_exchange":"01J…","read_at":{…},"match":{"class":"exact"},"carrier":"tool_result",
+    "route":{"kind":"channel","resources":[{"repo_file":{"repository":{…},"path":"/notes.md"}}]}}
  ]}
-{"kind":"trailer","worlds":1,"transmissions":1,"digest":"…"}
+{"kind":"transmission","id":"t:…","state":"suspected","quality":{"kind":"suspected"},
+ "co_access":[{"from":"d:01J…","to":"d:01K…","write_exchange":"01J…","write_at":{…},"reader_exchange":"01J…","read_at":{…},"resource":{…}}]}
+{"kind":"trailer","worlds":1,"rows":4,"digest":"…"}
 ```
 
 - `attribution` rows give the detector's agents as sets of exchanges.
@@ -298,10 +308,13 @@ is on a channel; `needs` agrees with `tier` (`MatchNeed::out_of_reach`).
 - Content evidence carries the reader location (required) and the
   origin location (optional; the gateway export path does not know it,
   so no control that names an origin applies there, as today).
-- `route.channel` and `co_access.resource` are a bench `Resource` (§6.1),
+- A match's `route` is a `PredictedRoute` (`channel {resources}`,
+  `delegation {direction}`, `direct`, `unobserved`); a channel names every
+  resource the detector's channel holds.
+- Each channel resource and `co_access.resource` are a bench `Resource` (§6.1),
   which the scorer canonicalises again before comparing. A detector that
   writes a raw URL gets it canonicalised by the bench, not by itself.
-- `world.status` is `scored`, `no_consumers` (crosstalk's
+- `world.status` is `scored`, `no_consumers {ingested}` (crosstalk's
   `PipelineDetector`: counted unscored, as today) or `failed {reason}`.
 - The trailer's digest makes a truncated file an error, not a smaller
   score.
@@ -488,8 +501,16 @@ The converter (schema, run window, session+turn join, tool_use_id and
 BLAKE3 cross-checks) moves to the bench. Its inputs change: instead of the
 gateway's exchange log and blob directory it reads bench `exchanges.jsonl`
 and `messages.jsonl`, which `ct-bench-detect from-export` writes with the
-gateway's minted ids and the `session` and turn ordinal in `client`. The
+gateway's minted ids and the `session` and turn ordinal in `client`.
+The capture also holds its `manifest.json` (an input view), which the
+adapter's predictions name; the bench only adds truth, so the completed
+export's input view is exactly that manifest and the bench's own
+labelling provenance goes to `diagnostics.json`. The
 URL canonicalisation in `resolve.rs` uses the bench canonicaliser.
+demo-swarm labels key groups of two or more agents as `agent_cluster`
+rows (a smaller group is not a cluster and is reported as
+`key_group_not_a_cluster`). Truth rows the format rejects are
+not written; each is reported as an `invalid_label` diagnostic.
 
 ### 5.4 Gates
 
@@ -508,7 +529,7 @@ score is skipped). A gate change is a bench PR, reviewed in the bench.
 
 ```json
 {"repository":{"host":"github.com","owner":"org","name":"repo"}}
-{"repo_file":{"repository":{…},"path":"src/lib.rs"}}
+{"repo_file":{"repository":{…},"path":"/src/lib.rs"}}
 {"thread":{"repository":{…},"kind":"issue","number":12}}
 {"collection":{"repository":{…},"kind":"pulls"}}
 {"url":"https://example.com/a?b=1&c=2"}
@@ -588,11 +609,17 @@ part order (§3.3). It turns every later stage into a byte diff.
 | --- | --- | --- |
 | P1 format | bench canonical JSON and part text vs spec's, over every message of every golden export | equal |
 | P2 scorer | `a2a-bench score` on golden labels + golden predictions vs ct-eval's `report.json` | equal counts in every row, equal gates outcome |
-| P3 reference | `a2a-reference` on the golden input view vs golden reference predictions | byte-identical predictions |
+| P3 reference | `a2a-reference` on the golden input view vs golden reference predictions | `diff --normalize-ids` empty, equal score counts |
 | P4 converters | `a2a-bench export` vs golden export, per dataset (AI Village at `@1`) | byte-identical files |
 | P5 adapter | `ct-bench-detect` on the bench export vs golden live predictions | byte-identical predictions |
 | P6 end to end | `a2a-bench run` with `ct-bench-detect` vs the baseline table | equal numbers |
 | P7 node0 | `ct-bench-detect from-export` on the two saved bench runs, then `a2a-bench score` | 1.000/1.000 and 1.000/0.883, 89.1 FP/1k |
+
+P3 cannot be byte-identical: the golden reference predictions use their
+own transmission ids and credential-as-agent attribution, so P3 compares
+with `a2a-bench diff --normalize-ids` (detector agents named by the set of
+exchanges they hold, transmissions without ids) and requires equal score
+counts besides.
 
 P2 and P3 can run in parallel with P4. Only after P6 and P7 pass is
 ct-eval's scoring removed from crosstalk.
@@ -604,6 +631,11 @@ ct-eval's scoring removed from crosstalk.
 - **`DetectionQuality` cross-check.** Moves to the adapter's tests.
 - **AI Village `@2`.** Different labels by design (§5.2); reported as a
   separate row after parity, not part of it.
+
+### 7.4 Results
+
+Stages P2–P4 passed on 2026-10-06. The commands, reports and diffs are
+on the `test/parity` branch under `parity/results/`.
 
 ## 8. Versioning
 

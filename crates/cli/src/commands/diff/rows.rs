@@ -2,9 +2,11 @@
 //!
 //! Rows are compared as JSON values (maps ordered, so equal rows have equal
 //! text) and identified by `(kind, id)`: a row's `id`, an `exchange_agent`
-//! row's `exchange`, an attribution's `agent`. With ids normalised, a
+//! row's `exchange`, an attribution's `agent`. With ids normalised,
+//! detector agents are first renamed by their exchanges (`agents`), then a
 //! predicted transmission's `id` is dropped and the row is identified by a
-//! digest of the rest, so the rows compare as multisets. Worlds are matched
+//! digest of the rest, so the rows compare as multisets (row order within
+//! a world is not compared). Worlds are matched
 //! by key; a world only one side holds, and common worlds in another order,
 //! are differences too.
 
@@ -18,13 +20,14 @@ use a2a_bench_format::jsonl::{FileKind, FileReader, Keyed, WorldSection};
 use serde::Serialize;
 use serde_json::Value;
 
-use super::{Change, DiffError, Tally};
+use super::{Change, DiffError, Tally, agents};
 use crate::safe;
 
 /// How rows are identified.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Identity {
-    /// Drop predicted transmissions' ids.
+    /// Name detector agents by their exchanges, drop predicted
+    /// transmissions' ids, and ignore row order within a world.
     pub normalize_ids: bool,
 }
 
@@ -97,11 +100,15 @@ fn world<K: FileKind>(
         tally.record(file, Some(key), "world", key.as_str(), Change::Changed);
     }
     let rows = |section: &WorldSection<K>| -> Result<Vec<Row>, DiffError> {
-        section
+        let mut values = section
             .rows
             .iter()
-            .map(|row| value(row).and_then(|row| keyed(row, identity)))
-            .collect()
+            .map(value)
+            .collect::<Result<Vec<_>, _>>()?;
+        if identity.normalize_ids {
+            agents::canonicalize(&mut values);
+        }
+        values.into_iter().map(|row| keyed(row, identity)).collect()
     };
     let (rows_a, rows_b) = (rows(a)?, rows(b)?);
     tally.rows_a += rows_a.len() as u64;
@@ -147,7 +154,7 @@ fn world<K: FileKind>(
             tally.record(file, Some(key), &id.0, &id.1, Change::OnlyB);
         }
     }
-    if !differs {
+    if !differs && !identity.normalize_ids {
         let order =
             |rows: &[Row]| -> Vec<String> { rows.iter().map(|(_, body)| body.clone()).collect() };
         if order(&rows_a) != order(&rows_b) {

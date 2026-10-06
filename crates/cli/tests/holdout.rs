@@ -35,7 +35,7 @@ fn s(path: &Path) -> &str {
 }
 
 /// The SALT fixture copied outside any repository (revision
-/// `unversioned`), and a dev list naming its first world.
+/// `unknown`), and a dev list naming its first world.
 fn setup() -> Option<Setup> {
     let Some(outside) = outside_repository() else {
         eprintln!("no directory outside a git repository: holdout tests skipped");
@@ -50,13 +50,13 @@ fn setup() -> Option<Setup> {
     let exported = export(&setup, &all, &[]);
     assert_code(&exported, 0);
     let m = manifest(&all);
-    assert_eq!(m["source"]["revision"], "unversioned");
+    assert_eq!(m["source"]["revision"], "unknown");
     let first = m["worlds"][0]["key"].as_str().unwrap().to_owned();
     std::fs::create_dir_all(setup.splits()).unwrap();
     std::fs::write(
         setup.splits().join("salt@1.dev.toml"),
         format!(
-            "dataset = \"salt\"\nversion = 1\nrevision = \"unversioned\"\nworlds = [\"{first}\"]\n"
+            "dataset = \"salt\"\nversion = 1\nrevision = \"unknown\"\nworlds = [\"{first}\"]\n"
         ),
     )
     .unwrap();

@@ -41,23 +41,88 @@ fn a_git_clone_is_named_by_its_head_unless_it_encloses_the_data_root() {
     let root = common::fixture("");
     assert_eq!(
         source_revision(&fixture, Some(&root)).unwrap(),
-        Revision::Unversioned
+        Revision::Unknown
     );
 }
 
 #[test]
-fn a_plain_directory_is_unversioned() {
+fn a_plain_directory_is_unknown() {
     let Some(dir) = common::outside_repository() else {
         return;
     };
     assert_eq!(
         source_revision(dir.path(), None).unwrap().as_str(),
-        "unversioned"
+        "unknown"
     );
     assert!(matches!(
         source_revision(&dir.path().join("missing"), None),
         Err(RevisionError::Resolve { .. })
     ));
+}
+
+const COMMIT_A: &str = "2eba8f3771e8fbcc0f49f6cbbfd2111b939a117a";
+const COMMIT_B: &str = "838b4150303ca8228e8edb432d8b8ccae353d258";
+
+/// A `hf download --local-dir` tree: each file's
+/// `.cache/huggingface/download/<path>.metadata` holds the commit, the
+/// etag and a timestamp, one per line.
+fn local_dir(commits: &[(&str, &str)]) -> tempfile::TempDir {
+    let dir = common::outside_repository().unwrap_or_else(common::scratch);
+    let download = dir.path().join(".cache/huggingface/download");
+    for (path, commit) in commits {
+        let metadata = download.join(format!("{path}.metadata"));
+        std::fs::create_dir_all(metadata.parent().unwrap()).unwrap();
+        std::fs::write(
+            &metadata,
+            format!("{commit}\n{}\n1759528920.1234567\n", "e".repeat(40)),
+        )
+        .unwrap();
+        let file = dir.path().join(path);
+        std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+        std::fs::write(file, "x").unwrap();
+    }
+    dir
+}
+
+#[test]
+fn an_hf_local_dir_is_named_by_its_common_commit() {
+    let dir = local_dir(&[
+        ("README.md", COMMIT_A),
+        ("data/train/part-0.jsonl", COMMIT_A),
+        ("data/test/part-0.jsonl", COMMIT_A),
+    ]);
+    let revision = source_revision(dir.path(), None).unwrap();
+    assert_eq!(revision, Revision::HfLocalDir(COMMIT_A.into()));
+    assert_eq!(revision.as_str(), COMMIT_A);
+}
+
+#[test]
+fn an_hf_local_dir_whose_files_disagree_is_mixed() {
+    let dir = local_dir(&[("README.md", COMMIT_A), ("data/part-0.jsonl", COMMIT_B)]);
+    let revision = source_revision(dir.path(), None).unwrap();
+    assert_eq!(
+        revision,
+        Revision::Mixed {
+            commits: vec![COMMIT_A.into(), COMMIT_B.into()]
+        }
+    );
+    assert_eq!(revision.as_str(), "mixed");
+}
+
+#[test]
+fn an_empty_or_malformed_download_cache_is_not_a_revision() {
+    let dir = local_dir(&[]);
+    std::fs::create_dir_all(dir.path().join(".cache/huggingface/download")).unwrap();
+    std::fs::write(
+        dir.path().join(".cache/huggingface/download/x.metadata"),
+        "not a commit\n",
+    )
+    .unwrap();
+    let revision = source_revision(dir.path(), None).unwrap();
+    assert!(
+        !matches!(revision, Revision::HfLocalDir(_) | Revision::Mixed { .. }),
+        "{revision:?}"
+    );
 }
 
 #[test]
