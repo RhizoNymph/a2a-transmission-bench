@@ -1,0 +1,17 @@
+[package]
+name = "a2a-bench-dataset-open-swe"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Open-SWE-Traces as a background corpus for a2a-transmission-bench."
+
+[lints]
+workspace = true
+
+[dependencies]
+a2a-bench-corpus = { version = "0.1.0", path = "../../corpus", features = ["parquet"] }
+a2a-bench-format = { version = "0.1.0", path = "../../format" }
+serde = { version = "=1.0.229", features = ["derive"] }
+thiserror = "=2.0.21"
+tracing = "=0.1.44"

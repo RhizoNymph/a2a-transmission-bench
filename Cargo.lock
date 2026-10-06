@@ -31,6 +31,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "a2a-bench-dataset-cipher"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-corpus",
+ "a2a-bench-format",
+ "base64 0.23.1",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "a2a-bench-dataset-lmcache"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-corpus",
+ "a2a-bench-format",
+ "serde",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "a2a-bench-dataset-open-swe"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-corpus",
+ "a2a-bench-format",
+ "serde",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "a2a-bench-dataset-salt"
 version = "0.1.0"
 dependencies = [
@@ -52,6 +87,21 @@ dependencies = [
  "a2a-bench-format",
  "base64 0.22.1",
  "flate2",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "a2a-bench-dataset-swe-splice"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-corpus",
+ "a2a-bench-dataset-open-swe",
+ "a2a-bench-format",
+ "base64 0.23.1",
  "serde",
  "serde_json",
  "tempfile",

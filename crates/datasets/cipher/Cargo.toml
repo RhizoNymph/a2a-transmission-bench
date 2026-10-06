@@ -1,0 +1,21 @@
+[package]
+name = "a2a-bench-dataset-cipher"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Synthetic encoded sender-receiver pairs for a2a-transmission-bench."
+
+[lints]
+workspace = true
+
+[dependencies]
+a2a-bench-corpus = { version = "0.1.0", path = "../../corpus" }
+a2a-bench-format = { version = "0.1.0", path = "../../format" }
+base64 = "=0.23.1"
+serde = { version = "=1.0.229", features = ["derive"] }
+thiserror = "=2.0.21"
+tracing = "=0.1.44"
+
+[dev-dependencies]
+serde_json = "=1.0.151"
