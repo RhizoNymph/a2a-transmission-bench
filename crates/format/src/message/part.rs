@@ -20,8 +20,18 @@ pub enum SystemPart {
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum UserPart {
     Text { text: String },
-    Media { media_type: String },
+    Media { kind: MediaKind },
     Unknown,
+}
+
+/// What a media part holds. Its bytes are not stored.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MediaKind {
+    Image,
+    Audio,
+    Document,
+    Other,
 }
 
 /// An assistant message's part.
@@ -87,7 +97,7 @@ pub struct ToolResult {
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ResultContent {
     Text { text: String },
-    Media { media_type: String },
+    Media { kind: MediaKind },
     Unknown,
 }
 
