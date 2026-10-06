@@ -7,7 +7,7 @@ Overview:
     labels), runs any detector as a separate process over the inputs, and
     scores the detector's predictions against the labels with regression
     gates per detector. Status: design approved (docs/design/separation.md);
-    the library crates are being integrated with the a2a-bench CLI.
+    the library crates and the a2a-bench CLI are integrated; parity is next.
   subsystems:
     format: >
       a2a-bench-format. On-disk types for messages, exchanges, labels and
@@ -37,9 +37,14 @@ Overview:
       detector binary (input view in, predictions.jsonl out). Attributes
       exchanges by client credential; depends on format only.
     score: >
-      a2a-bench-score. Alignment rule, judge, scorer, report, gates.
+      a2a-bench-score. Alignment rule, judge, scorer, report (with the
+      manifest's converter notes summed), gates. Canonicalises resources
+      through a seam the CLI fills with a2a-bench-resource.
     cli: >
-      a2a-bench-cli. The a2a-bench binary (export, validate, run, score, diff).
+      a2a-bench-cli. The a2a-bench binary (export, validate, input-view, run,
+      score, diff): dispatches to every converter crate, enforces revision
+      pins and the holdout rules, runs detectors as processes and scores with
+      the resource canonicaliser.
   data_flow: >
     dataset files -> converter (TraceSource of checked Worlds) ->
     corpus::export -> export dir (manifest with per-world label counts and
@@ -111,11 +116,6 @@ Features Index:
     entry_points: [crates/datasets/ai-village/src/lib.rs, crates/datasets/ai-village/src/shell/mod.rs]
     depends_on: [format, corpus, resource]
     doc: docs/features/dataset-ai-village.md
-  separation:
-    description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
-    entry_points: []
-    depends_on: []
-    doc: docs/design/separation.md
   dataset-open-swe:
     description: open_swe@1 - Open-SWE-Traces trajectories mixed into background worlds (no positives, controls per pair); shard discovery and round-robin rows reused by swe-splice
     entry_points: [crates/datasets/open-swe/src/lib.rs, crates/datasets/open-swe/src/source.rs]
@@ -136,4 +136,14 @@ Features Index:
     entry_points: [crates/datasets/cipher/src/lib.rs, crates/datasets/cipher/src/world.rs]
     depends_on: [corpus, format]
     doc: docs/features/dataset-cipher.md
+  cli:
+    description: The a2a-bench binary - export (dispatch to every converter, source digest, revision pinning, dev/holdout splits, holdout commitment), validate (every format check, counts only), input-view, run (detector contract, --twice determinism), score (resource canonicaliser, gates, exit 2), diff (exports or predictions row by row, --normalize-ids for P3)
+    entry_points: [crates/cli/src/bin/a2a-bench/main.rs, crates/cli/src/lib.rs, crates/cli/src/datasets/dispatch.rs]
+    depends_on: [format, corpus, resource, score, dataset-salt, dataset-agentdojo, dataset-tau2, dataset-wiki, dataset-swarm, dataset-open-swe, dataset-lmcache, dataset-swe-splice, dataset-cipher, dataset-ai-village, dataset-demo-swarm]
+    doc: docs/features/cli.md
+  separation:
+    description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
+    entry_points: []
+    depends_on: []
+    doc: docs/design/separation.md
 ```

@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
+    "crates/cli",
     "crates/corpus",
     "crates/datasets/agentdojo",
     "crates/datasets/ai-village",

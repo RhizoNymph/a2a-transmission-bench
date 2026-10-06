@@ -3,6 +3,37 @@
 version = 4
 
 [[package]]
+name = "a2a-bench-cli"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-corpus",
+ "a2a-bench-dataset-agentdojo",
+ "a2a-bench-dataset-ai-village",
+ "a2a-bench-dataset-cipher",
+ "a2a-bench-dataset-demo-swarm",
+ "a2a-bench-dataset-lmcache",
+ "a2a-bench-dataset-open-swe",
+ "a2a-bench-dataset-salt",
+ "a2a-bench-dataset-swarm",
+ "a2a-bench-dataset-swe-splice",
+ "a2a-bench-dataset-tau2",
+ "a2a-bench-dataset-wiki",
+ "a2a-bench-format",
+ "a2a-bench-resource",
+ "a2a-bench-score",
+ "anyhow",
+ "blake3",
+ "clap",
+ "serde",
+ "serde_json",
+ "shlex",
+ "tempfile",
+ "thiserror",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "a2a-bench-corpus"
 version = "0.1.0"
 dependencies = [
