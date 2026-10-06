@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::ids::{DetectorAgent, ExchangeId, TransmissionRef};
-use crate::labels::{CarrierKind, Codec, MatchClass, Route};
+use crate::labels::{CarrierKind, Codec, DelegationDirection, MatchClass, RouteKind};
 use crate::location::Location;
 use crate::resource::Resource;
 
@@ -60,7 +60,30 @@ pub struct ContentEvidence {
     #[serde(rename = "match")]
     pub kind: MatchKind,
     pub carrier: CarrierKind,
-    pub route: Route,
+    pub route: PredictedRoute,
+}
+
+/// How a detector says content travelled. A channel names every resource
+/// the detector's channel holds; a channel label aligns when one of them is
+/// the label's resource, after canonicalisation.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum PredictedRoute {
+    Channel { resources: Vec<Resource> },
+    Delegation { direction: DelegationDirection },
+    Direct,
+    Unobserved,
+}
+
+impl PredictedRoute {
+    pub const fn kind(&self) -> RouteKind {
+        match self {
+            Self::Channel { .. } => RouteKind::Channel,
+            Self::Delegation { .. } => RouteKind::Delegation,
+            Self::Direct => RouteKind::Direct,
+            Self::Unobserved => RouteKind::Unobserved,
+        }
+    }
 }
 
 /// One co-access: the sender wrote a resource the reader then read.

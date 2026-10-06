@@ -80,7 +80,42 @@ Every JSONL file is:
   `exchange_agent` rows that say which agent made each exchange.
 - **predictions**: `attribution {agent, exchanges}` (the detector's agents,
   canonical names), `unattributed {agent}`, and `transmission {id, state,
-  quality?, matches?, co_access?}`.
+  quality?, matches?, co_access?}`. A content match's `route` is a
+  `PredictedRoute`: a channel names **every** resource the detector's channel
+  holds, and a channel label aligns when one of them equals the label's
+  resource after canonicalisation.
+- **resources**: `repository`, `repo_file` (absolute path), `thread`
+  (`issue` covers GitHub issues and pull requests, one number space;
+  `merge_request`), `collection`, `url`, `file {host?, path}`,
+  `mcp {server, tool, target?}`, `opaque {tool, key}`.
+- **media** parts keep only their kind (`image`, `audio`, `document`,
+  `other`). A failed exchange has `response.error` (and may have no
+  messages).
+- **agent_cluster** rows carry their kind in `cluster` (`key_group`,
+  `identity`), since `kind` is the row tag. A key group of one agent is not
+  a cluster: converters skip it and count it in `notes`.
+
+### Locations: anchors, not scopes
+
+A location's `exchange` is where the location **resolves**: an exchange
+that carries `message` (request or response). It is not a scope. Alignment
+and control coverage compare message, part and range
+(`Location::overlaps`), and a row's reader exchange, when it has one, is
+what limits it to an exchange. Normative consequences:
+
+- A transmission label's, exemption's and prediction's read location sits
+  in its reader exchange; a co-access's write location in its write exchange.
+- A negative control that names a message but no exchange (a shared
+  system prompt, boilerplate, a rejected send's origin) is **placed** at the
+  first exchange, in world time order, of the reader (for an `origin`: of
+  the sender) that carries the message, else at the world's first exchange
+  that carries it; its `reader_exchange` stays absent, so it still covers
+  every exchange carrying that text. crosstalk-eval's golden export
+  (`golden/labels.rs`) uses the same rule.
+- A label whose message no exchange in the world carries can never match
+  anything. Converters **drop** it and count it in the manifest's per-world
+  `notes` (`uncarried_control`, …), which the scorer reports; a world is
+  never failed for it.
 
 ### Locations and part text
 
@@ -122,14 +157,35 @@ reader    ──▶ FileReader<K>::open (header: file kind, format)
 | `src/exchange.rs` | worlds and exchanges | `WorldDecl`, `AgentDecl`, `Driven`, `Exchange`, `Client`, `Request`, `Response`, `ToolDecl`, `Fidelity`, `Side` |
 | `src/location.rs` | locations | `Location`, `ByteRange`, `EmptyRange` |
 | `src/resource.rs` | resource shapes | `Resource`, `Repository`, `ThreadKind`, `CollectionKind` |
-| `src/labels/` (`mod`, `kinds`) | truth rows and their dimensions | `Label`, `ExpectedTransmission`, `ExpectedAccess`, `NegativeControl`, `Exemption`, `AgentCluster`, `ExchangeAgent`, `Tier`, `MatchNeed`, `Route`, `CarrierKind`, `Codec`, `InvalidLabel` |
-| `src/predictions.rs` | detector rows | `Prediction`, `Transmission`, `State`, `Quality`, `ContentEvidence`, `CoAccess`, `MatchKind`, `Attribution`, `Unattributed`, `WorldStatus`, `InvalidTransmission` |
+| `src/labels/` (`mod`, `kinds`) | truth rows and their dimensions | `Label`, `ExpectedTransmission`, `ExpectedAccess`, `NegativeControl`, `Exemption`, `AgentCluster`, `ExchangeAgent`, `Tier`, `MatchNeed` (with `json_string`, `yaml_string`, `through_json_string`, `two_string_levels`, `sender_medium_unobserved`, `tier`), `json_escapes`, `Route`, `CarrierKind`, `Codec`, `InvalidLabel` |
+| `src/predictions.rs` | detector rows | `Prediction`, `PredictedRoute`, `Transmission`, `State`, `Quality`, `ContentEvidence`, `CoAccess`, `MatchKind`, `Attribution`, `Unattributed`, `WorldStatus`, `InvalidTransmission` |
 | `src/files.rs` | the four file kinds | `Messages`, `Exchanges`, `Labels`, `Predictions`, their world rows, `Coverage`, `PredictionsHeader`, `DetectorInfo` |
 | `src/manifest.rs` | the manifest | `Manifest`, `Split`, `Source`, `Converter`, `Setting`, `WorldEntry`, `FileDigests` |
-| `src/jsonl/` (`mod`, `read`, `write`) | framing | `FileKind`, `FileReader`, `FileWriter`, `WorldSection`, `BasicHeader`, `Trailer`, `ReadError`, `WriteError` |
+| `src/source.rs` | the source digest | `SourceDigest`, `FileDigest`, `SOURCE_DIGEST_CONTEXT`, `SourceDigestError` |
+| `src/jsonl/` (`mod`, `read`, `write`) | framing (`FileReader::trailer` after the last world) | `FileKind`, `FileReader`, `FileWriter`, `WorldSection`, `BasicHeader`, `Trailer`, `ReadError`, `WriteError` |
 | `src/check/` (`mod`, `inputs`, `location`, `labels`, `predictions`) | cross-file checks | `WorldInputs`, `check_labels`, `check_predictions`, `InputError`, `LabelError`, `PredictionError`, `LocationError` |
 | `tests/fixtures/crosstalk-7f8a2fb-vectors.json` | exchange ids and canonical JSON computed by crosstalk at 7f8a2fb | |
 | `tests/fixtures/crosstalk-vectors-generator.rs.txt` | the program that computed them (built against crosstalk-spec and crosstalk-eval) | |
+
+## Manifest
+
+`manifest.json` holds the format, dataset, `dataset_version`, `split`,
+`source {path, revision, digest}`, `converter {version, git}`,
+`selection` and `pace` (ordered maps of `Setting`: bool, int, text, or a
+list of them), `worlds` (`{key, exchanges, labels?, notes?}`) and `files`
+(each file's trailer digest; `labels` absent in the input view). The input
+view also drops every world's `labels` count and `notes`, which are
+truth-derived. `Manifest::digest` is over the input view, so the full
+manifest and the input view name the same digest.
+
+### Source digest
+
+`source.digest` is BLAKE3, derive-key context `a2a-bench/1 source`, over
+the files the converter read, in byte order of their `/`-separated paths
+relative to the dataset root, each absorbed as
+`path 0x00 length(u64 little-endian) contents` (`source::SourceDigest`).
+It identifies exactly what was read; the dataset's own revision is
+`source.revision`.
 
 ## Invariants and constraints
 
