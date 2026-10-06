@@ -1,6 +1,8 @@
 //! A labelled run as a trace source of one world, and the export it
-//! completes: the corpus export writer's four files plus
-//! `diagnostics.json`, the typed join-diagnostics table.
+//! completes: the corpus export writer's four files, with the capture's
+//! manifest kept as the export's input view (`capture_manifest`), plus
+//! `diagnostics.json`, the typed join-diagnostics table and the bench's
+//! labelling provenance.
 
 use std::convert::Infallible;
 use std::fs::File;
@@ -8,18 +10,22 @@ use std::io::{BufReader, Write};
 use std::path::{Path, PathBuf};
 
 use a2a_bench_corpus::export::{
-    DigestError, ExportError, Exported, FilesRead, ManifestInfo, export,
+    DigestError, ExportError, Exported, FilesRead, MANIFEST_FILE, ManifestInfo, export,
+    write_manifest,
 };
 use a2a_bench_corpus::source::TraceSource;
 use a2a_bench_corpus::split::Selection;
 use a2a_bench_corpus::world::World;
 use a2a_bench_format::ids::{DatasetId, InvalidKey, WorldKey};
-use a2a_bench_format::manifest::{Converter, Source};
+use a2a_bench_format::manifest::Converter;
 
+use serde::Serialize;
+
+use crate::Options;
 use crate::capture::{self, CaptureError};
-use crate::label::{LabelError, Labelled, label};
+use crate::capture_manifest::{self, CAPTURE_MANIFEST_FILE, CaptureManifestError};
+use crate::label::{DiagnosticsReport, LabelError, Labelled, label};
 use crate::truth_file::{self, TruthFile, TruthFileError};
-use crate::{Options, VERSION};
 
 /// The file the diagnostics report is written to, beside the labels.
 pub const DIAGNOSTICS_FILE: &str = "diagnostics.json";
@@ -47,8 +53,22 @@ pub enum Error {
     Digest(#[from] DigestError),
     #[error(transparent)]
     Export(#[from] ExportError),
+    #[error("the capture manifest {path}: {problem}")]
+    CaptureManifest {
+        path: PathBuf,
+        problem: CaptureManifestError,
+    },
+    #[error(
+        "the export's input view differs from the capture's manifest at {paths:?}: the capture is not exactly the labelled run"
+    )]
+    NotTheCapture { paths: Vec<String> },
     #[error("encoding {DIAGNOSTICS_FILE}: {0}")]
     Encode(serde_json::Error),
+    #[error("removing {path}: {source}")]
+    Remove {
+        path: PathBuf,
+        source: std::io::Error,
+    },
     #[error("writing {path}: {source}")]
     Write {
         path: PathBuf,
@@ -56,25 +76,28 @@ pub enum Error {
     },
 }
 
-/// The files a run is labelled from: the truth file and the capture, each
-/// relative to `root` (or absolute under it), which the source digest is
-/// taken over.
+/// The files a run is labelled from: the truth file and the capture
+/// (messages, exchanges and its manifest), each relative to `root` (or
+/// absolute).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Inputs {
     pub root: PathBuf,
     pub truth: PathBuf,
     pub messages: PathBuf,
     pub exchanges: PathBuf,
+    pub manifest: PathBuf,
 }
 
 impl Inputs {
-    /// `truth.jsonl`, `messages.jsonl` and `exchanges.jsonl` in `dir`.
+    /// `truth.jsonl`, `messages.jsonl`, `exchanges.jsonl` and
+    /// `manifest.json` in `dir`.
     pub fn in_dir(dir: &Path) -> Self {
         Self {
             root: dir.to_path_buf(),
             truth: PathBuf::from("truth.jsonl"),
             messages: PathBuf::from("messages.jsonl"),
             exchanges: PathBuf::from("exchanges.jsonl"),
+            manifest: PathBuf::from(CAPTURE_MANIFEST_FILE),
         }
     }
 
@@ -172,46 +195,128 @@ impl TraceSource for DemoSwarmSource {
     }
 }
 
+/// Who labelled the run: the bench build and the truth file, recorded in
+/// [`DIAGNOSTICS_FILE`] (the manifest keeps the capture's provenance).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Labelling {
+    /// The bench's version and commit.
+    pub bench: Converter,
+    pub truth: TruthRef,
+}
+
+/// The truth file as read: its path as given ([`Inputs::truth`]) and the
+/// BLAKE3 of its bytes.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct TruthRef {
+    pub path: String,
+    pub blake3: String,
+}
+
+/// `path` as the caller gave it (relative to the inputs' root, or
+/// absolute), the digest of the file it names at `at`.
+fn truth_ref(path: &Path, at: &Path) -> Result<TruthRef, Error> {
+    let open = |source| Error::Open {
+        path: at.to_path_buf(),
+        source,
+    };
+    let mut file = File::open(at).map_err(open)?;
+    let mut hasher = blake3::Hasher::new();
+    std::io::copy(&mut file, &mut hasher).map_err(open)?;
+    Ok(TruthRef {
+        path: path.display().to_string(),
+        blake3: hasher.finalize().to_hex().to_string(),
+    })
+}
+
 /// Labels the run in `inputs` and writes the whole export to `out_dir`
 /// (empty or new): `messages.jsonl`, `exchanges.jsonl` (the world's part of
 /// the capture), `labels.jsonl`, `manifest.json`, then
-/// [`DIAGNOSTICS_FILE`]. `source_path` is the run's directory as the
-/// manifest records it; the revision is the run id.
+/// [`DIAGNOSTICS_FILE`].
+///
+/// The bench only adds truth: the manifest is the capture's
+/// (`inputs.manifest`, an input view) plus the labels digest and each
+/// world's label count and notes, so its input view, and the digest the
+/// capture's predictions name, are the capture's. A capture manifest that
+/// is missing, not an input view, of another dataset, version or world, or
+/// cut with other margins than `options` is refused before anything is
+/// written; an export whose input view still differs (the capture holds
+/// more than the labelled run, or its digests are not its files') is
+/// refused and its `manifest.json` removed. `bench` is recorded in the
+/// diagnostics as the labeller.
 pub fn write_export(
     inputs: &Inputs,
     out_dir: &Path,
     options: &Options,
-    converter: Converter,
-    source_path: &str,
+    bench: Converter,
 ) -> Result<Exported<Infallible>, Error> {
     let mut source = DemoSwarmSource::open(inputs, options)?;
-    let info = ManifestInfo {
-        dataset: source.dataset.clone(),
-        dataset_version: VERSION,
-        source: Source {
-            path: source_path.to_owned(),
-            revision: source.run.clone(),
-            digest: source.files.digest(&inputs.root)?,
-        },
-        converter,
-        selection: options.settings(),
-        pace: std::collections::BTreeMap::new(),
+    let manifest_path = inputs.at(&inputs.manifest);
+    let in_manifest = |problem| Error::CaptureManifest {
+        path: manifest_path.clone(),
+        problem,
     };
-    let exported = export(&mut source, out_dir, info, &Selection::Unsplit)?;
-    write_diagnostics(out_dir, source.labelled(), options)?;
+    let capture = capture_manifest::read(&manifest_path).map_err(in_manifest)?;
+    capture_manifest::check(
+        &capture,
+        &source.dataset,
+        source.labelled.world.key(),
+        &options.settings(),
+    )
+    .map_err(in_manifest)?;
+    let labelling = Labelling {
+        bench,
+        truth: truth_ref(&inputs.truth, &inputs.at(&inputs.truth))?,
+    };
+    let info = ManifestInfo {
+        dataset: capture.dataset.clone(),
+        dataset_version: capture.dataset_version,
+        source: capture.source.clone(),
+        converter: capture.converter.clone(),
+        selection: capture.selection.clone(),
+        pace: capture.pace.clone(),
+    };
+    let mut exported = export(&mut source, out_dir, info, &Selection::Unsplit)?;
+    // The split's own keys are not the capture's: its selection as written.
+    exported.manifest.selection = capture.selection.clone();
+    exported.manifest.split = capture.split;
+    let paths =
+        capture_manifest::differences(&exported.manifest, &capture).map_err(Error::Encode)?;
+    if !paths.is_empty() {
+        let written = out_dir.join(MANIFEST_FILE);
+        std::fs::remove_file(&written).map_err(|source| Error::Remove {
+            path: written,
+            source,
+        })?;
+        return Err(Error::NotTheCapture { paths });
+    }
+    write_manifest(out_dir, &exported.manifest)?;
+    write_diagnostics(out_dir, source.labelled(), options, &labelling)?;
     Ok(exported)
 }
 
-/// Writes `labelled`'s diagnostics report to `dir/diagnostics.json`
-/// (pretty JSON, a final newline).
+/// What `diagnostics.json` holds: the labelling provenance, then the
+/// report.
+#[derive(Serialize)]
+struct DiagnosticsFile<'a> {
+    labelling: &'a Labelling,
+    #[serde(flatten)]
+    report: DiagnosticsReport<'a>,
+}
+
+/// Writes `labelling` and `labelled`'s diagnostics report to
+/// `dir/diagnostics.json` (pretty JSON, a final newline).
 pub fn write_diagnostics(
     dir: &Path,
     labelled: &Labelled,
     options: &Options,
+    labelling: &Labelling,
 ) -> Result<PathBuf, Error> {
     let path = dir.join(DIAGNOSTICS_FILE);
-    let mut bytes =
-        serde_json::to_vec_pretty(&labelled.report(options.margins())).map_err(Error::Encode)?;
+    let file = DiagnosticsFile {
+        labelling,
+        report: labelled.report(options.margins()),
+    };
+    let mut bytes = serde_json::to_vec_pretty(&file).map_err(Error::Encode)?;
     bytes.push(b'\n');
     let write = |source| Error::Write {
         path: path.clone(),

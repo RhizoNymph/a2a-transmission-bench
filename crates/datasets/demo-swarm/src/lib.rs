@@ -18,12 +18,15 @@
 //! messages.jsonl + exchanges.jsonl ─▶ capture::read ─┴▶ label::label ─▶ World (checked)
 //!                                                         + Diagnostics, counts
 //! DemoSwarmSource (TraceSource of that one World) ─▶ corpus export ─▶ export dir
+//!   manifest = the capture's manifest.json + labels digest, label counts, notes
+//!   (its input view is the capture's, so the capture's predictions score)
 //!                                                  + diagnostics.json beside it
 //! ```
 //!
 //! See `docs/features/dataset-demo-swarm.md`.
 
 pub mod capture;
+pub mod capture_manifest;
 pub mod diagnostics;
 pub mod label;
 pub mod locate;
@@ -39,11 +42,13 @@ use std::collections::BTreeMap;
 use a2a_bench_format::manifest::Setting;
 
 pub use capture::{Capture, CaptureError};
+pub use capture_manifest::{CAPTURE_MANIFEST_FILE, CaptureManifestError};
 pub use diagnostics::{Diagnostic, Diagnostics, Effect, JoinFailure, RowKind, Side};
 pub use label::{CaptureCounts, DiagnosticsReport, LabelError, Labelled, label};
 pub use resolve::{AgentIndex, ResolveCounts};
 pub use source::{
-    DIAGNOSTICS_FILE, DemoSwarmSource, Error, Inputs, write_diagnostics, write_export,
+    DIAGNOSTICS_FILE, DemoSwarmSource, Error, Inputs, Labelling, TruthRef, write_diagnostics,
+    write_export,
 };
 pub use window::{DEFAULT_LEAD_MS, DEFAULT_SLACK_MS, Margins, RunWindow};
 
