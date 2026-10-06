@@ -30,8 +30,10 @@ Overview:
       swarm (swarm-traces), open-swe, lmcache, swe-splice, cipher, ai-village,
       demo-swarm. Each is a TraceSource built on corpus.
     reference: >
-      a2a-bench-reference. The naive reference matcher, shipped as the
-      a2a-reference detector binary.
+      a2a-bench-reference. The naive reference matcher ("baseline detector
+      0"), a library over one world's checked inputs and the a2a-reference
+      detector binary (input view in, predictions.jsonl out). Attributes
+      exchanges by client credential; depends on format only.
     score: >
       a2a-bench-score. Alignment rule, judge, scorer, report, gates.
     cli: >
@@ -67,6 +69,11 @@ Features Index:
     entry_points: [crates/score/src/lib.rs, crates/score/src/run/mod.rs, gates/]
     depends_on: [format]
     doc: docs/features/score.md
+  reference:
+    description: Baseline detector 0 - naive span/shingle matching over a world's inputs, as a library and the a2a-reference binary
+    entry_points: [crates/reference/src/lib.rs, crates/reference/src/bin/a2a-reference/main.rs]
+    depends_on: [format]
+    doc: docs/features/reference.md
   separation:
     description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
     entry_points: []
