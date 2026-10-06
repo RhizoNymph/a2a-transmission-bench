@@ -1,0 +1,96 @@
+//! Reference vectors from crosstalk at the pinned commit (7f8a2fb), for the
+//! bench's resource canonicaliser: every input runs through the functions
+//! the AI Village labels were made with.
+//!
+//! `url`: `ai_village::resource::from_url` (copied below: `tool_url_locator`,
+//! then the first locator of `SitesConfig::default()` on a `GET`).
+//! `plain`: `url_locator` alone. `remote`: `ai_village::resource::from_remote`
+//! (copied below). `kind`: `ai_village::resource::kind` of the `url` locator.
+//! `repository`: `Locator::repository(host, owner, name)`.
+//!
+//! Usage: resource-vectors <inputs.json> <repository-triples.json> > vectors.json
+use crosstalk_flow::extract::SitesConfig;
+use crosstalk_flow::extract::http::HttpRequest;
+use crosstalk_flow::extract::resource::{RepoId, tool_url_locator, url_locator};
+use crosstalk_spec::derived::flow::resource::Locator;
+use serde_json::{Value, json};
+
+/// crosstalk-eval `datasets::ai_village::resource::from_url`, verbatim but
+/// keeping the error.
+fn from_url(sites: &SitesConfig, text: &str) -> Result<Locator, String> {
+    let url = tool_url_locator(text).map_err(|e| format!("{e:?}"))?;
+    let site = sites
+        .apply(&HttpRequest::get(url.clone()))
+        .and_then(|access| access.locators.into_iter().next());
+    Ok(site.unwrap_or(url))
+}
+
+/// crosstalk-eval `datasets::ai_village::resource::from_remote`, verbatim.
+fn from_remote(text: &str) -> Option<Locator> {
+    let repo = RepoId::parse(text, None)?;
+    repo.forge_parts()?;
+    Some(repo.locator().clone())
+}
+
+/// crosstalk-eval `datasets::ai_village::resource::kind`, verbatim.
+fn kind(locator: &Locator) -> Option<&'static str> {
+    match locator {
+        Locator::Repository { .. } => Some("repository"),
+        Locator::File {
+            host: Some(host), ..
+        } if host.0.contains('/') && !host.0.starts_with('/') => Some("repo_file"),
+        Locator::Url { .. } => Some("url"),
+        Locator::File { .. } | Locator::Mcp { .. } | Locator::Opaque { .. } => None,
+    }
+}
+
+fn result(result: Result<Locator, String>) -> Value {
+    match result {
+        Ok(locator) => json!({ "ok": locator }),
+        Err(error) => json!({ "err": error }),
+    }
+}
+
+fn read(path: &str) -> Value {
+    let text = std::fs::read_to_string(path).unwrap_or_default();
+    serde_json::from_str(&text).unwrap_or(Value::Null)
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let inputs = read(args.get(1).map_or("inputs.json", String::as_str));
+    let triples = read(args.get(2).map_or("repositories.json", String::as_str));
+    let sites = SitesConfig::default();
+    let vectors: Vec<Value> = inputs
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .map(|text| {
+            let url = from_url(&sites, text);
+            let kind = url.as_ref().ok().and_then(kind);
+            json!({
+                "input": text,
+                "url": result(url),
+                "plain": result(url_locator(text).map_err(|e| format!("{e:?}"))),
+                "remote": from_remote(text),
+                "kind": kind,
+            })
+        })
+        .collect();
+    let repositories: Vec<Value> = triples
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|t| {
+            let [h, o, n] = t.as_array()?.as_slice() else {
+                return None;
+            };
+            let (h, o, n) = (h.as_str()?, o.as_str()?, n.as_str()?);
+            let out = Locator::repository(h, o, n).map_err(|e| format!("{e:?}"));
+            Some(json!({ "host": h, "owner": o, "name": n, "repository": result(out) }))
+        })
+        .collect();
+    let out = json!({ "crosstalk": "7f8a2fb", "vectors": vectors, "repositories": repositories });
+    println!("{}", serde_json::to_string_pretty(&out).unwrap_or_default());
+}

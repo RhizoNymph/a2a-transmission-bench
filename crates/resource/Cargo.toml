@@ -1,0 +1,18 @@
+[package]
+name = "a2a-bench-resource"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Neutral resource canonicaliser of a2a-transmission-bench: URLs, forge repositories, repo files, threads and collections."
+
+[lints]
+workspace = true
+
+[dependencies]
+a2a-bench-format = { version = "0.1.0", path = "../format" }
+thiserror = "=2.0.21"
+url = "=2.5.8"
+
+[dev-dependencies]
+serde_json = "=1.0.151"
