@@ -11,7 +11,9 @@ each trace file into one checked world. Dataset id `salt`, dataset version
 
 - Discovering trace files (`traces/<experiment>/<condition>/repNNN.json[.gz]`)
   in stratified order, with `limit` and `include` (crosstalk-eval's
-  `--limit`, `--include`).
+  `--limit`, `--include`), recorded in the manifest's `selection` as
+  `limit` (int) and one `include` key holding a list of texts, in the
+  order given.
 - Reading plain and gzipped traces; converting OpenAI-chat messages to
   bench messages.
 - Reconstructing each agent's calls per episode, timing them on the
@@ -53,7 +55,8 @@ load_world_paced(root, relative, pace)
 convert_trace
   declare: every agent named by any episode, in name order;
            model-driven iff any accepted llm_usage entry, model = run config's route
-           (or "unknown"); scripted otherwise (WorldBuilder::scripted_agent)
+           (or "unknown"); scripted otherwise, with that model
+           (WorldBuilder::scripted_agent_with_model)
   episode_start = 0
   for each episode (position p):
     for each agent: episode::reconstruct(agent, episode, file, scripted, {pace, episode_start})
@@ -77,7 +80,6 @@ convert_trace
   place(drafts, carriers): ids t0, t1, … in truth order; places without an exchange
                            go in the first carrier ──▶ builder.label
   builder.finish(Complete { construction })
-  with_scripted_models: rebuild the world with scripted agents' declared model (World::new)
 ```
 
 ### Messages (`messages.rs`)
@@ -117,7 +119,7 @@ Per episode, in this order (ids count the world's truth: `t<index>`):
      content bytes (after the header) of part 0 in the reader's first call
      after the turn, `sender_exchange` the exchange whose response made the
      send (when the event matched a call), needs
-     `need::through_json_string(content)`, tier `forwarding` when the
+     the format's `MatchNeed::through_json_string(content)`, tier `forwarding` when the
      sender relayed its own tool output (below), else `construction`.
 2. **Rejected sends.** Each `send_message` event with `success: false`
    between two model-driven agents, matched to its call: a `rejected_send`
@@ -193,7 +195,6 @@ that first carries the delivery. Exchange ids carry these times.
 | `src/forwarding/mod.rs` | the forwarding rule | `ToolOutput`, `FORWARD_K`, `FORWARDED_SHARE` |
 | `src/forwarding/fold.rs` | the matching fold (text only) | `fold` |
 | `src/forwarding/shingle.rs` | rolling-hash shingles, covered runs | `shingles`, `covered` |
-| `src/need.rs` | `MatchNeed::through_json_string` (not in the format crate) | `through_json_string`, `json_escapes` |
 | `tests/salt.rs` | crosstalk-eval's SALT tests on bench types, plus options, stratification, placement, ids, the source | |
 | `tests/forwarding.rs` | the forwarding tier on the fixture and synthetic traces; the rule's unit tests | |
 | `tests/clock.rs` | episode steps and call times | |
@@ -240,9 +241,8 @@ that first carries the delivery. Exchange ids carry these times.
 - An empty-content delivery (empty range) or a rejected send with empty
   arguments is silently unlabelled.
 - Scripted agents are declared with the run config's model, as
-  crosstalk-eval declares every agent with one; the corpus builder's
-  `scripted_agent` takes none, so the world is rebuilt with the
-  declaration amended.
+  crosstalk-eval declares every agent with one
+  (`WorldBuilder::scripted_agent_with_model`).
 
 ## Differences from crosstalk-eval
 
@@ -257,6 +257,8 @@ None in content. Representation only:
   the two agree unless a reader's history holds two such messages, which
   no SALT trace does (system prompts carry no signatures).
 - Token usage (`TokenUsage`) is not part of the format and is dropped.
+- The `include` selection is one list-valued key; crosstalk's golden
+  export writes `include[0]`, `include[1]`, ….
 
 ## Real-data comparison
 

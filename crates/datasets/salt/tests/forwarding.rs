@@ -10,7 +10,6 @@ use std::path::Path;
 
 use a2a_bench_corpus::clock::Pace;
 use a2a_bench_dataset_salt::forwarding::{FORWARD_K, FORWARDED_SHARE, ToolOutput};
-use a2a_bench_dataset_salt::need::through_json_string;
 use a2a_bench_dataset_salt::{convert_trace, load_world};
 use a2a_bench_format::labels::{Codec, MatchNeed, Route, Tier};
 use common::{
@@ -79,7 +78,7 @@ fn a_salt_delivery_pasting_the_senders_tool_result_is_forwarding() {
     assert_eq!(forwarded[0].from.as_str(), "alice");
     // Still a construction delivery in every other respect.
     assert_eq!(forwarded[0].route, Route::Direct);
-    assert_eq!(forwarded[0].needs, through_json_string(&pasted));
+    assert_eq!(forwarded[0].needs, MatchNeed::through_json_string(&pasted));
 }
 
 const LOG: &str = "seq 1 read_code src/ledger.py ok; seq 2 query_database SELECT total FROM orders WHERE month = 'march' ok; seq 3 resolve_records vendor 4471 ok";
@@ -185,7 +184,7 @@ fn a_tool_result_read_after_the_send_does_not_make_it_forwarding() {
 #[test]
 fn the_need_is_exact_unless_json_escapes_the_text() {
     assert_eq!(
-        through_json_string("plain text, no escapes"),
+        MatchNeed::through_json_string("plain text, no escapes"),
         MatchNeed::Exact
     );
     for escaped in [
@@ -196,7 +195,7 @@ fn the_need_is_exact_unless_json_escapes_the_text() {
         "\u{1}",
     ] {
         assert_eq!(
-            through_json_string(escaped),
+            MatchNeed::through_json_string(escaped),
             MatchNeed::Decoded {
                 codecs: vec![Codec::JsonString]
             },
@@ -204,7 +203,7 @@ fn the_need_is_exact_unless_json_escapes_the_text() {
         );
     }
     // Non-ASCII is written raw in JSON: no escape.
-    assert_eq!(through_json_string("café ✓"), MatchNeed::Exact);
+    assert_eq!(MatchNeed::through_json_string("café ✓"), MatchNeed::Exact);
 }
 
 // The rule itself (crosstalk-eval's `forwarding.rs` unit tests).

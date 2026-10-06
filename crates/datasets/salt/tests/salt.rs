@@ -127,8 +127,13 @@ fn options_are_the_manifest_selection() {
     assert_eq!(
         options.settings(),
         BTreeMap::from([
-            ("include[0]".to_owned(), Setting::Text("main/".into())),
-            ("include[1]".to_owned(), Setting::Text("warmup".into())),
+            (
+                "include".to_owned(),
+                Setting::List(vec![
+                    Setting::Text("main/".into()),
+                    Setting::Text("warmup".into()),
+                ]),
+            ),
             ("limit".to_owned(), Setting::Int(53)),
         ])
     );

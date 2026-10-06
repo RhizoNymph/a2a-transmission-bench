@@ -18,7 +18,6 @@ mod error;
 pub mod files;
 pub mod forwarding;
 pub mod messages;
-pub mod need;
 pub mod schema;
 pub mod truth;
 mod world;
@@ -56,8 +55,8 @@ pub struct Options {
 }
 
 impl Options {
-    /// The manifest's `selection`: `limit` when set, and `include[i]` per
-    /// include, as crosstalk's golden export writes them.
+    /// The manifest's `selection`: `limit` when set, and `include` (a list,
+    /// in the order given) when any are set.
     pub fn settings(&self) -> BTreeMap<String, Setting> {
         let mut out = BTreeMap::new();
         if let Some(limit) = self.limit {
@@ -66,8 +65,11 @@ impl Options {
                 Setting::Int(i64::try_from(limit).unwrap_or(i64::MAX)),
             );
         }
-        for (at, include) in self.include.iter().enumerate() {
-            out.insert(format!("include[{at}]"), Setting::Text(include.clone()));
+        if !self.include.is_empty() {
+            out.insert(
+                "include".to_owned(),
+                Setting::List(self.include.iter().cloned().map(Setting::Text).collect()),
+            );
         }
         out
     }

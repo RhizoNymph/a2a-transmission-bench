@@ -8,7 +8,7 @@
 //! It needs an exact match unless the content holds a character JSON
 //! escapes (a quote, a backslash, a control character): the sender's copy
 //! sits escaped inside canonical tool-call arguments, so then it needs one
-//! level of JSON string decoding ([`crate::need::through_json_string`]).
+//! level of JSON string decoding ([`MatchNeed::through_json_string`]).
 //!
 //! **Forwarding (`forwarding` tier).** A delivery whose content the sender
 //! relayed from its own tool output (at least half of it, folded, in
@@ -38,14 +38,13 @@ pub mod place;
 use std::collections::{BTreeMap, BTreeSet};
 
 use a2a_bench_format::ids::{AgentKey, ExchangeId, MessageId, SourceRef};
-use a2a_bench_format::labels::{NegativeReason, Tier};
+use a2a_bench_format::labels::{MatchNeed, NegativeReason, Tier};
 use a2a_bench_format::location::ByteRange;
 use a2a_bench_format::message::{AssistantPart, Body};
 
 use crate::episode::{AgentEpisode, delivered_turn};
 use crate::forwarding::ToolOutput;
 use crate::messages::{argument, content_text};
-use crate::need::through_json_string;
 use crate::schema::Episode;
 use place::{Control, Delivery, Draft, Spot};
 
@@ -196,7 +195,7 @@ impl EpisodeLabels<'_> {
                 reader_exchange,
                 text: delivery.content.clone(),
                 at: spot,
-                needs: through_json_string(&delivery.content),
+                needs: MatchNeed::through_json_string(&delivery.content),
                 tier: if forwarded {
                     Tier::Forwarding
                 } else {

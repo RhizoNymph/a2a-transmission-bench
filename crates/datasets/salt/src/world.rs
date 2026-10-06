@@ -5,7 +5,7 @@ use std::path::Path;
 
 use a2a_bench_corpus::clock::Pace;
 use a2a_bench_corpus::world::{ExchangeDraft, World, WorldAgent, WorldBuilder};
-use a2a_bench_format::exchange::{Driven, WorldDecl};
+use a2a_bench_format::exchange::Driven;
 use a2a_bench_format::files::Coverage;
 use a2a_bench_format::ids::{DatasetId, MessageId, SourceRef, WorldKey};
 use a2a_bench_format::labels::Tier;
@@ -133,7 +133,7 @@ pub fn convert_trace(trace: &Trace, file: &str, pace: Pace) -> Result<World, Sal
         exchanges = world.exchanges().len(),
         "converted SALT trace"
     );
-    with_scripted_models(world, &agents)
+    Ok(world)
 }
 
 /// Every agent any episode names, in name order: model-driven when one of
@@ -163,7 +163,10 @@ fn declare(
         let (agent, driven) = if driven {
             (builder.model_agent(name, &model)?, Driven::Model)
         } else {
-            (builder.scripted_agent(name)?, Driven::Scripted)
+            (
+                builder.scripted_agent_with_model(name, &model)?,
+                Driven::Scripted,
+            )
         };
         agents.insert(
             name.to_owned(),
@@ -175,37 +178,4 @@ fn declare(
         );
     }
     Ok(agents)
-}
-
-/// The world with each scripted agent declared with its run-config model,
-/// as crosstalk-eval declares it. `WorldBuilder::scripted_agent` takes no
-/// model, so the finished world is rebuilt (and checked again) with the
-/// declaration amended.
-fn with_scripted_models(
-    world: World,
-    agents: &BTreeMap<String, Declared>,
-) -> Result<World, SaltError> {
-    let scripted: BTreeMap<_, _> = agents
-        .values()
-        .filter(|declared| declared.driven == Driven::Scripted)
-        .map(|declared| (declared.agent.key().clone(), declared.model.clone()))
-        .collect();
-    if scripted.is_empty() {
-        return Ok(world);
-    }
-    let mut decl: WorldDecl = world.decl().clone();
-    for agent in &mut decl.agents {
-        if let Some(model) = scripted.get(&agent.key) {
-            agent.model = Some(model.clone());
-        }
-    }
-    let messages = world.messages_in_order().into_iter().cloned().collect();
-    Ok(World::new(
-        world.dataset().clone(),
-        decl,
-        messages,
-        world.exchanges().to_vec(),
-        world.labels().to_vec(),
-        world.coverage(),
-    )?)
 }
