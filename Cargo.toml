@@ -1,6 +1,24 @@
 [workspace]
 resolver = "3"
-members = ["crates/format", "crates/resource"]
+members = [
+    "crates/cli",
+    "crates/corpus",
+    "crates/datasets/agentdojo",
+    "crates/datasets/ai-village",
+    "crates/datasets/cipher",
+    "crates/datasets/demo-swarm",
+    "crates/datasets/lmcache",
+    "crates/datasets/open-swe",
+    "crates/datasets/salt",
+    "crates/datasets/swarm",
+    "crates/datasets/swe-splice",
+    "crates/datasets/tau2",
+    "crates/datasets/wiki",
+    "crates/format",
+    "crates/reference",
+    "crates/resource",
+    "crates/score",
+]
 
 [workspace.package]
 version = "0.1.0"

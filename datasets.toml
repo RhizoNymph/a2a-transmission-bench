@@ -1,0 +1,44 @@
+# Where datasets live. No dataset bytes are in the repository.
+# `revision` pins the source revision exports are made from (an HF snapshot
+# hash or a git HEAD); empty means none is pinned yet.
+root = "~/Data/ai/agents"
+
+[datasets.salt]
+path = "salt-nlp"
+revision = ""
+
+[datasets.collusion-wiki]
+path = "collusion-wiki"
+revision = ""
+
+[datasets.swarm-traces]
+path = "swarm-traces"
+revision = ""
+
+[datasets.agentdojo]
+path = "agentdojo"
+revision = ""
+
+[datasets.tau2]
+path = "tau2-bench/data/tau2/results/final"
+revision = ""
+
+[datasets.ai-village]
+path = "ai-village"
+revision = ""
+
+[datasets.open_swe]
+path = "open-swe-traces"
+revision = ""
+
+[datasets.lmcache]
+path = "lmcache"
+revision = ""
+
+[datasets.swe_splice]
+path = "open-swe-traces"
+revision = ""
+
+[datasets.cipher]
+path = "steganographic-evals/datasets/message_data"
+revision = ""

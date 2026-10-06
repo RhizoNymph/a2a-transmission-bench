@@ -1,0 +1,119 @@
+// Built outside the repository with a path dependency on crosstalk at the
+// pinned baseline (7f8a2fb) and its Cargo.lock:
+//   crosstalk-spec = { path = "<crosstalk>/spec" }
+//   crosstalk-eval = { path = "<crosstalk>/crates/eval" }
+//   serde_json = "=1.0.151"
+// `cargo run --release > crosstalk-7f8a2fb-corpus-vectors.json`.
+//! Reference vectors from crosstalk at the pinned commit, for the bench's
+//! corpus tests: the virtual clock (Pace::at, compose, ordinal) and the
+//! synthetic credential digest and vendor of corpus agents.
+use std::time::Duration;
+
+use crosstalk_eval::corpus::client::{synthetic_client, vendor_of};
+use crosstalk_eval::corpus::clock::{EPOCH_MICROS, MIN_STEP, Pace, compose, ordinal};
+use crosstalk_eval::keys::{AgentKey, DatasetId, WorldKey};
+use serde_json::{Value, json};
+
+fn time(result: Result<crosstalk_spec::support::Timestamp, impl std::fmt::Debug>) -> Value {
+    match result {
+        Ok(at) => json!(at.as_micros()),
+        Err(error) => json!({"error": format!("{error:?}")}),
+    }
+}
+
+fn main() {
+    let paces: [(u64, u64, u64); 9] = [
+        (1_000, 5_000, 0),
+        (1_000, 5_000, 1),
+        (1_000, 5_000, 9),
+        (1_000, 5_000, u64::MAX),
+        (2_000, 2_400, 1),
+        (1_000, 1_000, 3),
+        (1_000, 60_000, 42),
+        (1_000, 1_001, 7),
+        (999, 5_000, 0),
+    ];
+    let mut majors: Vec<u64> = (0..=40).collect();
+    majors.extend([1_000, 12_345, 1 << 20, 1 << 40, u64::MAX / 3_000_000, u64::MAX]);
+    let inner: [(u64, u64); 6] = [(0, 0), (1, 0), (0, 1), (999, 999), (500, 7), (1_000, 0)];
+    let pace_vectors: Vec<Value> = paces
+        .iter()
+        .map(|&(min, max, seed)| {
+            match Pace::new(Duration::from_millis(min), Duration::from_millis(max), seed) {
+                Err(error) => json!({"min_ms": min, "max_ms": max, "seed": seed, "error": format!("{error:?}")}),
+                Ok(pace) => {
+                    let at: Vec<Value> = majors
+                        .iter()
+                        .flat_map(|&major| inner.iter().map(move |&(minor, sub)| (major, minor, sub)))
+                        .map(|(major, minor, sub)| {
+                            json!({"major": major, "minor": minor, "sub": sub, "at": time(pace.at(major, minor, sub))})
+                        })
+                        .collect();
+                    json!({
+                        "min_ms": min, "max_ms": max, "seed": seed,
+                        "min_us": pace.min().as_micros() as u64,
+                        "max_us": pace.max().as_micros() as u64,
+                        "at": at,
+                    })
+                }
+            }
+        })
+        .collect();
+    let composed: Vec<Value> = (0..30u64)
+        .map(|major| (major, major % 7 * 100, major * 13 % 1_000))
+        .chain([(0, 1_000, 0), (0, 0, 1_000), (u64::MAX, 0, 0)])
+        .map(|(major, minor, sub)| json!({"major": major, "minor": minor, "sub": sub, "at": time(compose(major, minor, sub))}))
+        .collect();
+    let ordinals: Vec<Value> = (0..10u64)
+        .chain([1_000, 1_000_000, u64::MAX / 1_000, u64::MAX / 1_000 + 1, u64::MAX])
+        .map(|n| json!({"ordinal": n, "at": time(ordinal(n))}))
+        .collect();
+    let agents = [
+        ("salt", "trace-0001", "alice"),
+        ("salt", "trace-0001", "bob"),
+        ("salt", "trace-0002", "alice"),
+        ("ai-village", "2026-07-13", "Claude Opus 4"),
+        ("demo-swarm/headline", "run", "agent-3"),
+        ("wiki", "w ü", "\u{1F600}"),
+        ("", "", ""),
+    ];
+    let credentials: Vec<Value> = agents
+        .iter()
+        .map(|&(dataset, world, name)| {
+            let key = AgentKey::new(WorldKey::new(world), name);
+            let client = synthetic_client(&DatasetId::new(dataset), &key, "m");
+            let digest = client
+                .credential
+                .map(|c| c.hash.digest().to_hex())
+                .unwrap_or_default();
+            json!({"dataset": dataset, "world": world, "agent": name, "credential_digest": digest})
+        })
+        .collect();
+    let models = [
+        "bedrock/converse/global.anthropic.claude-opus-4-6-v1",
+        "claude-3-5-sonnet",
+        "gemini/gemini-3.7-flash",
+        "google/gemma-3",
+        "openai/gpt-5.6-luna",
+        "gpt-4o",
+        "deepseek/deepseek-v4-flash",
+        "Qwen/Qwen3-32B",
+        "script",
+        "",
+    ];
+    let vendors: Vec<Value> = models
+        .iter()
+        .map(|model| json!({"model": model, "vendor": format!("{:?}", vendor_of(model))}))
+        .collect();
+    let out = json!({
+        "crosstalk": "7f8a2fb",
+        "epoch_micros": EPOCH_MICROS,
+        "min_step_us": MIN_STEP.as_micros() as u64,
+        "paces": pace_vectors,
+        "compose": composed,
+        "ordinal": ordinals,
+        "credentials": credentials,
+        "vendors": vendors,
+    });
+    println!("{}", serde_json::to_string_pretty(&out).unwrap_or_default());
+}
