@@ -7,7 +7,8 @@ Overview:
     labels), runs any detector as a separate process over the inputs, and
     scores the detector's predictions against the labels with regression
     gates per detector. Status: design approved (docs/design/separation.md);
-    the library crates and the a2a-bench CLI are integrated; parity is next.
+    the library crates and the a2a-bench CLI are integrated; parity stages
+    P2-P4 passed on 2026-10-06 (results on test/parity).
   subsystems:
     format: >
       a2a-bench-format. On-disk types for messages, exchanges, labels and
@@ -137,7 +138,7 @@ Features Index:
     depends_on: [corpus, format]
     doc: docs/features/dataset-cipher.md
   cli:
-    description: The a2a-bench binary - export (dispatch to every converter, source digest, revision pinning, dev/holdout splits, holdout commitment), validate (every format check, counts only), input-view, run (detector contract, --twice determinism), score (resource canonicaliser, gates, exit 2), diff (exports or predictions row by row, --normalize-ids for P3)
+    description: The a2a-bench binary - export (dispatch to every converter, source digest, revision detection (HF snapshot, HF --local-dir metadata, git HEAD, else unknown) and pinning, dev/holdout splits, holdout commitment), validate (every format check, counts only), input-view, run (detector contract, --twice determinism), score (resource canonicaliser, gates, exit 2), diff (exports or predictions row by row; detector header fields reported apart; --normalize-ids names detector agents by their exchange sets and drops transmission ids, for P3)
     entry_points: [crates/cli/src/bin/a2a-bench/main.rs, crates/cli/src/lib.rs, crates/cli/src/datasets/dispatch.rs]
     depends_on: [format, corpus, resource, score, dataset-salt, dataset-agentdojo, dataset-tau2, dataset-wiki, dataset-swarm, dataset-open-swe, dataset-lmcache, dataset-swe-splice, dataset-cipher, dataset-ai-village, dataset-demo-swarm]
     doc: docs/features/cli.md
