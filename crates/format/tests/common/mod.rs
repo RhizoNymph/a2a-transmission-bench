@@ -140,6 +140,7 @@ fn exchange(
         response: Response {
             messages: response.iter().map(|m| m.id()).collect(),
             stop: None,
+            error: None,
         },
         fidelity: Fidelity::Exact,
         source,

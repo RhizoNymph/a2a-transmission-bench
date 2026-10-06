@@ -16,8 +16,8 @@ pub struct Repository {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ThreadKind {
+    /// A GitHub issue or pull request (one number space), or a GitLab issue.
     Issue,
-    Pull,
     MergeRequest,
 }
 
@@ -47,9 +47,19 @@ pub enum Resource {
         kind: CollectionKind,
     },
     Url(String),
-    /// A file outside any repository, on a filesystem the agents share.
+    /// A file outside any repository: on a filesystem the agents share, or
+    /// on `host` when the file is on a named machine.
     File {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        host: Option<String>,
         path: String,
+    },
+    /// A resource behind an MCP tool, keyed by the argument that names it.
+    Mcp {
+        server: String,
+        tool: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target: Option<String>,
     },
     /// A resource behind a tool, keyed by the argument that names it.
     Opaque {

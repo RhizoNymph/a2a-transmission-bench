@@ -257,6 +257,7 @@ fn world_new_runs_the_format_checks() {
         response: Response {
             messages: vec![],
             stop: None,
+            error: None,
         },
         fidelity: Fidelity::Reconstructed,
         source: SourceRef::new("f", "/x"),
@@ -367,4 +368,79 @@ fn in_memory_sources_stream_their_worlds() {
     assert_eq!(source.dataset(), &dataset());
     assert_eq!(source.worlds().count(), 1);
     assert_eq!(source.worlds().count(), 0);
+}
+
+#[test]
+fn recorded_clients_are_kept_as_they_are() {
+    let mut world = WorldBuilder::new(dataset(), world_key("w"));
+    let a = ok(world.model_agent("a", "openai/gpt-4o"));
+    let recorded = Client {
+        credential: "k:recorded".into(),
+        session: Some("s-9".into()),
+        turn: Some(3),
+        vendor: None,
+        model: Some("as-sent".into()),
+    };
+    let mut d = draft(&a, 1, vec![user("q")], says("r"));
+    // The draft's model, session and turn give way to the recorded client.
+    d.model = Some("ignored".into());
+    d.session = Some("ignored".into());
+    let id = ExchangeId::from_raw(7);
+    assert_eq!(
+        world.recorded_exchange_with_client(id, recorded.clone(), d),
+        Ok(id)
+    );
+    // The usual checks still hold.
+    assert!(matches!(
+        world.recorded_exchange_with_client(
+            ExchangeId::from_raw(8),
+            recorded.clone(),
+            draft(&a, 1, vec![user("q")], says("r"))
+        ),
+        Err(CorpusError::OutOfOrder { .. })
+    ));
+    let world = ok(world.finish(Coverage::Partial));
+    assert_eq!(world.exchanges()[0].client, recorded);
+    assert_eq!(world.agent_of(id), Some(a.key()));
+}
+
+#[test]
+fn scripted_agents_may_name_their_model() {
+    let mut world = WorldBuilder::new(dataset(), world_key("w"));
+    let a = ok(world.model_agent("a", "m"));
+    let s = ok(world.scripted_agent_with_model("s", "configured/model"));
+    ok(world.exchange(draft(&a, 1, vec![user("q")], says("r"))));
+    assert!(matches!(
+        world.exchange(draft(&s, 2, vec![user("q")], says("r"))),
+        Err(CorpusError::ScriptedAgent(_))
+    ));
+    let world = ok(world.finish(Coverage::Partial));
+    let decl = world
+        .decl()
+        .agents
+        .iter()
+        .find(|agent| agent.key == *s.key())
+        .unwrap_or_else(|| panic!("s undeclared"));
+    assert_eq!(decl.driven, Driven::Scripted);
+    assert_eq!(decl.model.as_deref(), Some("configured/model"));
+}
+
+#[test]
+fn notes_add_up_and_zero_is_not_recorded() {
+    let (mut world, alice, _) = builder();
+    ok(world.exchange(draft(&alice, 1, vec![user("q")], says("r"))));
+    world.add_note("uncarried_control", 2);
+    world.add_note("uncarried_control", 1);
+    world.add_note("nothing", 0);
+    let mut world = ok(world.finish(Coverage::Partial));
+    world.add_note("key_group_not_a_cluster", 1);
+    world.add_note("uncarried_control", 0);
+    assert_eq!(
+        world.notes(),
+        &[
+            ("key_group_not_a_cluster".to_owned(), 1),
+            ("uncarried_control".to_owned(), 3),
+        ]
+        .into()
+    );
 }
