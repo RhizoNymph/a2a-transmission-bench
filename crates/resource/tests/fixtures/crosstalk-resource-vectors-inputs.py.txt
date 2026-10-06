@@ -1,0 +1,203 @@
+"""Builds inputs.json and repositories.json for the resource vector generator."""
+import itertools, json, re, sys
+
+doc = open(sys.argv[1]).read()
+table = doc.split("<!-- spec-table:start -->")[1].split("<!-- spec-table:end -->")[0]
+spec = []
+for line in table.splitlines():
+    m = re.match(r"\| `(canonical_url|normalized_url|canonical_remote)` \| `(.*?)` \|", line)
+    if m:
+        spec.append(m.group(2).replace("\\|", "|"))
+
+inputs = list(spec)
+def add(*xs):
+    for x in xs:
+        inputs.append(x)
+
+# GitHub web forms over several owners/names and spellings.
+owners = ["o", "AgentVillage", "my-org", "a.b", "x_y", "Org123"]
+names = ["n", "Atlas", "repo.js", "my_repo", "n.git", "dotted.name"]
+for o, n in itertools.product(owners, names):
+    add(f"https://github.com/{o}/{n}")
+for o, n in itertools.product(owners[:3], names[:3]):
+    for host in ["github.com", "www.github.com", "GITHUB.COM", "github.com.", "github.com:443", "github.com:80"]:
+        add(f"https://{host}/{o}/{n}")
+    add(f"http://github.com/{o}/{n}/", f"github.com/{o}/{n}", f"www.github.com/{o}/{n}",
+        f"git@github.com:{o}/{n}.git", f"ssh://git@github.com/{o}/{n}.git",
+        f"ssh://git@github.com:22/{o}/{n}.git", f"git://github.com/{o}/{n}.git",
+        f"https://user:token@github.com/{o}/{n}.git", f"https://{o}.github.io/{n}/",
+        f"https://{o}.github.io/{n}/docs/index.html", f"https://{o}.github.io")
+for suffix in ["", "/", "/tree/main", "/tree/main/", "/tree/main/src", "/tree/v1.0", "/blob/main/README.md",
+               "/blob/main/src/a/b/c.rs", "/blob/main/src/../lib.rs", "/blob/3f2c1a9/x%20y.md",
+               "/blob/main/%E2%82%AC.txt", "/blob/main/a%2Fb.txt", "/blob/main/a%00b", "/raw/main/data.csv",
+               "/raw/main", "/blob", "/issues", "/issues/", "/issues/1", "/issues/42/", "/issues/42#issuecomment-9",
+               "/issues/42?foo=bar", "/issues/0", "/issues/18446744073709551615", "/issues/18446744073709551616",
+               "/issues/-1", "/issues/1e3", "/issues/new", "/issues/new/choose", "/pull/3", "/pull/3/files",
+               "/pull/3/commits/abc", "/pulls", "/pulls/3", "/pull", "/commits", "/commits/main",
+               "/releases", "/releases/tag/v1", "/wiki", "/wiki/Home", "/actions", "/settings",
+               "/archive/refs/heads/main.zip", "/compare/main...dev", "/discussions/5", "/.git", "/info/refs?service=git-upload-pack",
+               "/Issues/3", "/ISSUES", "?tab=readme", "#readme"]:
+    add(f"https://github.com/o/n{suffix}")
+for first in ["about", "apps", "collections", "contact", "customer-stories", "enterprise", "events", "explore",
+              "features", "issues", "login", "marketplace", "new", "notifications", "orgs", "pricing", "pulls",
+              "search", "settings", "sponsors", "topics", "users", "Settings", "trending", "o"]:
+    add(f"https://github.com/{first}/x")
+add("https://github.com", "https://github.com/", "https://github.com/o", "https://github.com/o/",
+    "https://github.com/search?q=atlas&type=repositories", "https://github.com/orgs/o/repositories",
+    "https://github.com/o/n%2Fx", "https://github.com/O%2FX/n", "https://github.com/o/n%20x",
+    "https://github.com/o/n+x", "https://github.com/o!/n", "https://github.com/../n",
+    "https://github.com/o/./n", "https://github.com/o/%2E%2E/n", "https://github.com/o/n/issues/%35",
+    "https://github.com:8080/o/n/issues/1", "https://gist.github.com/o/abc123", "https://github.com.evil.example/o/n",
+    "https://evilgithub.com/o/n", "https://github.community/t/x")
+# raw, codeload, api
+for path in ["o/n/main/README.md", "O/N/main/src/app.py", "o/n/refs/heads/main/a.md", "o/n/refs/tags/v1/a.md",
+             "o/n/refs/heads/main", "o/n/main", "o/n", "o/n/3f2c1a9/a/../b.md", "o/n/main/a%20b.md",
+             "o/n/refs/pull/1/head/a.md", "o/n/HEAD/x.json", "o/n.git/main/x"]:
+    add(f"https://raw.githubusercontent.com/{path}")
+for path in ["o/n", "o/n/zip/refs/heads/main", "o/n/tar.gz/v1.0", "O/N/legacy.zip/main", "o"]:
+    add(f"https://codeload.github.com/{path}")
+for path in ["repos/o/n", "repos/O/N", "repos/o/n/", "repos/o/n/contents", "repos/o/n/contents/",
+             "repos/o/n/contents/README.md", "repos/o/n/contents/src/app.py?ref=dev",
+             "repos/o/n/contents/a%2Fb.md", "repos/o/n/issues", "repos/o/n/issues/5", "repos/o/n/issues/5/comments",
+             "repos/o/n/issues/comments/123", "repos/o/n/issues/x", "repos/o/n/pulls", "repos/o/n/pulls/9",
+             "repos/o/n/pulls/9/reviews", "repos/o/n/commits", "repos/o/n/git/refs/heads/main",
+             "repos/o/n/releases/latest", "repos/o", "users/o", "user/repos", "orgs/o/repos", "search/repositories?q=x",
+             "repos/o/n/issues?state=all&per_page=100", "repos/o/n/issues/+5", "repos/o/n/pulls/007"]:
+    add(f"https://api.github.com/{path}")
+# Pages
+for host in ["o.github.io", "O.GitHub.io", "my-org.github.io", "a.b.github.io", ".github.io", "github.io",
+             "o.github.io:8080", "o.github.io."]:
+    for path in ["", "/", "/n", "/n/", "/n/page.html", "/index.html", "/N/A/b"]:
+        add(f"https://{host}{path}")
+# GitLab
+for path in ["g/p", "G/P", "g/p.git", "g/s/p", "g/s/t/p", "g/p/", "g/p/-/tree/main", "g/p/-/blob/main/src/x.py",
+             "g/s/p/-/blob/main/a/../b.md", "g/p/-/raw/main/data.csv", "g/p/-/blob/main", "g/p/-/issues",
+             "g/p/-/issues/", "g/p/-/issues/3", "g/p/-/issues/3/designs", "g/p/-/issues/x", "g/p/-/merge_requests",
+             "g/p/-/merge_requests/4", "g/p/-/merge_requests/4/diffs", "g/p/-/pipelines", "g/p/-/wikis/home",
+             "g/p/issues/5", "g/p/merge_requests/5", "g/p/-", "g/-/p", "g", "-/ide/project/g/p", "api/v4/version",
+             "dashboard/projects", "explore", "groups/g", "help", "users/sign_in", "search?search=x",
+             "g/p/-/commit/abc123", "g/p/-/tags", "g%2Fs/p"]:
+    add(f"https://gitlab.com/{path}")
+for path in ["g%2Fp", "g%2Fs%2Fp", "G%2FP", "123", "123/issues", "g%2Fp/issues", "g%2Fp/issues/5",
+             "g%2Fp/issues/5/notes", "g%2Fp/issues/x", "g%2Fp/merge_requests", "g%2Fp/merge_requests/2",
+             "g%2Fp/repository/files/README.md", "g%2Fp/repository/files/src%2Fx.py/raw",
+             "g%2Fp/repository/files/src%2Fx.py?ref=main", "g%2Fp/repository/files", "g%2Fp/repository/tree",
+             "g%2Fp/pipelines", "p", "g%2Fp/repository/files/a%2F..%2Fb.md/raw"]:
+    add(f"https://gitlab.com/api/v4/projects/{path}")
+add("https://www.gitlab.com/g/p", "gitlab.com/g/p", "git@gitlab.com:g/s/p.git", "ssh://git@gitlab.com/g/p.git",
+    "https://gitlab.example.com/g/p", "https://gitlab.com:8443/g/p", "https://GitLab.com/G/S/P/-/Issues/1")
+for host in ["g.gitlab.io", "G.GitLab.io", "site-1a2b3c.gitlab.io", "site-1a2b3g.gitlab.io", "a.b.gitlab.io",
+             "gitlab.io", "g.gitlab.io:8080"]:
+    for path in ["", "/", "/p", "/p/index.html"]:
+        add(f"https://{host}{path}")
+# MediaWiki
+for url in ["https://en.wikipedia.org/wiki/Dead_drop", "https://en.wikipedia.org/wiki/dead_drop",
+            "https://EN.Wikipedia.org/wiki/Dead%20drop#History", "https://de.wikipedia.org/wiki/Caf%c3%a9",
+            "https://de.wikipedia.org/wiki/café", "https://en.wikipedia.org/wiki/What%3F",
+            "https://en.wikipedia.org/wiki/", "https://en.wikipedia.org/wiki/_", "https://en.wikipedia.org/wiki/a%25b",
+            "https://en.wikipedia.org/wiki/Talk:x", "https://en.wikipedia.org/wiki/talk:x",
+            "https://en.wikipedia.org/wiki/%C3%9Fx", "https://en.wikipedia.org/wiki/ß", "https://en.wikipedia.org/wiki/a/b",
+            "https://en.wikipedia.org/wiki/a?action=edit", "https://en.wikipedia.org/wiki/a?action=history",
+            "https://en.m.wikipedia.org/wiki/Dead_drop", "https://m.wikidata.org/wiki/Q42",
+            "https://www.wikidata.org/wiki/Q42", "https://wikipedia.org/wiki/x", "https://en.wikipedia.org:8443/wiki/x",
+            "http://en.wikipedia.org/wiki/x", "https://en.wikipedia.org/w/index.php?title=Dead_drop&action=raw",
+            "https://en.wikipedia.org/w/index.php?action=edit&title=dead+drop",
+            "https://en.wikipedia.org/w/index.php?title=a&title=b", "https://en.wikipedia.org/w/index.php?title=b&title=a",
+            "https://en.wikipedia.org/w/index.php", "https://en.wikipedia.org/w/index.php?search=x",
+            "https://en.wikipedia.org/w/api.php?action=query&titles=Dead_drop|steganography&prop=revisions",
+            "https://en.wikipedia.org/w/api.php?action=query&titles=__x__",
+            "https://en.wikipedia.org/w/api.php?action=query&titles=|b",
+            "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=x",
+            "https://en.wikipedia.org/w/api.php?action=parse&page=Dead_drop",
+            "https://en.wikipedia.org/w/api.php?action=parse&text=x",
+            "https://en.wikipedia.org/w/api.php?action=edit&title=x&text=y",
+            "https://en.wikipedia.org/w/api.php?action=move&from=a&to=b",
+            "https://en.wikipedia.org/w/api.php?action=move&to=b",
+            "https://en.wikipedia.org/w/api.php?action=opensearch&search=x",
+            "https://en.wikipedia.org/w/api.php?format=json",
+            "https://en.wikipedia.org/w/rest.php/v1/page/dead_drop",
+            "https://en.wikipedia.org/w/rest.php/v1/page/dead_drop/history",
+            "https://en.wikipedia.org/w/rest.php/v1/search/page?q=x",
+            "https://en.wikipedia.org/api/rest_v1/page/summary/Dead_drop",
+            "https://en.wikipedia.org/api/rest_v1/page/html", "https://en.wikipedia.org/api/rest_v1/page/",
+            "https://en.wiktionary.org/wiki/dead_drop", "https://en.m.wiktionary.org/wiki/Dead_drop",
+            "https://community.fandom.com/wiki/help:Contents", "https://x.fandom.com/api.php?action=query&titles=a",
+            "https://x.fandom.com/index.php?title=b_c", "https://x.fandom.com/w/index.php?title=b",
+            "https://x.m.fandom.com/wiki/a", "https://wiki.example.org/wiki/dead_drop",
+            "https://commons.wikimedia.org/wiki/File:X.png", "https://www.mediawiki.org/wiki/API:Main_page",
+            "https://en.wikipedia.org/wiki/A%23b", "https://en.wikipedia.org/wiki/A%5Cb", "https://en.wikipedia.org/wiki/%E2%82%AC_sign",
+            "https://en.wikipedia.org/wiki/%FF"]:
+    add(url)
+# Generic URL forms: hosts, ports, cases, encodings, queries.
+for scheme in ["http", "https", "HTTP", "Https", "ftp", "ws", "wss", "git", "ssh", "foo"]:
+    for host in ["example.com", "Example.COM", "example.com.", "example.com:80", "example.com:443", "example.com:8080",
+                 "user:pw@example.com"]:
+        add(f"{scheme}://{host}/a/b?x=1#f")
+for path in ["", "/", "//", "/a//b", "/a/./b", "/a/../../b", "/%7Euser", "/%7e", "/%41%42", "/%2f", "/%2F%2e",
+             "/a%20b", "/a b", "/a+b", "/ü", "/%C3%BC", "/%c3%bc", "/%zz", "/%4", "/%", "/a;b=c", "/a:b",
+             "/%2E%2E/x", "/.%2e/x", "/a/%2e", "/\u20ac", "/a\\b", "/a|b", "/a\"b", "/a<b>", "/a`b", "/a{b}",
+             "/a'b", "/a%27b", "/a^b", "/%5E", "/~", "/a?", "/a?#", "/a#?x=1"]:
+    add(f"https://example.com{path}")
+for query in ["a=1", "b=2&a=1", "a=1&a=0", "a", "a=", "=a", "&", "&&", "a=1&&b=2&", "a=%7e", "a=%7E&b=%2f",
+              "a=x+y", "a=x%20y", "a=x y", "q=ü", "q=%C3%BC", "b=1;a=2", "A=1&a=1&_=1&~=1&0=1", "a=%zz",
+              "z=1&a=1&m=1", "a=1&b=2&a=1", "a='x'", "a=\"x\"", "a=<b>", "a=1#frag", "a=%26b", "%61=1"]:
+    add(f"https://example.com/p?{query}")
+for host in ["bücher.example", "BÜCHER.example", "xn--bcher-kva.example", "例え.jp", "faß.de", "ﬁ.example",
+             "xn--", "XN--", "xn--a.example", "a_b.example", "a..b.example", ".example.com", "example..com",
+             "-a.example", "a-.example", "127.0.0.1", "127.1", "0x7f.0.0.1", "[::1]", "[::FFFF:127.0.0.1]",
+             "[1:2:3:4:5:6:7:8]", "[::1", "256.256.256.256", "1.2.3.4.5", "999999999999", "localhost",
+             "LOCALHOST:3000", "a b.example", "a%20b.example", "a%2eb.example", "exa mple.com", "ex<ample.com",
+             "a" * 64 + ".example", "x", "example.com:65535", "example.com:65536", "example.com:0",
+             "example.com:080", "example.com:", "@example.com", "u@p@example.com", "u:p:x@example.com"]:
+    add(f"https://{host}/p")
+    add(f"http://{host}/p#x")
+for text in ["", "   ", "https://", "http:// alone", "https:///x", "https://?x", "https://#x", "//example.com/a",
+             "/etc/passwd", "file:///etc/passwd", "file://host/etc/passwd", "mailto:a@example.com",
+             "data:text/plain,hi", "javascript:alert(1)", "urn:isbn:123", "about:blank", "tel:+123",
+             "news:comp.lang", "magnet:?xt=urn:x", "s3://bucket/key", "gs://bucket/key", "HTTP://EXAMPLE.COM",
+             "  https://example.com/a  ", "\thttps://example.com/t\n", "https://example.com/a b c",
+             "example.com", "Example.COM/a", "example.com/a?b=2&a=1", "example.com:8080", "example.com:8080/",
+             "example.com:abc/x", "example.com:123456/x", "www.example.com", "WWW.Example.com/A", "www.readme.md",
+             "readme.md", "README.md", "main.rs", "main.rs/x", "foo.rs:1", "notes.txt", "data.json", "docs.rs",
+             "crates.io", "pypi.org/project/x", "en.wikipedia.org/wiki/x", "localhost:8080/x", "localhost",
+             "a.b", "a.b1", "a.b-c", "1.2.3.4", "1.2.3.4:80/x", "ex ample.com", "example.com.", "example.com./x",
+             "über.example/x", "-a.example", "a.-b.example", "user@example.com", "user:pw@example.com/x",
+             "example.com#frag", "example.com?q=1", "example.co.uk/a", "sub.example.museum", "x.y.z.w.example",
+             "git@github.com:o/n.git", "git@github.com:O/N", "github.com:o/n", "git@gitlab.com:g/s/p.git",
+             "git@localhost:o/n", "user@host.example:o/n.git", "host.example:/abs/n", "host.example://x/n",
+             "host:o/n", "C:\\x\\y", "C:/x/y", "c:o/n", "\\\\server\\share", "~/repo", "../repo", "./repo",
+             ".", "/srv/git/n.git", "/srv/git/n.git/", "/", "file:///srv/git/n.git", "file://", "file:///",
+             "ssh://host.example/o/n", "ssh://user@host.example:2222/o/n.git", "ssh://host.example", "ssh://host.example/n",
+             "ssh://[::1]/o/n", "ssh://user@[::1]:22/o/n", "git+ssh://git@github.com/o/n", "ssh+git://github.com/o/n.git",
+             "git://github.com/o/n", "HTTPS://GitHub.com/O/N", "Https://github.com/o/n", "https://github.com/o/n.git.git",
+             "https://github.com/o/.git", "https://github.com/o/n/.git", "https://github.com//o//n//",
+             "https://github.com/o/n?x=1", "https://github.com/o/n#x", "https://host.example:8443/g/s/p.git",
+             "https://user:pw@host.example/o/n", "https://host_bad.example/o/n", "https://www.www.host.example/o/n",
+             "git@www.www.github.com:o/n", "https://github.com./o/n", "https://GITHUB.COM.:443/O/N.GIT",
+             "git@github.com:o/n with space", "git@github.com:", "git@github.com:/o/n", "git@github.com:o",
+             "git@github.com:o/n/", "git@github.com:o//n", "git@github.com:./n", "git@github.com:o/..",
+             "git@github.com:o/ü", "git@GitHub.com:Org/Repo.git", "ftp://host.example/o/n",
+             "http://localhost:3000/o/n.git", "http://127.0.0.1/o/n", "http://[::1]/o/n"]:
+    add(text)
+
+# Deduplicate preserving order.
+seen = set()
+unique = []
+for x in inputs:
+    if x not in seen:
+        seen.add(x)
+        unique.append(x)
+
+triples = []
+for h in ["github.com", "GitHub.COM", "www.github.com", "WWW.GitHub.com", "github.com.", "github.com..",
+          "github.com:443", "www.www.github.com", "www.", "", ".github.com", "git hub.com", "github_com",
+          "[::1]", "127.0.0.1", "bücher.example", "a-b.example"]:
+    triples.append([h, "o", "n"])
+for o in ["O", "a/b", "/a/b/", "a//b", "a/./b", "..", ".", "", "a b", "a+b", "ü", "a.b-c_d", "A/B/C"]:
+    triples.append(["github.com", o, "n"])
+for n in ["N", "n.git", "N.GIT", "n.git.git", ".git", "/n/", "a/b", "", ".", "..", "n x", "n.js", "-", "_"]:
+    triples.append(["github.com", "o", n])
+
+json.dump(unique, open(sys.argv[2], "w"), ensure_ascii=False, indent=0)
+json.dump(triples, open(sys.argv[3], "w"), ensure_ascii=False, indent=0)
+print(len(spec), len(unique), len(triples))

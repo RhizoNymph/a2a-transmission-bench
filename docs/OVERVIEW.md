@@ -7,7 +7,7 @@ Overview:
     labels), runs any detector as a separate process over the inputs, and
     scores the detector's predictions against the labels with regression
     gates per detector. Status: design approved (docs/design/separation.md);
-    the format crate exists, the rest is being ported.
+    the format and resource crates exist, the rest is being ported.
   subsystems:
     format: >
       a2a-bench-format. On-disk types for messages, exchanges, labels and
@@ -15,8 +15,10 @@ Overview:
       id derivation; format versioning. Every other crate depends on it.
     resource: >
       a2a-bench-resource. The neutral resource canonicaliser (URLs, forge
-      repositories, repo files, threads, collections) used by converters for
-      labels and by the scorer for predicted channels.
+      repositories, repo files, threads, collections, wiki pages) used by
+      converters for labels and by the scorer, which canonicalizes labels and
+      predictions alike. Version 1 equals crosstalk's extractor at 7f8a2fb;
+      depends only on format and url.
     datasets: >
       a2a-bench-datasets. One converter per dataset (salt, agentdojo, tau2,
       collusion-wiki, swarm-traces, open-swe, lmcache, swe-splice, cipher,
@@ -42,6 +44,11 @@ Features Index:
     entry_points: [crates/format/src/lib.rs]
     depends_on: []
     doc: docs/features/format.md
+  resource:
+    description: Neutral resource canonicaliser - canonical URLs, forge repositories, files, threads and collections, git remotes, canonicalize and kind; normative spec table and parity vectors from crosstalk 7f8a2fb
+    entry_points: [crates/resource/src/lib.rs]
+    depends_on: [format]
+    doc: docs/features/resource.md
   separation:
     description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
     entry_points: []
