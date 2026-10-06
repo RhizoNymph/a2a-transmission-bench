@@ -1,7 +1,7 @@
 //! Canonical resources: from text (a URL, a git remote) and from any
 //! `Resource`.
 
-use a2a_bench_format::resource::{Repository, Resource, ThreadKind};
+use a2a_bench_format::resource::{Repository, Resource};
 
 use crate::error::UrlError;
 use crate::repository::path::absolute;
@@ -42,13 +42,13 @@ pub fn normalized_url(text: &str) -> Result<Resource, UrlError> {
 ///   they are;
 /// - a repository file's path: absolute (a relative one is taken from the
 ///   repository root) and resolved lexically;
-/// - a thread: a `pull` is an `issue` (GitHub's pull requests share the
-///   issues' numbers and conversation);
+/// - a thread: its repository canonical (GitHub pull requests are already
+///   `issue` threads in the format: one number space);
 /// - a URL: [`canonical_url`] of its text, so a URL that names a forge
 ///   page becomes that repository, file, thread or collection; text that
 ///   is no URL stays as it is;
-/// - a file: an absolute path resolved lexically;
-/// - an opaque key: as it is.
+/// - a file: an absolute path resolved lexically, its host as it is;
+/// - an MCP resource or an opaque key: as it is.
 pub fn canonicalize(resource: &Resource) -> Resource {
     let mut current = step(resource);
     for _ in 1..MAX_STEPS {
@@ -74,10 +74,7 @@ fn step(resource: &Resource) -> Resource {
             number,
         } => Resource::Thread {
             repository: canonical_repository(repository),
-            kind: match kind {
-                ThreadKind::Issue | ThreadKind::Pull => ThreadKind::Issue,
-                ThreadKind::MergeRequest => ThreadKind::MergeRequest,
-            },
+            kind: *kind,
             number: *number,
         },
         Resource::Collection { repository, kind } => Resource::Collection {
@@ -85,10 +82,11 @@ fn step(resource: &Resource) -> Resource {
             kind: *kind,
         },
         Resource::Url(text) => canonical_url(text).unwrap_or_else(|_| resource.clone()),
-        Resource::File { path } => Resource::File {
+        Resource::File { host, path } => Resource::File {
+            host: host.clone(),
             path: absolute(path).unwrap_or_else(|| path.clone()),
         },
-        Resource::Opaque { .. } => resource.clone(),
+        Resource::Mcp { .. } | Resource::Opaque { .. } => resource.clone(),
     }
 }
 

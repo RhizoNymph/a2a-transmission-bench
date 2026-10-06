@@ -210,7 +210,7 @@ fn clusters_need_two_agents() {
     let one = ClusterFields {
         id: label_id("c"),
         agents: vec![common::agent_key("a")],
-        kind: ClusterKind::Identity,
+        cluster: ClusterKind::Identity,
         tier: Tier::Structural,
         source: SourceRef::new("f", "/"),
     };
