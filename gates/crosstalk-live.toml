@@ -68,13 +68,18 @@ min = 0.98
 # the forwarding tier): 0.967 (910 / 941), at an overall precision of
 # 0.144, so none of the headline live gates apply to that configuration.
 
+# Lowered from 0.94 (set at crosstalk c3cd7f2) at crosstalk's request
+# (crosstalk PR #109): crosstalk's nearer-source rule (INV-1154) narrowed
+# forwarding on purpose, and the bench's parity baseline at 7f8a2fb measured
+# 0.885. Recorded here because a gate change requested by the detector's
+# authors is reviewed in the bench.
 [[gate]]
 name = "salt (live, forwarding on): forwarded tool output is found"
 variant = "forwarding-on"
 dataset = "salt"
 tier = "forwarding"
 metric = "recall"
-min = 0.94
+min = 0.86
 
 [[gate]]
 name = "salt (live): nothing is attributed to a scripted sender"
