@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/format"]
+members = ["crates/format", "crates/score"]
 
 [workspace.package]
 version = "0.1.0"

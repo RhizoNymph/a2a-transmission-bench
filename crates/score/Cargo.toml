@@ -1,0 +1,20 @@
+[package]
+name = "a2a-bench-score"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Scoring for a2a-transmission-bench: alignment, judge, scorer, report and gates."
+
+[lints]
+workspace = true
+
+[dependencies]
+a2a-bench-format = { version = "0.1.0", path = "../format" }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+thiserror = "=2.0.21"
+toml = "=1.1.6"
+
+[dev-dependencies]
+tempfile = "=3.27.0"
