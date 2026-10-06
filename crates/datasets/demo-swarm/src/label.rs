@@ -8,6 +8,7 @@
 //! world: the truth's agents (model-driven), the indexed exchanges sorted by (at_us, agent, id),
 //!        the messages they use; exchange_agent rows from the index
 //! Resolver(truth rows) ─▶ labels, each checked against the world ─▶ World::new (all checks again)
+//! diagnostics ─▶ counts by failure name ─▶ World::add_note (the manifest's notes)
 //! ```
 
 use std::collections::BTreeSet;
@@ -221,7 +222,7 @@ pub fn label(
 
     let mut labels = checker.into_rows();
     labels.extend(made.labels);
-    let world = World::new(
+    let mut world = World::new(
         dataset,
         decl,
         messages,
@@ -231,6 +232,9 @@ pub fn label(
             tier: Tier::Construction,
         },
     )?;
+    for (name, count) in diagnostics.by_failure() {
+        world.add_note(name, count);
+    }
     tracing::info!(
         dataset = %world.dataset(),
         world = %world.key(),

@@ -205,6 +205,7 @@ impl Log {
             response: Response {
                 messages: vec![response.id()],
                 stop: Some("tool_use".to_owned()),
+                error: None,
             },
             fidelity: Fidelity::Exact,
             source: SourceRef::new("exchange-log.jsonl", format!("exchange/{id}")),

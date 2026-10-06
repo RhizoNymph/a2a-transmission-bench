@@ -97,14 +97,16 @@ DemoSwarmSource::open(Inputs, Options)
       Checker(WorldInputs, exchange_agent rows)
       Resolver::resolve(truth rows) ──▶ labels (each checked), counts, diagnostics
       World::new(dataset, decl, messages, exchanges, rows + labels,
-                 complete {construction}) ──▶ Labelled
+                 complete {construction})
+      World::add_note(failure name, count) per diagnostic name ──▶ Labelled
   FilesRead: truth, messages, exchanges
 
 TraceSource::worlds() ──▶ the one World
 write_export(inputs, out_dir, options, converter, source_path)
   ManifestInfo {dataset, version 1, source {path, revision = header.run, digest},
                 selection = Options::settings(), pace = {}}
-  corpus::export(source, out_dir, info, Unsplit) ──▶ messages, exchanges, labels, manifest
+  corpus::export(source, out_dir, info, Unsplit) ──▶ messages, exchanges, labels,
+                                                    manifest (world notes = diagnostics by failure)
   write_diagnostics ──▶ diagnostics.json
 ```
 
@@ -132,12 +134,12 @@ write_export(inputs, out_dir, options, converter, source_path)
 | Row | Label | id |
 | --- | --- | --- |
 | `session` | none; maps the session to its agent (`unknown_session` noted when the capture lacks it) | |
-| `transmission` | `transmission`: route `channel {url}` (`normalized_url` of the route URL), carrier `tool_result`, tier `construction`, needs `decoded [json_string]` when the body holds `"`, `\` or a control character, else `exact` | `line/<n>` |
+| `transmission` | `transmission`: route `channel {url}` (`normalized_url` of the route URL), carrier `tool_result`, tier `construction`, needs `MatchNeed::through_json_string` of the body (`decoded [json_string]` when it holds `"`, `\` or a control character, else `exact`) | `line/<n>` |
 | `self_read` | `negative_control` `self_read`, writer → writer, at the read, with its text | `line/<n>` |
 | `reread` | `negative_control` `reread`, writer → reader, at the read, with its text | `line/<n>` |
 | `miss` | `negative_control` `miss` from every other agent of the world to the reader, at the read (the not-found result), no text; no digest check | `line/<n>/<sender>` |
 | `unattributed_read` | `exemption` `unknown_sender` at the read, with its text | `line/<n>` |
-| `agent_cluster` | `agent_cluster` kind `key_group` of its distinct agents (sorted), tier `construction`, when two or more; else `key_group_not_a_cluster` (noted) | `line/<n>` |
+| `agent_cluster` | `agent_cluster` with `cluster: key_group` of its distinct agents (sorted), tier `construction`, when two or more; else `key_group_not_a_cluster` (noted) | `line/<n>` |
 
 Every label's source is `{file: <truth file name>, path: "line/<n>"}`.
 Coverage is `complete {construction}`.
@@ -161,9 +163,9 @@ exchange is kept without it (`invalid_label`, writer side,
 | `src/locate.rs` | tool results and `PUT` calls in exchanges | `tool_result`, `write_call`, `FoundResult`, `FoundCall`, `LocateError`, `MessageIndex` |
 | `src/resolve/mod.rs` | agents, claims, the row loop | `AgentIndex`, `ResolveCounts` |
 | `src/resolve/join.rs` | reader and writer joins | (crate-internal) |
-| `src/resolve/rows.rs` | rows to checked labels | `needs`, `json_escapes` |
+| `src/resolve/rows.rs` | rows to checked labels (needs from the format's `MatchNeed::through_json_string`) | |
 | `src/resolve/check.rs` | one label against the world | (crate-internal `Checker`) |
-| `src/diagnostics.rs` | the typed join-diagnostics table | `Diagnostic`, `Diagnostics` (`table`, `render`, `named`), `DiagnosticCount`, `JoinFailure`, `RowKind`, `Side`, `Effect` |
+| `src/diagnostics.rs` | the typed join-diagnostics table | `Diagnostic`, `Diagnostics` (`table`, `by_failure`, `render`, `named`), `DiagnosticCount`, `JoinFailure`, `RowKind`, `Side`, `Effect` |
 | `src/label.rs` | labelling one capture | `label`, `Labelled` (`report`), `CaptureCounts`, `DiagnosticsReport`, `LabelError` |
 | `src/source.rs` | trace source, export, diagnostics file | `DemoSwarmSource` (`open`, `labelled`, `into_labelled`, `files_read`, `run`), `Inputs` (`in_dir`), `write_export`, `write_diagnostics`, `read_truth`, `DIAGNOSTICS_FILE`, `Error` |
 | `tests/swarm_truth/` | ported ct-eval tests over a synthetic capture (`fixture.rs`; `truth`, `join`, `window`, `sessions`, `scenario`, `export`) | |
@@ -182,6 +184,16 @@ exchange is kept without it (`invalid_label`, writer side,
   `client.turn` that disagrees with the ordinal is one diagnostic with
   its effect (`dropped`, `kept`, `kept_without_sender`, `noted`,
   `excluded`).
+- **Manifest notes.** The world's `notes` in `manifest.json` are the
+  diagnostics counted by failure name (`key_group_not_a_cluster`,
+  `hash_mismatch`, …), so they sum to `diagnostics.json`'s entry count
+  (tested). Truth: the input view drops them.
+- **The world is assembled with `World::new`, not the builder.** The
+  capture's exchanges (ids, clients, `response.error`, messages) are
+  carried verbatim; the builder's `recorded_exchange_with_client` keeps
+  the client but would drop a failed call's `response.error` (the builder
+  writes none), fold free-text stop reasons into `StopReason` and rebuild
+  message storage, so it is not used.
 - **One run is one world.** The world holds the in-window exchanges of
   the sessions the truth names; agents are every name the truth gives.
 - **Determinism.** Agents, sessions and claims are ordered maps;
@@ -208,7 +220,7 @@ exchange is kept without it (`invalid_label`, writer side,
   without a sender. A miss is joined with no digest check.
 - `turn_out_of_range` versus `tool_use_missing` depends only on whether
   the named turn is past the session's exchange count.
-- `needs` is `decoded [json_string]` whenever the body holds a character
+- `needs` (the format's `MatchNeed::through_json_string`) is `decoded [json_string]` whenever the body holds a character
   JSON escapes, since the writer's `PUT` carried it escaped, even though
   the reader's tool result is raw.
 - The window's latest time is the greatest `at_unix_ms`,

@@ -182,7 +182,7 @@ fn a_shared_key_group_is_a_key_group_cluster_not_an_identity() {
         })
         .collect();
     assert_eq!(clusters.len(), 1);
-    assert_eq!(clusters[0].kind, ClusterKind::KeyGroup);
+    assert_eq!(clusters[0].cluster, ClusterKind::KeyGroup);
     assert_eq!(clusters[0].agents, [key("a002"), key("a003")]);
     assert_eq!(clusters[0].id.as_str(), "line/10");
     assert_eq!(labelled.resolved.key_groups, 2);
@@ -431,7 +431,7 @@ fn only_a_self_read_control_names_one_agent_twice() {
     let one = a2a_bench_format::labels::ClusterFields {
         id: LabelId::new("line/1").unwrap(),
         agents: vec![key("a001")],
-        kind: ClusterKind::KeyGroup,
+        cluster: ClusterKind::KeyGroup,
         tier: Tier::Construction,
         source: SourceRef::new("truth.jsonl", "line/1"),
     };

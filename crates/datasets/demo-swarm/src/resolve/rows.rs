@@ -6,7 +6,7 @@ use std::collections::BTreeSet;
 
 use a2a_bench_format::ids::{AgentKey, ExchangeId, LabelId, SourceRef};
 use a2a_bench_format::labels::{
-    AgentCluster, CarrierKind, ClusterFields, ClusterKind, Codec, ControlFields, Exemption,
+    AgentCluster, CarrierKind, ClusterFields, ClusterKind, ControlFields, Exemption,
     ExemptionFields, ExemptionReason, ExpectedContent, ExpectedTransmission, Label, MatchNeed,
     NegativeControl, NegativeReason, Route, Tier, TransmissionFields,
 };
@@ -18,27 +18,6 @@ use super::join::ReadJoin;
 use crate::diagnostics::{Effect, JoinFailure, RowKind, Side};
 use crate::schema::{Delivery, KeyGroup, Miss, TruthRoute, UnattributedRead};
 use crate::truth_file::DeliveryKind;
-
-/// `decoded [json_string]` when the page holds a character JSON escapes
-/// (the writer's `PUT` carries it escaped inside its arguments, and the
-/// reader gets it raw), `exact` otherwise: ct-eval's
-/// `MatchNeed::through_json_string`.
-pub fn needs(text: &str) -> MatchNeed {
-    if json_escapes(text) {
-        MatchNeed::Decoded {
-            codecs: vec![Codec::JsonString],
-        }
-    } else {
-        MatchNeed::Exact
-    }
-}
-
-/// Whether JSON escapes a character of `text`: a quote, a backslash or a
-/// control character below U+0020.
-pub fn json_escapes(text: &str) -> bool {
-    text.chars()
-        .any(|ch| matches!(ch, '"' | '\\' | '\u{0}'..='\u{1f}'))
-}
 
 /// A label that could not be made, and why.
 type Refused = String;
@@ -141,7 +120,7 @@ impl Resolver<'_> {
                 text: read.found.text.clone(),
                 at: read.found.at,
             },
-            needs: needs(&read.found.text),
+            needs: MatchNeed::through_json_string(&read.found.text),
             tier: Tier::Construction,
             source: self.source(line),
         })
@@ -316,7 +295,7 @@ impl Resolver<'_> {
                 Ok(ClusterFields {
                     id: Self::id(format!("line/{line}"))?,
                     agents,
-                    kind: ClusterKind::KeyGroup,
+                    cluster: ClusterKind::KeyGroup,
                     tier: Tier::Construction,
                     source: self.source(line),
                 })

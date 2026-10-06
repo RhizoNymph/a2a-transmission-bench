@@ -207,6 +207,16 @@ impl Diagnostics {
             .filter(move |entry| entry.failure.name() == name)
     }
 
+    /// Counts by failure name: the world's manifest notes
+    /// (`key_group_not_a_cluster`, `tool_use_missing`, …).
+    pub fn by_failure(&self) -> BTreeMap<&'static str, u64> {
+        let mut counts: BTreeMap<&'static str, u64> = BTreeMap::new();
+        for entry in &self.entries {
+            *counts.entry(entry.failure.name()).or_default() += 1;
+        }
+        counts
+    }
+
     /// Counts by row kind, side, failure and effect, in that order.
     pub fn table(&self) -> Vec<DiagnosticCount> {
         let mut counts: BTreeMap<(Option<RowKind>, Side, &'static str, Effect), u64> =

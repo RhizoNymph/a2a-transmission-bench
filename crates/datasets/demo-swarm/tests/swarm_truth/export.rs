@@ -227,3 +227,31 @@ fn the_source_digest_covers_the_truth_and_the_capture() {
     let after = source.files_read().digest(&dir).unwrap();
     assert_ne!(before, after);
 }
+
+#[test]
+fn the_manifest_notes_the_diagnostics_by_failure() {
+    let (_, out) = exported("export-notes", &fixture::truth_rows());
+    let manifest = read_manifest(&out).unwrap();
+    let notes = &manifest.worlds[0].notes;
+    assert_eq!(notes.get("key_group_not_a_cluster"), Some(&1));
+    // The notes are the diagnostics table summed by failure.
+    let text = std::fs::read_to_string(out.join(DIAGNOSTICS_FILE)).unwrap();
+    let report: serde_json::Value = serde_json::from_str(&text).unwrap();
+    let mut expected = std::collections::BTreeMap::<String, u64>::new();
+    for row in report["table"].as_array().unwrap() {
+        *expected
+            .entry(row["failure"].as_str().unwrap().to_owned())
+            .or_default() += row["count"].as_u64().unwrap();
+    }
+    assert_eq!(notes, &expected);
+    assert_eq!(
+        notes.values().sum::<u64>(),
+        report["diagnostics"].as_array().unwrap().len() as u64
+    );
+    // The label count is the world's labels.jsonl rows.
+    let labels = sections::<Labels>(&out.join("labels.jsonl"));
+    assert_eq!(manifest.worlds[0].labels, Some(labels[0].rows.len() as u64));
+    // Both are truth: the input view drops them.
+    let view = manifest.input_view();
+    assert!(view.worlds[0].notes.is_empty() && view.worlds[0].labels.is_none());
+}
