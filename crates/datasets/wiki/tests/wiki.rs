@@ -95,7 +95,7 @@ fn constants_and_options() {
     assert_eq!(settings["min_agents"], Setting::Int(2));
     assert_eq!(
         settings["family"],
-        Setting::Text("relay-coordination".to_owned())
+        Setting::List(vec![Setting::Text("relay-coordination".to_owned())])
     );
     let source = wiki_source(&root(), &Options::default(), Pace::DEFAULT).unwrap();
     assert_eq!(source.dataset().as_str(), DATASET);

@@ -14,8 +14,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use a2a_bench_corpus::world::WorldBuilder;
 use a2a_bench_format::ids::{AgentKey, ExchangeId, LabelId, MessageId, SourceRef};
 use a2a_bench_format::labels::{
-    CarrierKind, Codec, ControlFields, ExpectedContent, ExpectedTransmission, Label, MatchNeed,
-    NegativeControl, NegativeReason, Route, Tier, TransmissionFields,
+    CarrierKind, ControlFields, ExpectedContent, ExpectedTransmission, Label, MatchNeed,
+    NegativeControl, NegativeReason, Route, Tier, TransmissionFields, json_escapes,
 };
 use a2a_bench_format::location::{ByteRange, Location};
 use a2a_bench_format::resource::Resource;
@@ -158,7 +158,7 @@ pub fn channel(
                 text: text.to_owned(),
                 at,
             },
-            needs: through_json_string(text),
+            needs: MatchNeed::through_json_string(text),
             tier: Tier::Heuristic,
             source,
         })?;
@@ -245,24 +245,6 @@ pub fn relay(
         builder.label(Label::Transmission(label))?;
     }
     Ok(())
-}
-
-/// `Exact`, or `Decoded([JsonString])` when `text` holds a character JSON
-/// escapes (it sits escaped inside the writer's tool arguments).
-pub fn through_json_string(text: &str) -> MatchNeed {
-    if json_escapes(text) {
-        MatchNeed::Decoded {
-            codecs: vec![Codec::JsonString],
-        }
-    } else {
-        MatchNeed::Exact
-    }
-}
-
-/// Whether JSON escapes a character of `text` (`"`, `\` or a control).
-pub fn json_escapes(text: &str) -> bool {
-    text.chars()
-        .any(|ch| matches!(ch, '"' | '\\' | '\u{0}'..='\u{1f}'))
 }
 
 /// Letters and digits in `text` (ASCII alphanumerics and any non-ASCII

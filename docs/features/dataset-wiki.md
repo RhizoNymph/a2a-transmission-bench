@@ -94,7 +94,7 @@ so label ids are unique export-wide.
 | File | Role | Key exports |
 | --- | --- | --- |
 | `src/lib.rs` | constants, the source, opening and planning, `TraceSource` | `DATASET`, `VERSION`, `REVISIONS_FILE`, `PAGES_FILE`, `source`, `WikiSource` (`open`, `families`, `world_count`, `world_keys`, `files_read`) |
-| `src/options.rs` | ct-eval's flags and the selection they make | `Options` (`selection`, `settings`), `Selection` (`demo`, `keeps_page`) |
+| `src/options.rs` | ct-eval's flags and the selection they make; the manifest's `selection` (`demo`, set bounds, and `family` / `wiki` each one key holding a `Setting::List` of the values given) | `Options` (`selection`, `settings`), `Selection` (`demo`, `keeps_page`) |
 | `src/error.rs` | the converter's errors | `WikiError` |
 | `src/read.rs` | gzipped or plain JSONL members | `member`, `lines` (crate-private) |
 | `src/schema.rs` | the records read | `Revision` (`identity`), `Hunk`, `Page` |
@@ -104,7 +104,7 @@ so label ids are unique export-wide.
 | `src/tools.rs` | the one place the read/write tool shape is defined | `TOOL`, `read_args`, `write_args` |
 | `src/build/mod.rs` | one world: agents, the two passes, the page index | `world`, `MODEL`, `SYSTEM`, `PageRevs`, `inserted_text` |
 | `src/build/turns.rs` | pass 1: one turn per revision, transcripts, the call clock | `Turns`, `RevRecord`, `EditRecord`, `ReadRecord` |
-| `src/build/labels.rs` | pass 2: channel transmissions, rereads, relays | `channel`, `relay`, `Read`, `Received`, `through_json_string`, `json_escapes`, `word_chars` |
+| `src/build/labels.rs` | pass 2: channel transmissions, rereads, relays | `channel`, `relay`, `Read`, `Received`, `word_chars` (needs from the format's `MatchNeed::through_json_string` and `json_escapes`) |
 | `src/build/messages.rs` | the synthetic messages | (crate-private) |
 | `src/tally.rs` | pages, multi-author pages and revisions per family | `FamilyTally`, `FamilyStats`, `NO_FAMILY` |
 | `tests/wiki.rs` | worlds, filters, selection hint, files read, the HTTP shape, labels on the fixture, harness shape, pacing, attribution, the large-template regression, demo, tally | |

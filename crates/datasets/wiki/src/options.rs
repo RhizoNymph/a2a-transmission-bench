@@ -41,7 +41,8 @@ impl Options {
     }
 
     /// The manifest's `selection`: `demo`, and the resolved selection's
-    /// bounds and filters that are set (lists joined with `,`).
+    /// bounds and filters that are set (each repeatable flag one key
+    /// holding a `Setting::List`, in the order given).
     pub fn settings(&self) -> BTreeMap<String, Setting> {
         let selection = self.selection();
         let mut out = BTreeMap::from([("demo".to_owned(), Setting::Bool(self.demo))]);
@@ -57,7 +58,10 @@ impl Options {
         }
         for (key, list) in [("family", &selection.families), ("wiki", &selection.wikis)] {
             if !list.is_empty() {
-                out.insert(key.to_owned(), Setting::Text(list.join(",")));
+                out.insert(
+                    key.to_owned(),
+                    Setting::List(list.iter().cloned().map(Setting::Text).collect()),
+                );
             }
         }
         out
