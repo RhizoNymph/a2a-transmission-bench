@@ -139,6 +139,7 @@ pub fn world(pool: &[Pooled], plan: &Plan, pace: Pace) -> Result<World, SpliceEr
         reader_exchange,
         route: Route::Channel {
             resource: Resource::File {
+                host: None,
                 path: written.path.clone(),
             },
         },

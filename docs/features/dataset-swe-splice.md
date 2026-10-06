@@ -30,7 +30,7 @@ types, reading Open-SWE through `a2a-bench-dataset-open-swe`. Version 1
 | Field | ct-eval flag | Default | Manifest `selection` key |
 | --- | --- | --- | --- |
 | `limit` | `--limit` (shards) | all | `limit`, when set |
-| `include` | `--include` | all | `include` (JSON array text), when not empty |
+| `include` | `--include` | all | `include` (a `Setting::List` of the needles as text, in order), when not empty |
 | `count` | `--count` (splices) | 40 (`SPLICES`) | `count`, always |
 | `seed` | `--corpus-seed` | 0 | `corpus_seed`, always |
 
@@ -159,7 +159,7 @@ not `out_of_reach`.
 
 - The label id `splice/<n>` (ct-eval's labels had none); `exchange_agent`
   rows from the builder.
-- The route's resource is the bench's `file {path}`; ct-eval's was
+- The route's resource is the bench's `file {path}` (no `host`); ct-eval's was
   `Locator::File { host: None, path }`.
 - `world` takes the pace (ct-eval had `world` at the default pace and
   `world_paced`).

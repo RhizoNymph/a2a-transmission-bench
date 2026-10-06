@@ -34,8 +34,8 @@ impl Default for Options {
 
 impl Options {
     /// The manifest's `selection`: `agents_per_world` always, `limit` and
-    /// `count` when set, `include` (a JSON array of the needles) when not
-    /// empty.
+    /// `count` when set, `include` (a list of the needles, in order) when
+    /// not empty.
     pub fn settings(&self) -> BTreeMap<String, Setting> {
         let mut out = BTreeMap::new();
         out.insert(
@@ -60,7 +60,7 @@ pub fn count_setting(value: usize) -> Setting {
     i64::try_from(value).map_or_else(|_| Setting::Text(value.to_string()), Setting::Int)
 }
 
-/// Include needles as one text setting: their JSON array.
+/// Include needles as one list setting, in the order given.
 pub fn include_setting(needles: &[String]) -> Setting {
-    Setting::Text(serde_json::Value::from(needles.to_vec()).to_string())
+    Setting::List(needles.iter().cloned().map(Setting::Text).collect())
 }

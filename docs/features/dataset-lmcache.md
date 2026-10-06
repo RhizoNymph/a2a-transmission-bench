@@ -27,7 +27,7 @@ reproduces ct-eval's corpus exactly.
 | Field | ct-eval flag | Default | Manifest `selection` key |
 | --- | --- | --- | --- |
 | `limit` | `--limit` (files) | all | `limit`, when set |
-| `include` | `--include` (substring of `data/<file>`) | all | `include` (JSON array text), when not empty |
+| `include` | `--include` (substring of `data/<file>`) | all | `include` (a `Setting::List` of the needles as text, in order), when not empty |
 | `count` | `--count` (sessions per file) | all | `count`, when set |
 | `agents_per_world` | `--agents-per-world` | 16 | `agents_per_world`, always |
 

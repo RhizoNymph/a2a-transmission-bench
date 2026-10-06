@@ -28,7 +28,7 @@ corpus exactly.
 | Field | ct-eval flag | Default | Manifest `selection` key |
 | --- | --- | --- | --- |
 | `limit` | `--limit` (pools) | all | `limit`, when set |
-| `include` | `--include` (substring of the pool's stem) | `DEFAULT_POOLS` | `include` (JSON array text), when not empty |
+| `include` | `--include` (substring of the pool's stem) | `DEFAULT_POOLS` | `include` (a `Setting::List` of the needles as text, in order), when not empty |
 | `count` | `--count` (pairs per cipher) | 24 (`PAIRS_PER_CIPHER`) | `count`, always |
 | `seed` | `--corpus-seed` | 0 | `corpus_seed`, always |
 

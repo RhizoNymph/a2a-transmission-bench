@@ -74,6 +74,17 @@ fn the_dataset_is_ct_evals() {
     };
     assert_eq!(set.settings().get("count"), Some(&Setting::Int(16)));
     assert_eq!(set.settings().get("limit"), Some(&Setting::Int(5)));
+    let listed = Options {
+        include: vec!["b".into(), "a".into()],
+        ..Options::default()
+    };
+    assert_eq!(
+        listed.settings().get("include"),
+        Some(&Setting::List(vec![
+            Setting::Text("b".into()),
+            Setting::Text("a".into())
+        ]))
+    );
 }
 
 #[test]

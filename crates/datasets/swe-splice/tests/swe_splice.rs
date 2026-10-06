@@ -109,6 +109,17 @@ fn the_dataset_is_ct_evals() {
             ("count".to_owned(), Setting::Int(40)),
         ])
     );
+    let listed = Options {
+        include: vec!["b".into(), "a".into()],
+        ..Options::default()
+    };
+    assert_eq!(
+        listed.settings().get("include"),
+        Some(&Setting::List(vec![
+            Setting::Text("b".into()),
+            Setting::Text("a".into())
+        ]))
+    );
 }
 
 #[test]
@@ -387,7 +398,7 @@ fn splices_plant_one_channel_transmission() {
         assert!(label.from.as_str().starts_with("sender/"));
         assert!(label.to.as_str().starts_with("reader/"));
         let Route::Channel {
-            resource: Resource::File { path },
+            resource: Resource::File { host: None, path },
         } = &label.route
         else {
             panic!("a splice is a file channel: {:?}", label.route);
@@ -501,6 +512,7 @@ fn a_splice_world_builds_from_a_chosen_pair() {
         label.route,
         Route::Channel {
             resource: Resource::File {
+                host: None,
                 path: "/testbed/reproduce_color.py".into()
             }
         }

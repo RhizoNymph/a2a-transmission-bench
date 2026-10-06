@@ -83,6 +83,17 @@ fn the_dataset_is_ct_evals() {
         big.settings().get("corpus_seed"),
         Some(&Setting::Text(u64::MAX.to_string()))
     );
+    let listed = Options {
+        include: vec!["b".into(), "a".into()],
+        ..Options::default()
+    };
+    assert_eq!(
+        listed.settings().get("include"),
+        Some(&Setting::List(vec![
+            Setting::Text("b".into()),
+            Setting::Text("a".into())
+        ]))
+    );
 }
 
 #[test]

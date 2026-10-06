@@ -35,7 +35,7 @@ The crate also exports what the `swe_splice` generator reads Open-SWE with
 | Field | ct-eval flag | Default | Manifest `selection` key |
 | --- | --- | --- | --- |
 | `limit` | `--limit` (shards) | all | `limit`, when set |
-| `include` | `--include` (repeatable, substring of the relative path) | all | `include` (JSON array text), when not empty |
+| `include` | `--include` (repeatable, substring of the relative path) | all | `include` (a `Setting::List` of the needles as text, in order), when not empty |
 | `count` | `--count` (rows per shard) | all | `count`, when set |
 | `agents_per_world` | `--agents-per-world` | 16 | `agents_per_world`, always |
 

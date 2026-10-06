@@ -140,7 +140,10 @@ fn the_dataset_is_ct_evals() {
             ("count".to_owned(), Setting::Int(16)),
             (
                 "include".to_owned(),
-                Setting::Text("[\"openhands\",\"qwen\"]".into())
+                Setting::List(vec![
+                    Setting::Text("openhands".into()),
+                    Setting::Text("qwen".into())
+                ])
             ),
             ("limit".to_owned(), Setting::Int(13)),
         ])

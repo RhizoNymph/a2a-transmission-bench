@@ -37,7 +37,6 @@ dependencies = [
  "a2a-bench-corpus",
  "a2a-bench-format",
  "serde",
- "serde_json",
  "thiserror",
  "tracing",
 ]
@@ -49,7 +48,6 @@ dependencies = [
  "a2a-bench-corpus",
  "a2a-bench-format",
  "serde",
- "serde_json",
  "thiserror",
  "tracing",
 ]
