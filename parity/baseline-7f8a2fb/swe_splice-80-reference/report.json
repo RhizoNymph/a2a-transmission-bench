@@ -1,0 +1,617 @@
+{
+  "dataset": "swe_splice",
+  "detector": "reference",
+  "totals": {
+    "worlds": 80,
+    "agents": 160,
+    "exchanges": 11780,
+    "expectations": 80,
+    "negative_controls": 11700,
+    "predictions": 4944
+  },
+  "overall": {
+    "expected": 80,
+    "found": 59,
+    "missed": 21,
+    "suspected": 0,
+    "predicted": 4944,
+    "correct": 3543,
+    "false_positive": 1401,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 0.716626213592233,
+    "recall": 0.7375
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 80,
+    "recall": 0.0,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "swe_splice",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "construction",
+      "expected": 14,
+      "found": 14,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 1290,
+      "correct": 1244,
+      "false_positive": 46,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.9643410852713178,
+      "recall": 1.0
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 83,
+      "correct": 0,
+      "false_positive": 83,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "construction",
+      "expected": 15,
+      "found": 15,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 950,
+      "correct": 950,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 97,
+      "correct": 0,
+      "false_positive": 97,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "construction",
+      "expected": 51,
+      "found": 30,
+      "missed": 21,
+      "suspected": 0,
+      "predicted": 1349,
+      "correct": 1349,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.5882352941176471
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 89,
+      "correct": 0,
+      "false_positive": 89,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 449,
+      "correct": 0,
+      "false_positive": 449,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 85,
+      "correct": 0,
+      "false_positive": 85,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 25,
+      "correct": 0,
+      "false_positive": 25,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 423,
+      "correct": 0,
+      "false_positive": 423,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 77,
+      "correct": 0,
+      "false_positive": 77,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 11,
+      "correct": 0,
+      "false_positive": 11,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 6,
+      "correct": 0,
+      "false_positive": 6,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "swe_splice",
+      "route": "direct",
+      "carrier": "system_prompt",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 10,
+      "correct": 0,
+      "false_positive": 10,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "swe_splice",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 49,
+        "false_detection": 77,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "swe_splice",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 7,
+        "false_detection": 18,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "swe_splice",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 3,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "swe_splice",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 236,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "swe_splice",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 11,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "swe_splice",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "system_prompt"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 10,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "swe_splice",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 13,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "swe_splice",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 4,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "swe_splice",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 50,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [
+    {
+      "dataset": "swe_splice",
+      "reason": "boilerplate",
+      "count": 758
+    }
+  ],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt: delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: injections read through keyed tools are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2: turns reach the peer's next call",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2: matches in user turns are the peer's turns",
+      "status": "other_dataset"
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": {
+    "false_positives": 1401,
+    "exchanges": 11780,
+    "per_1k_exchanges": 118.93039049235993,
+    "sources": [
+      {
+        "reason": "boilerplate",
+        "count": 85
+      },
+      {
+        "reason": "boilerplate",
+        "count": 51
+      },
+      {
+        "reason": "boilerplate",
+        "count": 44
+      },
+      {
+        "reason": "boilerplate",
+        "count": 35
+      },
+      {
+        "reason": "boilerplate",
+        "count": 35
+      },
+      {
+        "reason": "boilerplate",
+        "count": 30
+      },
+      {
+        "reason": "boilerplate",
+        "count": 28
+      },
+      {
+        "reason": "boilerplate",
+        "count": 25
+      },
+      {
+        "reason": "boilerplate",
+        "count": 23
+      },
+      {
+        "reason": "boilerplate",
+        "count": 20
+      },
+      {
+        "reason": "boilerplate",
+        "count": 20
+      },
+      {
+        "reason": "boilerplate",
+        "count": 16
+      },
+      {
+        "reason": "boilerplate",
+        "count": 16
+      },
+      {
+        "reason": "boilerplate",
+        "count": 15
+      },
+      {
+        "reason": "boilerplate",
+        "count": 15
+      },
+      {
+        "reason": "boilerplate",
+        "count": 12
+      },
+      {
+        "reason": "boilerplate",
+        "count": 12
+      },
+      {
+        "reason": "boilerplate",
+        "count": 12
+      },
+      {
+        "reason": "boilerplate",
+        "count": 12
+      },
+      {
+        "reason": "boilerplate",
+        "count": 10
+      }
+    ]
+  }
+}

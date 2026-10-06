@@ -1,0 +1,31 @@
+dataset open_swe · detector reference · 13 worlds, 208 agents, 14311 exchanges, 0 labels, 214665 negative controls, 4539 predictions
+overall: recall - (0 / 0), precision 0.000 (0 correct, 4539 false, 0 unjudged)
+
+route    carrier        class       tier        expected  found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+channel  tool_result    exact       structural         0      0       0       -        199        0    199         0          0      0.000
+channel  tool_result    normalized  structural         0      0       0       -         77        0     77         0          0      0.000
+channel  tool_result    decoded     structural         0      0       0       -         19        0     19         0          0      0.000
+direct   tool_result    exact       structural         0      0       0       -       1830        0   1830         0          0      0.000
+direct   tool_result    normalized  structural         0      0       0       -       1524        0   1524         0          0      0.000
+direct   tool_result    decoded     structural         0      0       0       -        550        0    550         0          0      0.000
+direct   user_turn      exact       structural         0      0       0       -         74        0     74         0          0      0.000
+direct   user_turn      normalized  structural         0      0       0       -          2        0      2         0          0      0.000
+direct   system_prompt  exact       structural         0      0       0       -        264        0    264         0          0      0.000
+
+negative-control violations:
+  shared_source        52
+  boilerplate          4487
+
+false positives: 317.2 per 1k exchanges (4539 over 14311)
+top boilerplate sources: (excerpts of dataset text removed for this record)
+
+gates:
+  skip  (other dataset)          salt: delivered messages that arrive verbatim are found
+  skip  (other dataset)          salt: delivered messages that arrive escaped are found
+  skip  (other dataset)          salt: every construction label
+  skip  (other dataset)          salt: matches in user turns are deliveries
+  skip  (other dataset)          salt: nothing is attributed to a scripted sender
+  skip  (other dataset)          agentdojo: injections read through keyed tools are found
+  skip  (other dataset)          agentdojo: matches in keyed tool results are injections
+  skip  (other dataset)          tau2: turns reach the peer's next call
+  skip  (other dataset)          tau2: matches in user turns are the peer's turns

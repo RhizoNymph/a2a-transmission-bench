@@ -1,0 +1,393 @@
+{
+  "dataset": "lmcache",
+  "detector": "live",
+  "totals": {
+    "worlds": 5,
+    "agents": 80,
+    "exchanges": 2513,
+    "expectations": 0,
+    "negative_controls": 37695,
+    "predictions": 247
+  },
+  "overall": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 247,
+    "correct": 0,
+    "false_positive": 247,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 0.0,
+    "recall": null
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 0,
+    "recall": null,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "lmcache",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 100,
+      "correct": 0,
+      "false_positive": 100,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "lmcache",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 96,
+      "correct": 0,
+      "false_positive": 96,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "lmcache",
+      "route": "unobserved",
+      "carrier": "reader_output",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 48,
+      "correct": 0,
+      "false_positive": 48,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "lmcache",
+      "route": "unobserved",
+      "carrier": "reader_output",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 3,
+      "correct": 0,
+      "false_positive": 3,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "lmcache",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 85,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "lmcache",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 69,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "lmcache",
+        "route": "unobserved",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "reader_output"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 34,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "lmcache",
+        "route": "unobserved",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "reader_output"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 2,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [
+    {
+      "dataset": "lmcache",
+      "reason": "shared_source",
+      "count": 189
+    },
+    {
+      "dataset": "lmcache",
+      "reason": "boilerplate",
+      "count": 58
+    }
+  ],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt (live): delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): injections read through keyed tools are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): decoded matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swarm-traces (live): decoded tokens are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swarm-traces (live): decoded matches are the planted tokens",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2 (live): turns reach the peer's next call",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2 (live): matches in user turns are the peer's turns",
+      "status": "other_dataset"
+    },
+    {
+      "name": "ai-village (live): other agents' talk reaches the Claude Code agent",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel reads of other agents' lines are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel matches are the labelled lines",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): planted file transmissions are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): channel matches are the planted file",
+      "status": "other_dataset"
+    },
+    {
+      "name": "open-swe (live): background false positives stay bounded",
+      "status": "other_dataset"
+    },
+    {
+      "name": "lmcache (live): background false positives stay bounded",
+      "status": "pass",
+      "value": 98.28889773179466
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": {
+    "false_positives": 247,
+    "exchanges": 2513,
+    "per_1k_exchanges": 98.28889773179466,
+    "sources": [
+      {
+        "reason": "shared_source",
+        "count": 21
+      },
+      {
+        "reason": "boilerplate",
+        "count": 21
+      },
+      {
+        "reason": "shared_source",
+        "count": 20
+      },
+      {
+        "reason": "boilerplate",
+        "count": 20
+      },
+      {
+        "reason": "shared_source",
+        "count": 18
+      },
+      {
+        "reason": "shared_source",
+        "count": 16
+      },
+      {
+        "reason": "shared_source",
+        "count": 14
+      },
+      {
+        "reason": "shared_source",
+        "count": 10
+      },
+      {
+        "reason": "shared_source",
+        "count": 9
+      },
+      {
+        "reason": "shared_source",
+        "count": 9
+      },
+      {
+        "reason": "boilerplate",
+        "count": 9
+      },
+      {
+        "reason": "shared_source",
+        "count": 8
+      },
+      {
+        "reason": "shared_source",
+        "count": 7
+      },
+      {
+        "reason": "shared_source",
+        "count": 7
+      },
+      {
+        "reason": "shared_source",
+        "count": 7
+      },
+      {
+        "reason": "shared_source",
+        "count": 4
+      },
+      {
+        "reason": "shared_source",
+        "count": 3
+      },
+      {
+        "reason": "shared_source",
+        "count": 3
+      },
+      {
+        "reason": "shared_source",
+        "count": 3
+      },
+      {
+        "reason": "shared_source",
+        "count": 3
+      }
+    ]
+  }
+}

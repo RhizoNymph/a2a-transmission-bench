@@ -1,0 +1,424 @@
+{
+  "dataset": "lmcache",
+  "detector": "reference",
+  "totals": {
+    "worlds": 5,
+    "agents": 80,
+    "exchanges": 2513,
+    "expectations": 0,
+    "negative_controls": 37695,
+    "predictions": 4728
+  },
+  "overall": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 4728,
+    "correct": 0,
+    "false_positive": 4728,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 0.0,
+    "recall": null
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 0,
+    "recall": null,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "lmcache",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 10,
+      "correct": 0,
+      "false_positive": 10,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "lmcache",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 33,
+      "correct": 0,
+      "false_positive": 33,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "lmcache",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 3,
+      "correct": 0,
+      "false_positive": 3,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "lmcache",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 3818,
+      "correct": 0,
+      "false_positive": 3818,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "lmcache",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 795,
+      "correct": 0,
+      "false_positive": 795,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "lmcache",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "decoded",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 69,
+      "correct": 0,
+      "false_positive": 69,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "lmcache",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 10,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "lmcache",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 22,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "lmcache",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 1270,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "lmcache",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 1,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "lmcache",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 108,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "lmcache",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 6,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [
+    {
+      "dataset": "lmcache",
+      "reason": "shared_source",
+      "count": 4392
+    },
+    {
+      "dataset": "lmcache",
+      "reason": "boilerplate",
+      "count": 336
+    }
+  ],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt: delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: injections read through keyed tools are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2: turns reach the peer's next call",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2: matches in user turns are the peer's turns",
+      "status": "other_dataset"
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": {
+    "false_positives": 4728,
+    "exchanges": 2513,
+    "per_1k_exchanges": 1881.41663350577,
+    "sources": [
+      {
+        "reason": "shared_source",
+        "count": 1241
+      },
+      {
+        "reason": "shared_source",
+        "count": 476
+      },
+      {
+        "reason": "shared_source",
+        "count": 322
+      },
+      {
+        "reason": "shared_source",
+        "count": 188
+      },
+      {
+        "reason": "boilerplate",
+        "count": 187
+      },
+      {
+        "reason": "shared_source",
+        "count": 155
+      },
+      {
+        "reason": "shared_source",
+        "count": 147
+      },
+      {
+        "reason": "shared_source",
+        "count": 128
+      },
+      {
+        "reason": "shared_source",
+        "count": 111
+      },
+      {
+        "reason": "shared_source",
+        "count": 100
+      },
+      {
+        "reason": "shared_source",
+        "count": 97
+      },
+      {
+        "reason": "shared_source",
+        "count": 61
+      },
+      {
+        "reason": "shared_source",
+        "count": 58
+      },
+      {
+        "reason": "shared_source",
+        "count": 49
+      },
+      {
+        "reason": "shared_source",
+        "count": 47
+      },
+      {
+        "reason": "shared_source",
+        "count": 43
+      },
+      {
+        "reason": "shared_source",
+        "count": 39
+      },
+      {
+        "reason": "shared_source",
+        "count": 37
+      },
+      {
+        "reason": "shared_source",
+        "count": 37
+      },
+      {
+        "reason": "shared_source",
+        "count": 36
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+dataset swe_splice · detector reference · 80 worlds, 160 agents, 11780 exchanges, 80 labels, 11700 negative controls, 4944 predictions
+overall: recall 0.738 (59 / 80), precision 0.717 (3543 correct, 1401 false, 0 unjudged)
+
+route    carrier        class       tier          expected  found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+channel  tool_result    exact       construction        14     14       0   1.000       1290     1244     46         0          0      0.964
+channel  tool_result    exact       structural           0      0       0       -         83        0     83         0          0      0.000
+channel  tool_result    normalized  construction        15     15       0   1.000        950      950      0         0          0      1.000
+channel  tool_result    normalized  structural           0      0       0       -         97        0     97         0          0      0.000
+channel  tool_result    decoded     construction        51     30      21   0.588       1349     1349      0         0          0      1.000
+direct   tool_result    exact       construction         0      0       0       -         89        0     89         0          0      0.000
+direct   tool_result    exact       structural           0      0       0       -        449        0    449         0          0      0.000
+direct   tool_result    normalized  construction         0      0       0       -         85        0     85         0          0      0.000
+direct   tool_result    normalized  structural           0      0       0       -         25        0     25         0          0      0.000
+direct   tool_result    decoded     construction         0      0       0       -        423        0    423         0          0      0.000
+direct   tool_result    decoded     structural           0      0       0       -         77        0     77         0          0      0.000
+direct   user_turn      exact       structural           0      0       0       -         11        0     11         0          0      0.000
+direct   user_turn      normalized  structural           0      0       0       -          6        0      6         0          0      0.000
+direct   system_prompt  exact       structural           0      0       0       -         10        0     10         0          0      0.000
+
+negative-control violations:
+  boilerplate          758
+
+false positives: 118.9 per 1k exchanges (1401 over 11780)
+top boilerplate sources: (excerpts of dataset text removed for this record)
+
+gates:
+  skip  (other dataset)          salt: delivered messages that arrive verbatim are found
+  skip  (other dataset)          salt: delivered messages that arrive escaped are found
+  skip  (other dataset)          salt: every construction label
+  skip  (other dataset)          salt: matches in user turns are deliveries
+  skip  (other dataset)          salt: nothing is attributed to a scripted sender
+  skip  (other dataset)          agentdojo: injections read through keyed tools are found
+  skip  (other dataset)          agentdojo: matches in keyed tool results are injections
+  skip  (other dataset)          tau2: turns reach the peer's next call
+  skip  (other dataset)          tau2: matches in user turns are the peer's turns

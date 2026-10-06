@@ -1,0 +1,285 @@
+{
+  "dataset": "agentdojo",
+  "detector": "live",
+  "totals": {
+    "worlds": 2259,
+    "agents": 4146,
+    "exchanges": 11235,
+    "expectations": 2683,
+    "negative_controls": 3774,
+    "predictions": 3701
+  },
+  "overall": {
+    "expected": 2324,
+    "found": 2315,
+    "missed": 9,
+    "suspected": 0,
+    "predicted": 3701,
+    "correct": 3609,
+    "false_positive": 92,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 0.9751418535530938,
+    "recall": 0.9961273666092944
+  },
+  "out_of_reach": {
+    "expected": 359,
+    "found": 0,
+    "missed": 359,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": 0.0
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 2324,
+    "recall": 0.0,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "agentdojo",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "out_of_reach",
+      "expected": 359,
+      "found": 0,
+      "missed": 359,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "dataset": "agentdojo",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 72,
+      "correct": 0,
+      "false_positive": 72,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "agentdojo",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "construction",
+      "expected": 294,
+      "found": 292,
+      "missed": 2,
+      "suspected": 0,
+      "predicted": 326,
+      "correct": 306,
+      "false_positive": 20,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.9386503067484663,
+      "recall": 0.9931972789115646
+    },
+    {
+      "dataset": "agentdojo",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "construction",
+      "expected": 2030,
+      "found": 2023,
+      "missed": 7,
+      "suspected": 0,
+      "predicted": 3303,
+      "correct": 3303,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.996551724137931
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "agentdojo",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 72,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "agentdojo",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 292,
+        "false_detection": 10,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "agentdojo",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 1362,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt (live): delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): injections read through keyed tools are found",
+      "status": "pass",
+      "value": 0.9961273666092944
+    },
+    {
+      "name": "agentdojo (live): decoded matches in keyed tool results are injections",
+      "status": "pass",
+      "value": 1.0
+    },
+    {
+      "name": "agentdojo (live): matches in keyed tool results are injections",
+      "status": "pass",
+      "value": 0.9751418535530938
+    },
+    {
+      "name": "swarm-traces (live): decoded tokens are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swarm-traces (live): decoded matches are the planted tokens",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2 (live): turns reach the peer's next call",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2 (live): matches in user turns are the peer's turns",
+      "status": "other_dataset"
+    },
+    {
+      "name": "ai-village (live): other agents' talk reaches the Claude Code agent",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel reads of other agents' lines are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel matches are the labelled lines",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): planted file transmissions are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): channel matches are the planted file",
+      "status": "other_dataset"
+    },
+    {
+      "name": "open-swe (live): background false positives stay bounded",
+      "status": "other_dataset"
+    },
+    {
+      "name": "lmcache (live): background false positives stay bounded",
+      "status": "other_dataset"
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": {
+    "false_positives": 92,
+    "exchanges": 11235,
+    "per_1k_exchanges": 8.188696039163329,
+    "sources": []
+  }
+}

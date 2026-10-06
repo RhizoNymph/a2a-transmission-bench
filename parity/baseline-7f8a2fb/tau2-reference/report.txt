@@ -1,0 +1,28 @@
+dataset tau2 · detector reference · 10832 worlds, 18016 agents, 264793 exchanges, 119256 labels, 106465 negative controls, 241794 predictions
+overall: recall 0.999 (119085 / 119256), precision 0.998 (241233 correct, 561 false, 0 unjudged)
+
+route   carrier        class       tier        expected   found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+direct  tool_result    exact       structural         0       0       0       -        282        0    282         0          0      0.000
+direct  tool_result    normalized  structural         0       0       0       -        199        0    199         0          0      0.000
+direct  user_turn      exact       structural    119256  119085     171   0.999     220626   220626      0         0          0      1.000
+direct  user_turn      normalized  structural         0       0       0       -      17542    17542      0         0          0      1.000
+direct  user_turn      decoded     structural         0       0       0       -       3065     3065      0         0          0      1.000
+direct  system_prompt  exact       structural         0       0       0       -         57        0     57         0          0      0.000
+direct  system_prompt  normalized  structural         0       0       0       -         23        0     23         0          0      0.000
+
+negative-control violations:
+  shared_source        481
+
+false positives: 2.1 per 1k exchanges (561 over 264793)
+top boilerplate sources: (excerpts of dataset text removed for this record)
+
+gates:
+  skip  (other dataset)          salt: delivered messages that arrive verbatim are found
+  skip  (other dataset)          salt: delivered messages that arrive escaped are found
+  skip  (other dataset)          salt: every construction label
+  skip  (other dataset)          salt: matches in user turns are deliveries
+  skip  (other dataset)          salt: nothing is attributed to a scripted sender
+  skip  (other dataset)          agentdojo: injections read through keyed tools are found
+  skip  (other dataset)          agentdojo: matches in keyed tool results are injections
+  pass  0.999                    tau2: turns reach the peer's next call
+  pass  1.000                    tau2: matches in user turns are the peer's turns

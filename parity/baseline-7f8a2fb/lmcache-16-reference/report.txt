@@ -1,0 +1,28 @@
+dataset lmcache · detector reference · 5 worlds, 80 agents, 2513 exchanges, 0 labels, 37695 negative controls, 4728 predictions
+overall: recall - (0 / 0), precision 0.000 (0 correct, 4728 false, 0 unjudged)
+
+route    carrier      class       tier        expected  found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+channel  tool_result  exact       structural         0      0       0       -         10        0     10         0          0      0.000
+direct   tool_result  exact       structural         0      0       0       -         33        0     33         0          0      0.000
+direct   tool_result  normalized  structural         0      0       0       -          3        0      3         0          0      0.000
+direct   user_turn    exact       structural         0      0       0       -       3818        0   3818         0          0      0.000
+direct   user_turn    normalized  structural         0      0       0       -        795        0    795         0          0      0.000
+direct   user_turn    decoded     structural         0      0       0       -         69        0     69         0          0      0.000
+
+negative-control violations:
+  shared_source        4392
+  boilerplate          336
+
+false positives: 1881.4 per 1k exchanges (4728 over 2513)
+top boilerplate sources: (excerpts of dataset text removed for this record)
+
+gates:
+  skip  (other dataset)          salt: delivered messages that arrive verbatim are found
+  skip  (other dataset)          salt: delivered messages that arrive escaped are found
+  skip  (other dataset)          salt: every construction label
+  skip  (other dataset)          salt: matches in user turns are deliveries
+  skip  (other dataset)          salt: nothing is attributed to a scripted sender
+  skip  (other dataset)          agentdojo: injections read through keyed tools are found
+  skip  (other dataset)          agentdojo: matches in keyed tool results are injections
+  skip  (other dataset)          tau2: turns reach the peer's next call
+  skip  (other dataset)          tau2: matches in user turns are the peer's turns

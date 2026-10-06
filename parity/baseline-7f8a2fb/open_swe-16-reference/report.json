@@ -1,0 +1,532 @@
+{
+  "dataset": "open_swe",
+  "detector": "reference",
+  "totals": {
+    "worlds": 13,
+    "agents": 208,
+    "exchanges": 14311,
+    "expectations": 0,
+    "negative_controls": 214665,
+    "predictions": 4539
+  },
+  "overall": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 4539,
+    "correct": 0,
+    "false_positive": 4539,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 0.0,
+    "recall": null
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 0,
+    "recall": null,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "open_swe",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 199,
+      "correct": 0,
+      "false_positive": 199,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 77,
+      "correct": 0,
+      "false_positive": 77,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 19,
+      "correct": 0,
+      "false_positive": 19,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 1830,
+      "correct": 0,
+      "false_positive": 1830,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 1524,
+      "correct": 0,
+      "false_positive": 1524,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 550,
+      "correct": 0,
+      "false_positive": 550,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 74,
+      "correct": 0,
+      "false_positive": 74,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 2,
+      "correct": 0,
+      "false_positive": 2,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "direct",
+      "carrier": "system_prompt",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 264,
+      "correct": 0,
+      "false_positive": 264,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 163,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 54,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 13,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 724,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 74,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "system_prompt"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 233,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 913,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 2,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 282,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [
+    {
+      "dataset": "open_swe",
+      "reason": "shared_source",
+      "count": 52
+    },
+    {
+      "dataset": "open_swe",
+      "reason": "boilerplate",
+      "count": 4487
+    }
+  ],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt: delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: injections read through keyed tools are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2: turns reach the peer's next call",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2: matches in user turns are the peer's turns",
+      "status": "other_dataset"
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": {
+    "false_positives": 4539,
+    "exchanges": 14311,
+    "per_1k_exchanges": 317.16861155754316,
+    "sources": [
+      {
+        "reason": "boilerplate",
+        "count": 484
+      },
+      {
+        "reason": "boilerplate",
+        "count": 393
+      },
+      {
+        "reason": "boilerplate",
+        "count": 233
+      },
+      {
+        "reason": "boilerplate",
+        "count": 176
+      },
+      {
+        "reason": "boilerplate",
+        "count": 158
+      },
+      {
+        "reason": "boilerplate",
+        "count": 142
+      },
+      {
+        "reason": "boilerplate",
+        "count": 95
+      },
+      {
+        "reason": "boilerplate",
+        "count": 68
+      },
+      {
+        "reason": "boilerplate",
+        "count": 59
+      },
+      {
+        "reason": "boilerplate",
+        "count": 55
+      },
+      {
+        "reason": "boilerplate",
+        "count": 53
+      },
+      {
+        "reason": "boilerplate",
+        "count": 48
+      },
+      {
+        "reason": "boilerplate",
+        "count": 43
+      },
+      {
+        "reason": "boilerplate",
+        "count": 41
+      },
+      {
+        "reason": "boilerplate",
+        "count": 38
+      },
+      {
+        "reason": "boilerplate",
+        "count": 35
+      },
+      {
+        "reason": "boilerplate",
+        "count": 31
+      },
+      {
+        "reason": "boilerplate",
+        "count": 30
+      },
+      {
+        "reason": "boilerplate",
+        "count": 30
+      },
+      {
+        "reason": "boilerplate",
+        "count": 30
+      }
+    ]
+  }
+}

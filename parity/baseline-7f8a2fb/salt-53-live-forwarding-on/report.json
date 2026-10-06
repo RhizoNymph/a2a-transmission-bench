@@ -1,0 +1,597 @@
+{
+  "dataset": "salt",
+  "detector": "live",
+  "totals": {
+    "worlds": 53,
+    "agents": 106,
+    "exchanges": 11796,
+    "expectations": 3850,
+    "negative_controls": 12951,
+    "predictions": 11926
+  },
+  "overall": {
+    "expected": 2909,
+    "found": 2601,
+    "missed": 308,
+    "suspected": 0,
+    "predicted": 7187,
+    "correct": 6337,
+    "false_positive": 850,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 0.8817309030193404,
+    "recall": 0.8941216913028532
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 941,
+    "found": 833,
+    "missed": 108,
+    "suspected": 0,
+    "predicted": 4739,
+    "correct": 4739,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 1.0,
+    "recall": 0.8852284803400637
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 2909,
+    "recall": 0.0,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 3,
+      "correct": 0,
+      "false_positive": 3,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 68,
+      "correct": 0,
+      "false_positive": 68,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 20,
+      "correct": 0,
+      "false_positive": 20,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 69,
+      "correct": 0,
+      "false_positive": 69,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 317,
+      "correct": 0,
+      "false_positive": 317,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 1,
+      "correct": 0,
+      "false_positive": 1,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "exact",
+      "tier": "construction",
+      "expected": 2664,
+      "found": 2358,
+      "missed": 306,
+      "suspected": 0,
+      "predicted": 3528,
+      "correct": 3512,
+      "false_positive": 16,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.9954648526077098,
+      "recall": 0.8851351351351351
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 140,
+      "correct": 0,
+      "false_positive": 140,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "exact",
+      "tier": "forwarding",
+      "expected": 142,
+      "found": 139,
+      "missed": 3,
+      "suspected": 0,
+      "predicted": 2311,
+      "correct": 2311,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.9788732394366197
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "normalized",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 2825,
+      "correct": 2825,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 134,
+      "correct": 0,
+      "false_positive": 134,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "normalized",
+      "tier": "forwarding",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 2115,
+      "correct": 2115,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "decoded",
+      "tier": "construction",
+      "expected": 245,
+      "found": 243,
+      "missed": 2,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": 0.9918367346938776
+    },
+    {
+      "dataset": "salt",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "decoded",
+      "tier": "forwarding",
+      "expected": 799,
+      "found": 694,
+      "missed": 105,
+      "suspected": 0,
+      "predicted": 313,
+      "correct": 313,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.8685857321652065
+    },
+    {
+      "dataset": "salt",
+      "route": "unobserved",
+      "carrier": "reader_output",
+      "class": "exact",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 66,
+      "correct": 0,
+      "false_positive": 66,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "salt",
+      "route": "unobserved",
+      "carrier": "reader_output",
+      "class": "normalized",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 16,
+      "correct": 0,
+      "false_positive": 16,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "salt",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 49,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "salt",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 2867,
+        "false_detection": 68,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "salt",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 50,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "salt",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 567,
+        "false_detection": 43,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "salt",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 139,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "salt",
+        "route": "unobserved",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "reader_output"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 39,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "salt",
+        "route": "unobserved",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "reader_output"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 13,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [
+    {
+      "dataset": "salt",
+      "reason": "rejected_send",
+      "count": 182
+    },
+    {
+      "dataset": "salt",
+      "reason": "shared_source",
+      "count": 138
+    },
+    {
+      "dataset": "salt",
+      "reason": "boilerplate",
+      "count": 274
+    }
+  ],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt (live, forwarding on): forwarded tool output is found",
+      "status": "fail",
+      "value": 0.8852284803400637,
+      "bound": 0.94
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": {
+    "false_positives": 850,
+    "exchanges": 11796,
+    "per_1k_exchanges": 72.05832485588336,
+    "sources": [
+      {
+        "reason": "shared_source",
+        "count": 58
+      },
+      {
+        "reason": "boilerplate",
+        "count": 53
+      },
+      {
+        "reason": "rejected_send",
+        "count": 38
+      },
+      {
+        "reason": "boilerplate",
+        "count": 38
+      },
+      {
+        "reason": "shared_source",
+        "count": 31
+      },
+      {
+        "reason": "boilerplate",
+        "count": 26
+      },
+      {
+        "reason": "rejected_send",
+        "count": 24
+      },
+      {
+        "reason": "rejected_send",
+        "count": 22
+      },
+      {
+        "reason": "boilerplate",
+        "count": 20
+      },
+      {
+        "reason": "boilerplate",
+        "count": 18
+      },
+      {
+        "reason": "boilerplate",
+        "count": 16
+      },
+      {
+        "reason": "boilerplate",
+        "count": 16
+      },
+      {
+        "reason": "boilerplate",
+        "count": 14
+      },
+      {
+        "reason": "boilerplate",
+        "count": 14
+      },
+      {
+        "reason": "shared_source",
+        "count": 10
+      },
+      {
+        "reason": "shared_source",
+        "count": 10
+      },
+      {
+        "reason": "boilerplate",
+        "count": 9
+      },
+      {
+        "reason": "shared_source",
+        "count": 8
+      },
+      {
+        "reason": "rejected_send",
+        "count": 7
+      },
+      {
+        "reason": "rejected_send",
+        "count": 7
+      }
+    ]
+  }
+}

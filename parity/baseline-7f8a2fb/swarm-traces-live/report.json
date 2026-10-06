@@ -1,0 +1,207 @@
+{
+  "dataset": "swarm-traces",
+  "detector": "live",
+  "totals": {
+    "worlds": 629,
+    "agents": 1258,
+    "exchanges": 1887,
+    "expectations": 629,
+    "negative_controls": 0,
+    "predictions": 629
+  },
+  "overall": {
+    "expected": 629,
+    "found": 629,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 629,
+    "correct": 629,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 629,
+    "recall": 0.0,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "swarm-traces",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "construction",
+      "expected": 170,
+      "found": 170,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 170,
+      "correct": 170,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "dataset": "swarm-traces",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "structural",
+      "expected": 459,
+      "found": 459,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 459,
+      "correct": 459,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "swarm-traces",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 629,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt (live): delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): injections read through keyed tools are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): decoded matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swarm-traces (live): decoded tokens are found",
+      "status": "pass",
+      "value": 1.0
+    },
+    {
+      "name": "swarm-traces (live): decoded matches are the planted tokens",
+      "status": "pass",
+      "value": 1.0
+    },
+    {
+      "name": "tau2 (live): turns reach the peer's next call",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2 (live): matches in user turns are the peer's turns",
+      "status": "other_dataset"
+    },
+    {
+      "name": "ai-village (live): other agents' talk reaches the Claude Code agent",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel reads of other agents' lines are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel matches are the labelled lines",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): planted file transmissions are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): channel matches are the planted file",
+      "status": "other_dataset"
+    },
+    {
+      "name": "open-swe (live): background false positives stay bounded",
+      "status": "other_dataset"
+    },
+    {
+      "name": "lmcache (live): background false positives stay bounded",
+      "status": "other_dataset"
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": null
+}

@@ -1,0 +1,26 @@
+dataset swarm-traces · detector reference · 629 worlds, 1258 agents, 1887 exchanges, 629 labels, 0 negative controls, 1261 predictions
+overall: recall 0.997 (627 / 629), precision 1.000 (1261 correct, 0 false, 0 unjudged)
+
+route   carrier      class       tier          expected  found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+direct  tool_result  exact       construction         0      0       0       -        160      160      0         0          0      1.000
+direct  tool_result  exact       structural           0      0       0       -        473      473      0         0          0      1.000
+direct  tool_result  normalized  structural           0      0       0       -          1        1      0         0          0      1.000
+direct  tool_result  decoded     construction       170    169       1   0.994        169      169      0         0          0      1.000
+direct  tool_result  decoded     structural         459    458       1   0.998        458      458      0         0          0      1.000
+
+gates:
+  skip  (other dataset)          salt: delivered messages that arrive verbatim are found
+  skip  (other dataset)          salt: delivered messages that arrive escaped are found
+  skip  (other dataset)          salt: every construction label
+  skip  (other dataset)          salt: matches in user turns are deliveries
+  skip  (other dataset)          salt: nothing is attributed to a scripted sender
+  skip  (other dataset)          agentdojo: injections read through keyed tools are found
+  skip  (other dataset)          agentdojo: matches in keyed tool results are injections
+  skip  (other dataset)          tau2: turns reach the peer's next call
+  skip  (other dataset)          tau2: matches in user turns are the peer's turns
+
+swarm decode chains: 91037 payloads, 659746 candidate tokens, 629 labelled
+kind     chain                              tokens construction structural    encoded_b      plain_b
+labelled base64                                  1            0          1           36           25
+labelled url                                   615          168        447        72256        60503
+labelled url.url                                13            2         11         2050         1490

@@ -1,0 +1,40 @@
+dataset swe_splice · detector live · 80 worlds, 160 agents, 11780 exchanges, 80 labels, 11700 negative controls, 693 predictions
+overall: recall 1.000 (80 / 80), precision 0.939 (642 correct, 42 false, 0 unjudged)
+
+route       carrier        class       tier          expected  found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+channel     tool_result    exact       construction        14     14       0   1.000         23       23      0         0          0      1.000
+channel     tool_result    normalized  construction        15     15       0   1.000        203      203      0         0          0      1.000
+channel     tool_result    decoded     construction        51     51       0   1.000        416      416      0         0          0      1.000
+channel     tool_result    discarded   -                    0      0       0       -          9        0      0         0          9          -
+direct      tool_result    exact       structural           0      0       0       -          8        0      8         0          0      0.000
+unobserved  reader_output  exact       structural           0      0       0       -         34        0     34         0          0      0.000
+
+negative-control violations:
+  boilerplate          42
+
+access-only predictions under negative controls (not violations, not gated):
+  dismissed on boilerplate controls: 9
+
+false positives: 3.6 per 1k exchanges (42 over 11780)
+top boilerplate sources: (excerpts of dataset text removed for this record)
+
+gates:
+  skip  (other dataset)          salt (live): delivered messages that arrive verbatim are found
+  skip  (other dataset)          salt (live): delivered messages that arrive escaped are found
+  skip  (other dataset)          salt (live): every construction label
+  skip  (other dataset)          salt (live): matches in user turns are deliveries
+  skip  (other dataset)          salt (live): nothing is attributed to a scripted sender
+  skip  (other dataset)          agentdojo (live): injections read through keyed tools are found
+  skip  (other dataset)          agentdojo (live): decoded matches in keyed tool results are injections
+  skip  (other dataset)          agentdojo (live): matches in keyed tool results are injections
+  skip  (other dataset)          swarm-traces (live): decoded tokens are found
+  skip  (other dataset)          swarm-traces (live): decoded matches are the planted tokens
+  skip  (other dataset)          tau2 (live): turns reach the peer's next call
+  skip  (other dataset)          tau2 (live): matches in user turns are the peer's turns
+  skip  (other dataset)          ai-village (live): other agents' talk reaches the Claude Code agent
+  skip  (other dataset)          wiki (live): channel reads of other agents' lines are found
+  skip  (other dataset)          wiki (live): channel matches are the labelled lines
+  pass  1.000                    swe-splice (live): planted file transmissions are found
+  pass  1.000                    swe-splice (live): channel matches are the planted file
+  skip  (other dataset)          open-swe (live): background false positives stay bounded
+  skip  (other dataset)          lmcache (live): background false positives stay bounded

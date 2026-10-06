@@ -1,0 +1,36 @@
+dataset lmcache · detector live · 5 worlds, 80 agents, 2513 exchanges, 0 labels, 37695 negative controls, 247 predictions
+overall: recall - (0 / 0), precision 0.000 (0 correct, 247 false, 0 unjudged)
+
+route       carrier        class       tier        expected  found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+direct      user_turn      exact       structural         0      0       0       -        100        0    100         0          0      0.000
+direct      user_turn      normalized  structural         0      0       0       -         96        0     96         0          0      0.000
+unobserved  reader_output  exact       structural         0      0       0       -         48        0     48         0          0      0.000
+unobserved  reader_output  normalized  structural         0      0       0       -          3        0      3         0          0      0.000
+
+negative-control violations:
+  shared_source        189
+  boilerplate          58
+
+false positives: 98.3 per 1k exchanges (247 over 2513)
+top boilerplate sources: (excerpts of dataset text removed for this record)
+
+gates:
+  skip  (other dataset)          salt (live): delivered messages that arrive verbatim are found
+  skip  (other dataset)          salt (live): delivered messages that arrive escaped are found
+  skip  (other dataset)          salt (live): every construction label
+  skip  (other dataset)          salt (live): matches in user turns are deliveries
+  skip  (other dataset)          salt (live): nothing is attributed to a scripted sender
+  skip  (other dataset)          agentdojo (live): injections read through keyed tools are found
+  skip  (other dataset)          agentdojo (live): decoded matches in keyed tool results are injections
+  skip  (other dataset)          agentdojo (live): matches in keyed tool results are injections
+  skip  (other dataset)          swarm-traces (live): decoded tokens are found
+  skip  (other dataset)          swarm-traces (live): decoded matches are the planted tokens
+  skip  (other dataset)          tau2 (live): turns reach the peer's next call
+  skip  (other dataset)          tau2 (live): matches in user turns are the peer's turns
+  skip  (other dataset)          ai-village (live): other agents' talk reaches the Claude Code agent
+  skip  (other dataset)          wiki (live): channel reads of other agents' lines are found
+  skip  (other dataset)          wiki (live): channel matches are the labelled lines
+  skip  (other dataset)          swe-splice (live): planted file transmissions are found
+  skip  (other dataset)          swe-splice (live): channel matches are the planted file
+  skip  (other dataset)          open-swe (live): background false positives stay bounded
+  pass  98.289                   lmcache (live): background false positives stay bounded
