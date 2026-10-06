@@ -18,12 +18,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "a2a-bench-dataset-agentdojo"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-corpus",
+ "a2a-bench-format",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "a2a-bench-dataset-salt"
 version = "0.1.0"
 dependencies = [
  "a2a-bench-corpus",
  "a2a-bench-format",
  "flate2",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "a2a-bench-dataset-tau2"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-corpus",
+ "a2a-bench-format",
  "serde",
  "serde_json",
  "tempfile",

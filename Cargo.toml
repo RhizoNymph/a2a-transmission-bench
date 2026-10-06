@@ -2,7 +2,9 @@
 resolver = "3"
 members = [
     "crates/corpus",
+    "crates/datasets/agentdojo",
     "crates/datasets/salt",
+    "crates/datasets/tau2",
     "crates/format",
     "crates/reference",
     "crates/resource",
