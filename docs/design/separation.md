@@ -77,6 +77,13 @@ adapter.
 
 ## 3. On-disk format v1
 
+The normative format is [../features/format.md](../features/format.md)
+and the `a2a-bench-format` crate. Building it changed a few details below:
+every file is split into per-world sections (messages de-duplicated within
+a world), a message nests its role and parts under `body`, a tool result
+has no tool name (the spec's has none), coverage is on the labels world
+row, and every file has a header and a trailer whose digest covers it.
+
 All files are UTF-8 JSONL, one JSON object per line, each tagged by
 `kind`. Readers reject unknown kinds and unknown fields
 (`deny_unknown_fields`), and every file starts with a `header` line that

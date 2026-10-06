@@ -1,0 +1,156 @@
+{
+  "canonical_json": [
+    {
+      "canonical": "{\"a\":2,\"b\":1}",
+      "input": "{\"b\":1,\"a\":2}"
+    },
+    {
+      "canonical": "{\"\\r\":2,\"1\":5,\"€\":1,\"😀\":3,\"דּ\":4}",
+      "input": "{\"\\u20ac\":1,\"\\r\":2,\"\\ud83d\\ude00\":3,\"\\ufb33\":4,\"1\":5}"
+    },
+    {
+      "canonical": "1",
+      "input": "1.0"
+    },
+    {
+      "canonical": "1e+21",
+      "input": "1e21"
+    },
+    {
+      "canonical": "100000000000000000000",
+      "input": "1e20"
+    },
+    {
+      "canonical": "1.2345678901234567890123456789e+29",
+      "input": "123456789012345678901234567890"
+    },
+    {
+      "canonical": "0",
+      "input": "-0"
+    },
+    {
+      "canonical": "0.000001",
+      "input": "0.000001"
+    },
+    {
+      "canonical": "1e-7",
+      "input": "1e-7"
+    },
+    {
+      "canonical": "1.5e+30",
+      "input": "1.5e30"
+    },
+    {
+      "canonical": "-0.1234",
+      "input": "-12.340e-2"
+    },
+    {
+      "canonical": "[1,2.5,true,null,\"x\"]",
+      "input": "[1,2.50,true,null,\"x\"]"
+    },
+    {
+      "canonical": "\"\\u0001\\u001f\\\"\\\\/\\b\\f\\n\\r\\t é\"",
+      "input": "\"\\u0001\\u001f\\\"\\\\\\/\\b\\f\\n\\r\\t é\""
+    },
+    {
+      "canonical": "{\"a\":2}",
+      "input": "{\"a\":1,\"a\":2}"
+    },
+    {
+      "canonical": "{\"k\":[]}",
+      "input": " { \"k\" : [ ] } "
+    },
+    {
+      "canonical": "1e+400",
+      "input": "1E400"
+    },
+    {
+      "canonical": "0.000001",
+      "input": "0.1e-5"
+    },
+    {
+      "canonical": "1",
+      "input": "100e-2"
+    },
+    {
+      "canonical": "9007199254740993",
+      "input": "9007199254740993"
+    }
+  ],
+  "crosstalk": "7f8a2fb",
+  "exchange_ids": [
+    {
+      "at_us": 1767225601000000,
+      "dataset": "salt",
+      "file": "trace-0001.json.gz",
+      "id": "01KDVDNAZ8S5H61TAWJTKTJVEZ",
+      "path": "/episodes/0/messages/3"
+    },
+    {
+      "at_us": 1767225600001000,
+      "dataset": "salt",
+      "file": "f",
+      "id": "01KDVDNA01XE048682T6QKCMXZ",
+      "path": "/z"
+    },
+    {
+      "at_us": 1769385600123456,
+      "dataset": "ai-village",
+      "file": "claude_code_messages.jsonl.gz",
+      "id": "01KFVSK93VST54CKZ3CGRQDXC0",
+      "path": "/row/17"
+    },
+    {
+      "at_us": 0,
+      "dataset": "demo-swarm/headline",
+      "file": "",
+      "id": "0000000000FGJZT8PPPNM4NK8P",
+      "path": ""
+    },
+    {
+      "at_us": 1767225699999999,
+      "dataset": "wiki",
+      "file": "a/b c",
+      "id": "01KDVDRBMZ2J00M824130SZXGK",
+      "path": "/ü/😀"
+    }
+  ],
+  "rejects": [
+    {
+      "input": "[1,]",
+      "rejected": true
+    },
+    {
+      "input": "01",
+      "rejected": true
+    },
+    {
+      "input": "{\"a\":1,}",
+      "rejected": true
+    },
+    {
+      "input": "\"\\ud800\"",
+      "rejected": true
+    },
+    {
+      "input": "\"\u0001\"",
+      "rejected": true
+    },
+    {
+      "input": "1.",
+      "rejected": true
+    },
+    {
+      "input": "-",
+      "rejected": true
+    },
+    {
+      "input": "[1] x",
+      "rejected": true
+    },
+    {
+      "input": "\"\\x\"",
+      "rejected": true
+    }
+  ]
+}

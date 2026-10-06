@@ -1,0 +1,20 @@
+[package]
+name = "a2a-bench-format"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "On-disk format of a2a-transmission-bench: messages, exchanges, labels, predictions and manifests."
+
+[lints]
+workspace = true
+
+[dependencies]
+blake3 = "=1.8.7"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+thiserror = "=2.0.21"
+
+[dev-dependencies]
+proptest = { version = "=1.11.0", default-features = false, features = ["std"] }
+tempfile = "=3.27.0"
