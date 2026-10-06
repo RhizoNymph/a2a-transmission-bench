@@ -28,7 +28,8 @@ Overview:
       predictions alike. Version 1 equals crosstalk's extractor at 7f8a2fb;
       depends only on format and url.
     datasets: >
-      a2a-bench-datasets. One converter per dataset (salt, agentdojo, tau2,
+      One crate per dataset, crates/datasets/<name> (a2a-bench-dataset-<name>;
+      wiki and swarm exist). One converter per dataset (salt, agentdojo, tau2,
       collusion-wiki, swarm-traces, open-swe, lmcache, swe-splice, cipher,
       ai-village, demo-swarm), each a TraceSource built on corpus.
     reference: >
@@ -63,6 +64,16 @@ Features Index:
     entry_points: [crates/resource/src/lib.rs]
     depends_on: [format]
     doc: docs/features/resource.md
+  dataset-wiki:
+    description: collusion-wiki converter (collusion-wiki@1) - wiki revisions as synthesised HTTP-tool exchanges, one world per agent-page component, heuristic channel transmissions, reread controls and relays; parity with ct-eval 7f8a2fb
+    entry_points: [crates/datasets/wiki/src/lib.rs, crates/datasets/wiki/src/build/mod.rs]
+    depends_on: [format, corpus, resource]
+    doc: docs/features/dataset-wiki.md
+  dataset-swarm:
+    description: swarm-traces converter (swarm-traces@1) - encoded payload tokens decoded through codec chains, one two-agent world per token with a decoded-class direct label; no payload text in logs or errors; parity with ct-eval 7f8a2fb
+    entry_points: [crates/datasets/swarm/src/lib.rs, crates/datasets/swarm/src/build.rs]
+    depends_on: [format, corpus]
+    doc: docs/features/dataset-swarm.md
   separation:
     description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
     entry_points: []
