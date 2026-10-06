@@ -33,6 +33,7 @@ pub use error::{FileName, RunError};
 pub use export::score_export;
 
 use crate::canon::{AsGiven, Canonicalize};
+use crate::notes::DatasetNotes;
 use crate::predict::{AgentMapError, world_predictions};
 use crate::score::{Score, Scorer};
 use crate::world::World;
@@ -144,6 +145,9 @@ pub struct RunSummary {
     pub failures: Vec<FailedWorld>,
     pub unscored: Unscored,
     pub unknown_detected_agents: Vec<UnknownDetected>,
+    /// The manifest's converter notes, summed per dataset; empty when the
+    /// run had no manifest ([`score_streams`]).
+    pub notes: Vec<DatasetNotes>,
 }
 
 impl RunSummary {
@@ -156,6 +160,7 @@ impl RunSummary {
             failures: Vec::new(),
             unscored: Unscored::default(),
             unknown_detected_agents: Vec::new(),
+            notes: Vec::new(),
         }
     }
 }

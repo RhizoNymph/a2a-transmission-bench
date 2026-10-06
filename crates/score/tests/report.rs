@@ -11,6 +11,7 @@ use a2a_bench_format::labels::{
 };
 use a2a_bench_format::predictions::{PredictedRoute, Quality};
 use a2a_bench_score::class::EvidenceClass;
+use a2a_bench_score::notes::DatasetNotes;
 use a2a_bench_score::predict::Prediction;
 use a2a_bench_score::report::gates::Gates;
 use a2a_bench_score::report::table::render;
@@ -86,6 +87,17 @@ fn summary() -> RunSummary {
         world: WorldKey::new("w1").unwrap(),
         transmission: TransmissionRef::new("t:9").unwrap(),
         agent: DetectorAgent::new("d:ghost").unwrap(),
+    });
+    summary.notes.push(DatasetNotes {
+        dataset: common::dataset(),
+        worlds: 2,
+        labels: 7,
+        counts: [
+            ("key_group_not_a_cluster".to_owned(), 1),
+            ("uncarried_control".to_owned(), 3),
+        ]
+        .into_iter()
+        .collect(),
     });
     summary
 }
@@ -208,4 +220,39 @@ fn no_background_without_negative_controls() {
     );
     let report = Report::new(summary, Vec::new(), Disclosure::Full);
     assert!(report.background.is_none());
+}
+
+#[test]
+fn converter_notes_are_a_top_level_section_and_a_table_line() {
+    for disclosure in [Disclosure::Full, Disclosure::Holdout] {
+        let report = report(disclosure);
+        let value = json(&report);
+        let notes = &value["notes"];
+        assert_eq!(notes.as_array().map(Vec::len), Some(1), "{notes:#}");
+        assert_eq!(notes[0]["dataset"], common::dataset().as_str());
+        assert_eq!(notes[0]["worlds"], 2);
+        assert_eq!(notes[0]["labels"], 7);
+        assert_eq!(notes[0]["counts"]["uncarried_control"], 3);
+        assert_eq!(notes[0]["counts"]["key_group_not_a_cluster"], 1);
+        let text = render(&report);
+        assert!(
+            text.contains(&format!(
+                "notes: {} 7 label rows over 2 worlds; key_group_not_a_cluster 1, uncarried_control 3",
+                common::dataset()
+            )),
+            "{text}"
+        );
+    }
+}
+
+#[test]
+fn a_report_without_notes_says_so() {
+    let summary = RunSummary::new(
+        common::dataset(),
+        common::detector(),
+        Scorer::new(0).finish(),
+    );
+    let report = Report::new(summary, Vec::new(), Disclosure::Full);
+    assert_eq!(json(&report)["notes"], serde_json::json!([]));
+    assert!(!render(&report).contains("notes:"));
 }

@@ -23,6 +23,10 @@ rules mean what they meant there (crosstalk `docs/features/eval.md`,
   and variant, evaluation, the exit code (`report::gates`).
 - A library entry point that streams an export and a predictions file
   world by world and returns the run's summary (`run`).
+- Converter notes: the manifest's per-world `labels` counts and `notes`
+  (drop counts such as `uncarried_control`, `key_group_not_a_cluster`),
+  summed per dataset and name into the report's `notes` section
+  (`notes`).
 
 ## Non-scope
 
@@ -30,7 +34,9 @@ rules mean what they meant there (crosstalk `docs/features/eval.md`,
   `Report::new`, `Report::write`, `Report::exit_code`).
 - Resource canonicalisation: `a2a-bench-resource` plugs in through
   `canon::Canonicalize`; the crate itself compares resources as given
-  (`AsGiven`).
+  (`AsGiven`) and does not depend on it. The `a2a-bench` CLI scores with
+  `ResourceCanon` (`crates/cli/src/canon.rs`), which applies
+  `a2a_bench_resource::canonicalize` to labels and predictions alike.
 - crosstalk's `DetectionQuality` cross-check (a spec type): it moves to the
   crosstalk adapter's tests. The bench keeps the transmission rows it
   checked.
@@ -65,7 +71,8 @@ run::score_export(export dir, predictions path, ScoreOptions)
     every file read to its trailer; extra worlds ─▶ ExtraWorld
     with options.file_digests: FileReader::trailer().digest of messages and
       exchanges (and labels when the manifest has its digest) ─ differs ─▶ FileDigest
-  ─▶ RunSummary { dataset, detector, score, failures, unscored, unknown_detected_agents }
+  ─▶ RunSummary { dataset, detector, score, failures, unscored, unknown_detected_agents, notes: [] }
+  ─▶ notes: DatasetNotes::of(manifest) (worlds, label rows, counts by name, summed)
 
 Gates: GateSearch::from_env(--gates).load() ─▶ Gates::for_run(detector.name, detector.variant)
        ─▶ Gates::evaluate(&summary.score) ─▶ Vec<GateOutcome>
@@ -122,6 +129,7 @@ channel label.
 | --- | --- | --- |
 | `crates/score/src/lib.rs` | crate root | modules, `AsGiven`, `Canonicalize`, `World` |
 | `src/canon.rs` | the canonicalisation seam | `Canonicalize`, `AsGiven`, `same_resource` |
+| `src/notes.rs` | the manifest's converter notes, summed | `DatasetNotes` (`of`) |
 | `src/class.rs` | evidence classes and a need's class | `EvidenceClass`, `need_class` |
 | `src/world.rs` | one world as the scorer sees it | `World` |
 | `src/predict/mod.rs` | prediction rows to predictions | `Prediction`, `from_transmission`, `world_predictions`, `WorldPredictions`, `UnknownDetectedAgent` |
@@ -172,15 +180,20 @@ channel label.
   (inputs or labels failing their checks, world order, framing,
   truncation, a foreign manifest digest, an export file whose trailer
   digest is not the one `manifest.files` records) fails the whole run.
-- **Manifest notes are not reported.** The manifest's per-world `labels`
-  counts and converter `notes` are not read: the report's shape is
-  ct-eval's, and adding them is a report change, not a format one.
+- **Manifest notes are reported apart.** `score_export` sums the
+  manifest's per-world `labels` counts and converter `notes` per dataset
+  and name into `RunSummary::notes`; the report carries them as a new
+  top-level `notes` section (`[{dataset, worlds, labels, counts}]`) and a
+  `notes:` line in the table. Every ct-eval-shaped field is unchanged, so
+  the parity check's counts are unaffected. `score_streams` has no
+  manifest and leaves `notes` empty. Notes never name a world, so a
+  holdout report keeps them.
 - **Determinism.** Every list in the score and report comes from ordered
   maps (`BTreeMap` by derived `Ord`); predictions are judged in row order.
   Equal inputs give byte-identical `report.json` (tested).
 - **Holdout disclosure** writes the totals, summaries, rows, transmission,
   violation and access-only-under-control rows, gate outcomes and counts of
-  failed worlds and unknown-agent transmissions; it leaves out `failures`,
+  failed worlds and unknown-agent transmissions and the summed notes; it leaves out `failures`,
   `unknown_detected_agents`, `misses`, `false_positives` and
   `background.sources`, and the table names no world.
 - **Report shape.** ct-eval's field names and nesting are kept (rows
@@ -188,7 +201,7 @@ channel label.
   differences: `detector` is the predictions header's `DetectorInfo`,
   `failures` are typed `{world, failure: {kind, …}}`, plus `disclosure`,
   `failed_worlds`, `unknown_detected_agent` (and the list
-  `unknown_detected_agents`); transmission rows are keyed by the bench's
+  `unknown_detected_agents`), `notes`; transmission rows are keyed by the bench's
   `Quality` instead of the spec's `QualityMatch`.
 - **Gates.** Each file names one `detector`; a gate's optional `variant`
   selects the run's `detector.variant` (unset: every variant). Unknown keys

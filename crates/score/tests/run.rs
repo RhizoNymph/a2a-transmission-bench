@@ -489,3 +489,44 @@ fn a_partial_world_is_scored_under_its_coverage() {
     let all = run(&files).unwrap().score.total(&Selector::default());
     assert_eq!((all.predicted, all.unjudged, all.false_positive), (1, 1, 0));
 }
+
+#[test]
+fn an_exports_manifest_notes_and_label_counts_are_summed_into_the_summary() {
+    let (one, two) = (scene("w1"), scene("w2"));
+    let mut manifest = manifest(&[&one.built, &two.built]);
+    manifest.worlds[0]
+        .notes
+        .insert("uncarried_control".to_owned(), 2);
+    manifest.worlds[1]
+        .notes
+        .insert("uncarried_control".to_owned(), 1);
+    manifest.worlds[1]
+        .notes
+        .insert("key_group_not_a_cluster".to_owned(), 4);
+    let labels: u64 = manifest.worlds.iter().filter_map(|w| w.labels).sum();
+    let files = common::files_for(
+        &[
+            (&one.built, WorldStatus::Scored, Vec::new()),
+            (&two.built, WorldStatus::Scored, Vec::new()),
+        ],
+        manifest.digest().unwrap(),
+    );
+    let dir = tempfile::tempdir().unwrap();
+    write_export(dir.path(), &manifest, &files);
+    let summary = score_export(
+        dir.path(),
+        &dir.path().join("predictions.jsonl"),
+        ScoreOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(summary.notes.len(), 1);
+    let notes = &summary.notes[0];
+    assert_eq!(notes.dataset, common::dataset());
+    assert_eq!(notes.worlds, 2);
+    assert_eq!(notes.labels, labels);
+    assert_eq!(notes.counts.get("uncarried_control"), Some(&3));
+    assert_eq!(notes.counts.get("key_group_not_a_cluster"), Some(&4));
+
+    // Streams carry no manifest, so no notes.
+    assert!(run(&files).unwrap().notes.is_empty());
+}

@@ -7,6 +7,7 @@
 
 pub mod canon;
 pub mod class;
+pub mod notes;
 pub mod predict;
 pub mod report;
 pub mod run;

@@ -104,6 +104,23 @@ pub fn render(report: &Report) -> String {
             report.unknown_detected_agent
         );
     }
+    for notes in &report.notes {
+        let counts = notes
+            .counts
+            .iter()
+            .map(|(name, count)| format!("{name} {count}"))
+            .collect::<Vec<_>>();
+        let counts = if counts.is_empty() {
+            "no converter notes".to_owned()
+        } else {
+            counts.join(", ")
+        };
+        let _ = writeln!(
+            out,
+            "notes: {} {} label rows over {} worlds; {counts}",
+            notes.dataset, notes.labels, notes.worlds
+        );
+    }
     let o = &report.overall;
     let _ = writeln!(
         out,

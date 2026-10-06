@@ -20,6 +20,7 @@ use a2a_bench_format::ids::DatasetId;
 use a2a_bench_format::labels::Tier;
 
 use crate::class::EvidenceClass;
+use crate::notes::DatasetNotes;
 use crate::run::{FailedWorld, RunSummary, UnknownDetected, Unscored};
 use crate::score::{
     AccessOnlyControlRow, Counts, FalsePositive, Miss, RowKey, Selector, SourceCount, Totals,
@@ -171,6 +172,9 @@ pub struct Report {
     /// The false-positive rate and its sources, when the run had negative
     /// controls.
     pub background: Option<Background>,
+    /// The converters' notes and label row counts, summed per dataset and
+    /// name (never per world, so a holdout report keeps them).
+    pub notes: Vec<DatasetNotes>,
     /// Absent from a holdout report.
     #[serde(flatten)]
     pub detail: Option<Detail>,
@@ -201,6 +205,7 @@ impl Report {
             failures,
             unscored,
             unknown_detected_agents,
+            notes,
         } = summary;
         let content = Selector::default();
         let mut overall = Counts::default();
@@ -273,6 +278,7 @@ impl Report {
             unscored,
             unknown_detected_agent,
             background,
+            notes,
             detail,
         }
     }
