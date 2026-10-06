@@ -6,8 +6,8 @@ mod common;
 
 use a2a_bench_format::json::CanonicalJson;
 use a2a_bench_format::message::{
-    AssistantPart, Body, InvalidMessage, Message, NoPartText, ResultContent, ToolArguments,
-    ToolCall, ToolExecution, ToolOutcome, ToolPart, ToolResult, UserPart,
+    AssistantPart, Body, InvalidMessage, MediaKind, Message, NoPartText, ResultContent,
+    ToolArguments, ToolCall, ToolExecution, ToolOutcome, ToolPart, ToolResult, UserPart,
 };
 
 fn result(content: Vec<ResultContent>) -> ToolResult {
@@ -112,18 +112,18 @@ fn tool_result_text_joins_text_contents_with_newlines() {
         ToolPart::ToolResult(result(vec![
             ResultContent::Text { text: "one".into() },
             ResultContent::Media {
-                media_type: "image/png".into(),
+                kind: MediaKind::Image,
             },
             ResultContent::Text { text: "two".into() },
         ])),
         ToolPart::ToolResult(result(vec![ResultContent::Media {
-            media_type: "image/png".into(),
+            kind: MediaKind::Image,
         }])),
     ]));
     assert_eq!(tool.part_text(0).unwrap(), "one\ntwo");
     assert_eq!(tool.part_text(1), Err(NoPartText::NotText { index: 1 }));
     let user = common::message(Body::User(vec![UserPart::Media {
-        media_type: "image/png".into(),
+        kind: MediaKind::Image,
     }]));
     assert_eq!(user.part_text(0), Err(NoPartText::NotText { index: 0 }));
 }

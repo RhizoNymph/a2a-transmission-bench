@@ -34,7 +34,6 @@ pub fn render(resource: &Resource) -> String {
         } => {
             let kind = match kind {
                 ThreadKind::Issue => "issue",
-                ThreadKind::Pull => "pull",
                 ThreadKind::MergeRequest => "merge_request",
             };
             format!("thread {} {kind} {number}", repo_text(repository))
@@ -47,7 +46,21 @@ pub fn render(resource: &Resource) -> String {
             )
         }
         Resource::Url(text) => format!("url {text}"),
-        Resource::File { path } => format!("file {path}"),
+        Resource::File { host: None, path } => format!("file {path}"),
+        Resource::File {
+            host: Some(host),
+            path,
+        } => format!("file @{host} {path}"),
+        Resource::Mcp {
+            server,
+            tool,
+            target: None,
+        } => format!("mcp {server} {tool}"),
+        Resource::Mcp {
+            server,
+            tool,
+            target: Some(target),
+        } => format!("mcp {server} {tool} {target}"),
         Resource::Opaque { tool, key } => format!("opaque {tool} {key}"),
     }
 }
@@ -87,7 +100,6 @@ pub fn parse(text: &str) -> Resource {
             let (kind, number) = rest.split_once(' ').expect("kind and number");
             let kind = match kind {
                 "issue" => ThreadKind::Issue,
-                "pull" => ThreadKind::Pull,
                 "merge_request" => ThreadKind::MergeRequest,
                 other => panic!("thread kind {other}"),
             };
@@ -108,9 +120,28 @@ pub fn parse(text: &str) -> Resource {
             Resource::Collection { repository, kind }
         }
         "url" => Resource::Url(rest.to_owned()),
-        "file" => Resource::File {
-            path: rest.to_owned(),
+        "file" => match rest.strip_prefix('@') {
+            Some(hosted) => {
+                let (host, path) = hosted.split_once(' ').expect("host and path");
+                Resource::File {
+                    host: Some(host.to_owned()),
+                    path: path.to_owned(),
+                }
+            }
+            None => Resource::File {
+                host: None,
+                path: rest.to_owned(),
+            },
         },
+        "mcp" => {
+            let mut parts = rest.splitn(3, ' ');
+            let mut part = || parts.next().map(str::to_owned);
+            Resource::Mcp {
+                server: part().expect("a server"),
+                tool: part().expect("a tool"),
+                target: part(),
+            }
+        }
         "opaque" => Resource::Opaque {
             tool: word(),
             key: word(),
@@ -139,7 +170,7 @@ pub fn render_as_locator(resource: &Resource) -> String {
             let path = match (gitlab, kind) {
                 (false, _) => format!("issues/{number}"),
                 (true, ThreadKind::MergeRequest) => format!("-/merge_requests/{number}"),
-                (true, ThreadKind::Issue | ThreadKind::Pull) => format!("-/issues/{number}"),
+                (true, ThreadKind::Issue) => format!("-/issues/{number}"),
             };
             page(repository, path)
         }

@@ -28,6 +28,10 @@ fn manifest() -> Manifest {
             git: "deadbeef".into(),
         },
         selection: BTreeMap::from([
+            (
+                "include".to_owned(),
+                Setting::List(vec![Setting::Text("a".into()), Setting::Text("b".into())]),
+            ),
             ("limit".to_owned(), Setting::Int(53)),
             ("demo".to_owned(), Setting::Bool(false)),
         ]),
@@ -35,6 +39,8 @@ fn manifest() -> Manifest {
         worlds: vec![WorldEntry {
             key: WorldKey::new("w1").unwrap(),
             exchanges: 3,
+            labels: Some(4),
+            notes: BTreeMap::from([("uncarried_control".to_owned(), 1)]),
         }],
         files: FileDigests {
             messages: Digest::keyed("t", b"m"),
@@ -50,6 +56,16 @@ fn input_view_hides_labels_and_keeps_the_digest() {
     let view = full.input_view();
     assert!(view.files.labels.is_none());
     assert!(!serde_json::to_string(&view).unwrap().contains("labels"));
+    assert!(
+        !serde_json::to_string(&view)
+            .unwrap()
+            .contains("uncarried_control")
+    );
+    assert!(
+        view.worlds
+            .iter()
+            .all(|w| w.labels.is_none() && w.notes.is_empty())
+    );
     assert_eq!(full.digest().unwrap(), view.digest().unwrap());
     let mut other = manifest();
     other.dataset_version = 2;

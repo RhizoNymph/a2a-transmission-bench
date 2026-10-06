@@ -72,6 +72,7 @@ pub struct FileReader<K: FileKind, R: BufRead> {
     seen: BTreeSet<WorldKey>,
     rows: u64,
     done: bool,
+    trailer: Option<Trailer>,
 }
 
 impl<K: FileKind, R: BufRead> FileReader<K, R> {
@@ -113,11 +114,18 @@ impl<K: FileKind, R: BufRead> FileReader<K, R> {
             seen: BTreeSet::new(),
             rows: 0,
             done: false,
+            trailer: None,
         })
     }
 
     pub fn header(&self) -> &K::Header {
         &self.header
+    }
+
+    /// The trailer, once [`FileReader::next_world`] has returned `None`: its
+    /// counts and digest have been checked against the file.
+    pub fn trailer(&self) -> Option<&Trailer> {
+        self.trailer.as_ref()
     }
 
     /// The next world's section, or `None` after a valid trailer.
@@ -182,6 +190,7 @@ impl<K: FileKind, R: BufRead> FileReader<K, R> {
                 }
                 Frame::Trailer(trailer) => {
                     self.check_trailer(&trailer)?;
+                    self.trailer = Some(trailer);
                     self.done = true;
                     if current.is_some() {
                         return Ok(current);

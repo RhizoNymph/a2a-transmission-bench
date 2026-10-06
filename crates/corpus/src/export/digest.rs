@@ -1,24 +1,27 @@
 //! The source digest: BLAKE3 over the dataset files a converter read,
 //! sorted by path, recorded in the manifest's `source.digest`.
 //!
-//! The hasher is BLAKE3 in derive-key mode under [`SOURCE_DIGEST_CONTEXT`].
-//! For each file, in byte order of its path relative to the dataset root
-//! (`/`-separated), it absorbs
+//! The definition is the format's ([`a2a_bench_format::source`]): BLAKE3 in
+//! derive-key mode under [`SOURCE_DIGEST_CONTEXT`], absorbing for each file,
+//! in byte order of its path relative to the dataset root (`/`-separated),
 //!
 //! ```text
 //! path 0x00 length(u64, little-endian) contents
 //! ```
 //!
-//! so a renamed, moved, split or edited file changes the digest.
+//! so a renamed, moved, split or edited file changes the digest. This module
+//! finds and reads the files and feeds them to
+//! [`a2a_bench_format::source::SourceDigest`].
 
 use std::collections::BTreeMap;
 use std::fs::File;
+use std::io::Read;
 use std::path::{Component, Path, PathBuf};
 
 use a2a_bench_format::ids::Digest;
+use a2a_bench_format::source::{SourceDigest, SourceDigestError};
 
-/// The BLAKE3 derive-key context of a source digest.
-pub const SOURCE_DIGEST_CONTEXT: &str = "a2a-bench/1 source";
+pub use a2a_bench_format::source::SOURCE_DIGEST_CONTEXT;
 
 #[derive(Debug, thiserror::Error)]
 pub enum DigestError {
@@ -30,6 +33,11 @@ pub enum DigestError {
     Io {
         path: PathBuf,
         source: std::io::Error,
+    },
+    #[error("digesting {path}: {source}")]
+    Digest {
+        path: PathBuf,
+        source: SourceDigestError,
     },
 }
 
@@ -103,7 +111,7 @@ pub fn source_digest(
         let text = relative_text(root, &path)?;
         sorted.insert(text, path);
     }
-    let mut hasher = blake3::Hasher::new_derive_key(SOURCE_DIGEST_CONTEXT);
+    let mut digest = SourceDigest::new();
     for (text, path) in sorted {
         let full = if path.is_absolute() {
             path
@@ -114,19 +122,30 @@ pub fn source_digest(
             path: full.clone(),
             source,
         };
+        let refused = |source| DigestError::Digest {
+            path: full.clone(),
+            source,
+        };
         let file = File::open(&full).map_err(io)?;
         let length = file.metadata().map_err(io)?.len();
-        hasher.update(text.as_bytes());
-        hasher.update(&[0]);
-        hasher.update(&length.to_le_bytes());
-        let mut reader = std::io::Read::take(file, length);
-        let copied = std::io::copy(&mut reader, &mut hasher).map_err(io)?;
-        if copied != length {
-            return Err(io(std::io::Error::new(
+        // Only the length declared: a file that grows mid-read hashes as it was.
+        let mut file = file.take(length);
+        let mut entry = digest.file(&text, length).map_err(refused)?;
+        let mut buffer = vec![0; 64 * 1024];
+        loop {
+            let read = file.read(&mut buffer).map_err(io)?;
+            if read == 0 {
+                break;
+            }
+            entry.update(&buffer[..read]);
+        }
+        entry.end().map_err(|source| match source {
+            SourceDigestError::Length { .. } => io(std::io::Error::new(
                 std::io::ErrorKind::UnexpectedEof,
                 "the file changed while it was hashed",
-            )));
-        }
+            )),
+            other => refused(other),
+        })?;
     }
-    Ok(Digest::from_bytes(*hasher.finalize().as_bytes()))
+    Ok(digest.finish())
 }

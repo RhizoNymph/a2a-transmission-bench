@@ -43,6 +43,8 @@ pub enum Setting {
     Bool(bool),
     Int(i64),
     Text(String),
+    /// A repeatable setting, in the order given.
+    List(Vec<Setting>),
 }
 
 /// A world the export holds.
@@ -51,6 +53,13 @@ pub enum Setting {
 pub struct WorldEntry {
     pub key: WorldKey,
     pub exchanges: u64,
+    /// The world's label rows. Truth: absent in the input view.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub labels: Option<u64>,
+    /// Converter counts worth reporting (labels it could not place, groups
+    /// it did not label), by name. Truth-derived: absent in the input view.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub notes: BTreeMap<String, u64>,
 }
 
 /// The digests of an export's files: their trailers' digests.
@@ -82,16 +91,20 @@ pub struct Manifest {
 }
 
 impl Manifest {
-    /// The manifest a detector sees: no labels digest.
+    /// The manifest a detector sees: no labels digest, label counts or notes.
     pub fn input_view(&self) -> Self {
         let mut view = self.clone();
         view.files.labels = None;
+        for world in &mut view.worlds {
+            world.labels = None;
+            world.notes.clear();
+        }
         view
     }
 
-    /// The digest predictions name: the keyed BLAKE3 of the manifest's
-    /// canonical JSON, without its labels digest, so the full manifest
-    /// and the input view have the same one.
+    /// The digest predictions name: the keyed BLAKE3 of the input view's
+    /// canonical JSON, so the full manifest and the input view have the same
+    /// one.
     pub fn digest(&self) -> Result<Digest, serde_json::Error> {
         let text = serde_json::to_string(&self.input_view())?;
         let canonical =

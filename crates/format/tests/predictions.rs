@@ -4,11 +4,11 @@
 mod common;
 
 use a2a_bench_format::ids::{DetectorAgent, TransmissionRef};
-use a2a_bench_format::labels::{CarrierKind, Codec, MatchClass, Route};
+use a2a_bench_format::labels::{CarrierKind, Codec, MatchClass};
 use a2a_bench_format::location::{ByteRange, Location};
 use a2a_bench_format::predictions::{
-    CoAccess, ContentEvidence, InvalidTransmission, MatchKind, Prediction, Quality, State,
-    Transmission, TransmissionFields,
+    CoAccess, ContentEvidence, InvalidTransmission, MatchKind, PredictedRoute, Prediction, Quality,
+    State, Transmission, TransmissionFields,
 };
 use a2a_bench_format::resource::Resource;
 
@@ -25,8 +25,8 @@ pub fn content(fixture: &common::Fixture, kind: MatchKind) -> ContentEvidence {
         origin_at: None,
         kind,
         carrier: CarrierKind::ToolResult,
-        route: Route::Channel {
-            resource: Resource::Url(common::PAGE.into()),
+        route: PredictedRoute::Channel {
+            resources: vec![Resource::Url(common::PAGE.into())],
         },
     }
 }

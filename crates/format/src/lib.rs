@@ -14,5 +14,6 @@ pub mod manifest;
 pub mod message;
 pub mod predictions;
 pub mod resource;
+pub mod source;
 pub mod time;
 pub mod version;
