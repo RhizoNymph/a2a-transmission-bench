@@ -63,6 +63,11 @@ Features Index:
     entry_points: [crates/resource/src/lib.rs]
     depends_on: [format]
     doc: docs/features/resource.md
+  dataset-salt:
+    description: SALT-NLP converter (dataset salt@1) - stratified trace discovery, per-episode call reconstruction on the pace clock, delivery labels with the forwarding tier, rejected-send, scripted-peer, shared-source and boilerplate controls; parity with ct-eval 7f8a2fb
+    entry_points: [crates/datasets/salt/src/lib.rs, crates/datasets/salt/src/world.rs]
+    depends_on: [format, corpus]
+    doc: docs/features/dataset-salt.md
   separation:
     description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
     entry_points: []
