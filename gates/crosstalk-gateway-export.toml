@@ -61,16 +61,18 @@ max = 0
 # rate by about 4 per 1k and Poisson noise on 22 is about ±19 per 1k, so the
 # ceiling sits about two standard deviations above the measured rate.
 
-# Tightened at crosstalk's request (crosstalk PR #114), calibrated on the
-# fresh node0 run 20261006T212129Z (crosstalk 21a8bcf: 68.5 FP/1k, 17/248;
-# precision 0.927), about 2 sigma Poisson from it: fp_per_1k 130 -> 105,
-# precision 0.80 -> 0.88. The parity baseline run 20261006T021639Z (0.883,
-# 89.1 FP/1k) still passes both. Reviewed in the bench like any gate change.
+# Tightened at crosstalk's request (crosstalk PR #114), from the spread of
+# all four saved boilerplate runs replayed at crosstalk 21a8bcf (precision
+# 0.875-0.940, FP/1k 64.8-107.4, recall 1.000): fp_per_1k 130 -> 115,
+# precision 0.80 -> 0.86. A first single-run calibration (105 / 0.88) failed
+# 20261006T062146Z on the same code. The parity baseline run
+# 20261006T021639Z (0.883, 89.1 FP/1k live at 7f8a2fb) passes both.
+# Reviewed in the bench like any gate change.
 [[gate]]
 name = "demo-swarm/boilerplate: false positives per 1k exchanges stay bounded"
 dataset = "demo-swarm/boilerplate"
 metric = "fp_per_1k"
-max = 105.0
+max = 115.0
 
 [[gate]]
 name = "demo-swarm/boilerplate: every wiki transmission is still found"
@@ -82,4 +84,4 @@ min = 0.95
 name = "demo-swarm/boilerplate: template text does not swamp detections"
 dataset = "demo-swarm/boilerplate"
 metric = "precision"
-min = 0.88
+min = 0.86
