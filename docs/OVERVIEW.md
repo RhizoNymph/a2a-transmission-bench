@@ -7,7 +7,8 @@ Overview:
     labels), runs any detector as a separate process over the inputs, and
     scores the detector's predictions against the labels with regression
     gates per detector. Status: design approved (docs/design/separation.md);
-    the format crate exists, the rest is being ported.
+    the format crate and the reference matcher exist, the rest is being
+    ported.
   subsystems:
     format: >
       a2a-bench-format. On-disk types for messages, exchanges, labels and
@@ -22,8 +23,10 @@ Overview:
       collusion-wiki, swarm-traces, open-swe, lmcache, swe-splice, cipher,
       ai-village, demo-swarm), the world builder and the virtual pace clock.
     reference: >
-      a2a-bench-reference. The naive reference matcher, shipped as the
-      a2a-reference detector binary.
+      a2a-bench-reference. The naive reference matcher ("baseline detector
+      0"), a library over one world's checked inputs and the a2a-reference
+      detector binary (input view in, predictions.jsonl out). Attributes
+      exchanges by client credential; depends on format only.
     score: >
       a2a-bench-score. Alignment rule, judge, scorer, report, gates.
     cli: >
@@ -42,6 +45,11 @@ Features Index:
     entry_points: [crates/format/src/lib.rs]
     depends_on: []
     doc: docs/features/format.md
+  reference:
+    description: Baseline detector 0 - naive span/shingle matching over a world's inputs, as a library and the a2a-reference binary
+    entry_points: [crates/reference/src/lib.rs, crates/reference/src/bin/a2a-reference/main.rs]
+    depends_on: [format]
+    doc: docs/features/reference.md
   separation:
     description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
     entry_points: []
