@@ -48,8 +48,9 @@ a2a-bench export --dataset <id> --out <dir> [--root <data root>] [--dataset-dir 
                  [--config datasets.toml] [--splits <dir>] [--version N]
                  [--split dev|holdout --release <detector>@<tag>] [--allow-revision]
                  [dataset flags…]
-a2a-bench export --dataset demo-swarm --inputs <dir> --truth <truth.jsonl> --out <dir>
+a2a-bench export --dataset demo-swarm --inputs <capture dir> --truth <truth.jsonl> --out <dir>
                  [--run-lead-ms N] [--run-slack-ms N]
+                 (capture dir: messages.jsonl, exchanges.jsonl, manifest.json)
 a2a-bench validate <export dir> [--predictions <file>]
 a2a-bench input-view <export dir> <dest>
 a2a-bench run --export <dir> --detector-cmd "<program> [args…]" --out <dir>
@@ -94,8 +95,9 @@ times and record no pace.
 export
   --version ≠ converter VERSION ─▶ refused
   --split/--release: dev needs none, holdout needs <detector>@<tag> (Release)
-  demo-swarm ─▶ Inputs {root: deepest dir holding inputs and truth, truth, messages, exchanges}
-             ─▶ demo_swarm::write_export(…, converter, source path = --inputs) (revision = run id)
+  demo-swarm ─▶ Inputs {root: deepest dir holding inputs and truth, truth, messages, exchanges, manifest}
+             ─▶ demo_swarm::write_export(…, bench converter): manifest = the capture's manifest.json
+                (source, converter, selection, revision = run id) + labels; bench provenance in diagnostics.json
   holdout ─▶ --out outside any git repository (enclosing_repository), else refused
   datasets.toml (--config, else the repo's, else DEFAULT) ─▶ data root (--root overrides)
   dataset dir = --dataset-dir, else root / datasets.<id>.path; source.path = that path as configured
@@ -256,3 +258,15 @@ The reference gates were calibrated on SALT `--limit 265` and full
 AgentDojo selections, so small selections are expected to miss them.
 Scoring the SALT predictions again with `score` gives a byte-identical
 `report.json`, and `validate --predictions` passes on each run.
+
+## demo-swarm parity on node0's saved runs (2026-10-06, P7)
+
+Captures and predictions from `ct-bench-detect from-export`, truth from
+the runs, `score --gates gates/crosstalk-gateway-export.toml --examples
+0`. The export's input view is the capture's manifest, so the predictions'
+`manifest_digest` matches and they score; `validate --predictions` passes.
+
+| Run | Recall | Precision | FP / 1k exchanges | Gates |
+| --- | --- | --- | --- | --- |
+| `20261006T020835Z` (headline) | 1.000 (55 / 55) | 1.000 (55 correct, 0 false) | 0.0 | 5 pass, exit 0 |
+| `20261006T021639Z` (boilerplate) | 1.000 (50 / 50) | 0.883 (166 correct, 22 false) | 89.1 | 3 pass, exit 0 |

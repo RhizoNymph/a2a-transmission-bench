@@ -501,7 +501,11 @@ The converter (schema, run window, session+turn join, tool_use_id and
 BLAKE3 cross-checks) moves to the bench. Its inputs change: instead of the
 gateway's exchange log and blob directory it reads bench `exchanges.jsonl`
 and `messages.jsonl`, which `ct-bench-detect from-export` writes with the
-gateway's minted ids and the `session` and turn ordinal in `client`. The
+gateway's minted ids and the `session` and turn ordinal in `client`.
+The capture also holds its `manifest.json` (an input view), which the
+adapter's predictions name; the bench only adds truth, so the completed
+export's input view is exactly that manifest and the bench's own
+labelling provenance goes to `diagnostics.json`. The
 URL canonicalisation in `resolve.rs` uses the bench canonicaliser.
 demo-swarm labels key groups of two or more agents as `agent_cluster`
 rows (a smaller group is not a cluster and is reported as

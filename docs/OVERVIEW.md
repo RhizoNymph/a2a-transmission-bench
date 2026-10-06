@@ -108,7 +108,7 @@ Features Index:
     depends_on: [format, corpus]
     doc: docs/features/dataset-swarm.md
   dataset-demo-swarm:
-    description: demo-swarm/headline and demo-swarm/boilerplate - crosstalk demo swarm runs labelled from the swarm's truth v2 over the adapter's bench capture (session + turn join, tool_use_id and BLAKE3 cross-checks, run window, typed join diagnostics)
+    description: demo-swarm/headline and demo-swarm/boilerplate - crosstalk demo swarm runs labelled from the swarm's truth v2 over the adapter's bench capture (session + turn join, tool_use_id and BLAKE3 cross-checks, run window, typed join diagnostics); the export only adds truth, keeping the capture's manifest as its input view so the adapter's predictions score
     entry_points: [crates/datasets/demo-swarm/src/lib.rs, crates/datasets/demo-swarm/src/source.rs, crates/datasets/demo-swarm/src/label.rs]
     depends_on: [format, corpus, resource]
     doc: docs/features/dataset-demo-swarm.md
