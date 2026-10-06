@@ -63,6 +63,16 @@ Features Index:
     entry_points: [crates/resource/src/lib.rs]
     depends_on: [format]
     doc: docs/features/resource.md
+  dataset-agentdojo:
+    description: AgentDojo converter (agentdojo@1) - prompt-injection runs as a victim and a synthetic attacker; injection copies (construction, channel copies out of reach), boilerplate controls; ct-eval 7f8a2fb parity
+    entry_points: [crates/datasets/agentdojo/src/lib.rs, crates/datasets/agentdojo/src/source.rs]
+    depends_on: [format, corpus]
+    doc: docs/features/dataset-agentdojo.md
+  dataset-tau2:
+    description: tau2-bench converter (tau2@1) - simulations as an agent and a user simulator with flipped views at recorded times; structural turn labels, boilerplate and shared-source controls; ct-eval 7f8a2fb parity
+    entry_points: [crates/datasets/tau2/src/lib.rs, crates/datasets/tau2/src/source.rs]
+    depends_on: [format, corpus]
+    doc: docs/features/dataset-tau2.md
   separation:
     description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
     entry_points: []
