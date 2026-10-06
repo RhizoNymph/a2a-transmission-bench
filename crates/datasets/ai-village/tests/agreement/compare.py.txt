@@ -1,0 +1,58 @@
+"""Counts-only comparison of ct-eval truth and the bench's labels."""
+import collections, hashlib, json, sys
+
+def loc_key(loc):
+    t, d = loc['type'], loc['data']
+    if t == 'url':
+        s = f"{d['scheme']}://{d['host']}{d['path']}"
+        return s + ('?' + d['query'] if d.get('query') else '')
+    if t == 'file':
+        return f"file://{d['host']}{d['path']}" if d.get('host') else f"file://{d['path']}"
+    if t == 'repository':
+        return f"repo://{d['host']}/{d['owner']}/{d['name']}"
+    if t == 'opaque':
+        return f"opaque://{d['tool']}/{d['key']}"
+    return json.dumps(loc, sort_keys=True)
+
+def h(text):
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
+
+def ct_row(d):
+    l = d['label']
+    route = l['route']
+    r = route['kind'] + (' ' + loc_key(route['resource']) if route['kind'] == 'channel' else '')
+    at = l['content']['at']
+    return (d['expect'], l['from']['world'], l['from']['name'], l['to']['name'], l.get('sender_exchange'),
+            l['reader_exchange'], r, l['carrier'], json.dumps(l['needs'], sort_keys=True), l['tier'],
+            h(l['content']['text']), at['part']['index'], at['range']['start'], at['range']['end'],
+            l['source']['file'], l['source']['path'])
+
+def bench_row(d):
+    route = d['route']
+    r = route['kind'] + (' ' + route['resource'] if route['kind'] == 'channel' else '')
+    return (d['expect'], d['world'], d['from'], d['to'], d['sender_exchange'], d['reader_exchange'], r,
+            d['carrier'], json.dumps(d['needs'], sort_keys=True), d['tier'], h(d['text']), d['part'],
+            d['start'], d['end'], d['source_file'], d['source_path'])
+
+def load(path, f):
+    with open(path) as fh:
+        return collections.Counter(f(json.loads(l)) for l in fh)
+
+ct = load(sys.argv[1], ct_row)
+bench = load(sys.argv[2], bench_row)
+print('labels ct', sum(ct.values()), 'bench', sum(bench.values()))
+print('identical label rows (all fields, text by hash, location by part and range):', sum((ct & bench).values()))
+print('only ct', sum((ct - bench).values()), 'only bench', sum((bench - ct).values()))
+def dims(c, idx):
+    out = collections.Counter()
+    for row, n in c.items():
+        out[tuple(row[i] if i != 6 else row[i].split(' ')[0] for i in idx)] += n
+    return out
+for name, idx in [('kind', [0]), ('tier', [9]), ('route', [6]), ('carrier', [7]), ('need class', [8])]:
+    a, b = dims(ct, idx), dims(bench, idx)
+    for k in sorted(set(a) | set(b)):
+        print(f'{name:10} {str(k):60} ct {a[k]:7} bench {b[k]:7}')
+ids = lambda c: {x for row in c for x in (row[4], row[5]) if x}
+print('label exchange ids ct', len(ids(ct)), 'bench', len(ids(bench)), 'equal', ids(ct) == ids(bench))
+worlds = lambda c: {row[1] for row in c}
+print('worlds with labels ct', len(worlds(ct)), 'bench', len(worlds(bench)), 'equal', worlds(ct) == worlds(bench))

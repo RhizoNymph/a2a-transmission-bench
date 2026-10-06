@@ -31,6 +31,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "a2a-bench-dataset-ai-village"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-corpus",
+ "a2a-bench-format",
+ "a2a-bench-resource",
+ "flate2",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tracing",
+ "url",
+]
+
+[[package]]
 name = "a2a-bench-dataset-cipher"
 version = "0.1.0"
 dependencies = [

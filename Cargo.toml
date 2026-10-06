@@ -3,6 +3,7 @@ resolver = "3"
 members = [
     "crates/corpus",
     "crates/datasets/agentdojo",
+    "crates/datasets/ai-village",
     "crates/datasets/cipher",
     "crates/datasets/demo-swarm",
     "crates/datasets/lmcache",

@@ -106,6 +106,11 @@ Features Index:
     entry_points: [crates/datasets/demo-swarm/src/lib.rs, crates/datasets/demo-swarm/src/source.rs, crates/datasets/demo-swarm/src/label.rs]
     depends_on: [format, corpus, resource]
     doc: docs/features/dataset-demo-swarm.md
+  dataset-ai-village:
+    description: AI Village converter (ai-village@1) - the Claude Code stream (construction-tier get_events labels) and village-day windows (structural chat, heuristic repository channel labels), with the bench's own normative shell model (command table, shell state, write outcomes) for bash accesses; parity with ct-eval at crosstalk 7f8a2fb proven by an access agreement check and a label comparison
+    entry_points: [crates/datasets/ai-village/src/lib.rs, crates/datasets/ai-village/src/shell/mod.rs]
+    depends_on: [format, corpus, resource]
+    doc: docs/features/dataset-ai-village.md
   separation:
     description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
     entry_points: []
