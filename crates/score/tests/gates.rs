@@ -328,7 +328,10 @@ fn the_shipped_gates_have_a_forwarding_on_gate() {
 }
 
 #[test]
-fn a_shipped_threshold_is_ct_evals() {
+/// Shipped thresholds load as written: the SALT one is still ct-eval's
+/// (7f8a2fb); the demo-swarm boilerplate FP bound is the bench's own since
+/// crosstalk PR #114 tightened it (130 -> 105).
+fn a_shipped_threshold_loads_as_written() {
     let gates = shipped();
     let gate = gates
         .gates
@@ -337,7 +340,7 @@ fn a_shipped_threshold_is_ct_evals() {
             gate.name == "demo-swarm/boilerplate: false positives per 1k exchanges stay bounded"
         })
         .unwrap();
-    assert_eq!(gate.check, Check::FpPer1k { max: 130.0 });
+    assert_eq!(gate.check, Check::FpPer1k { max: 105.0 });
     assert_eq!(gate.detector, "crosstalk-gateway-export");
     let gate = gates
         .gates
