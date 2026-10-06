@@ -1,0 +1,349 @@
+{
+  "dataset": "cipher",
+  "detector": "live",
+  "totals": {
+    "worlds": 400,
+    "agents": 800,
+    "exchanges": 1000,
+    "expectations": 400,
+    "negative_controls": 0,
+    "predictions": 49
+  },
+  "overall": {
+    "expected": 200,
+    "found": 49,
+    "missed": 151,
+    "suspected": 0,
+    "predicted": 49,
+    "correct": 49,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 1.0,
+    "recall": 0.245
+  },
+  "out_of_reach": {
+    "expected": 200,
+    "found": 0,
+    "missed": 200,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": 0.0
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 200,
+    "recall": 0.0,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "cipher",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "construction",
+      "expected": 13,
+      "found": 3,
+      "missed": 10,
+      "suspected": 0,
+      "predicted": 3,
+      "correct": 3,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.23076923076923078
+    },
+    {
+      "dataset": "cipher",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "construction",
+      "expected": 87,
+      "found": 11,
+      "missed": 76,
+      "suspected": 0,
+      "predicted": 11,
+      "correct": 11,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.12643678160919541
+    },
+    {
+      "dataset": "cipher",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "out_of_reach",
+      "expected": 100,
+      "found": 0,
+      "missed": 100,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "dataset": "cipher",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "exact",
+      "tier": "construction",
+      "expected": 13,
+      "found": 2,
+      "missed": 11,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": 0.15384615384615385
+    },
+    {
+      "dataset": "cipher",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "normalized",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 2,
+      "correct": 2,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    },
+    {
+      "dataset": "cipher",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "decoded",
+      "tier": "construction",
+      "expected": 87,
+      "found": 33,
+      "missed": 54,
+      "suspected": 0,
+      "predicted": 33,
+      "correct": 33,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.3793103448275862
+    },
+    {
+      "dataset": "cipher",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "decoded",
+      "tier": "out_of_reach",
+      "expected": 100,
+      "found": 0,
+      "missed": 100,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": 0.0
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "cipher",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 3,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "cipher",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 2,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "cipher",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 11,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "cipher",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 33,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt (live): delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): injections read through keyed tools are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): decoded matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swarm-traces (live): decoded tokens are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swarm-traces (live): decoded matches are the planted tokens",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2 (live): turns reach the peer's next call",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2 (live): matches in user turns are the peer's turns",
+      "status": "other_dataset"
+    },
+    {
+      "name": "ai-village (live): other agents' talk reaches the Claude Code agent",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel reads of other agents' lines are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel matches are the labelled lines",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): planted file transmissions are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): channel matches are the planted file",
+      "status": "other_dataset"
+    },
+    {
+      "name": "open-swe (live): background false positives stay bounded",
+      "status": "other_dataset"
+    },
+    {
+      "name": "lmcache (live): background false positives stay bounded",
+      "status": "other_dataset"
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": null
+}

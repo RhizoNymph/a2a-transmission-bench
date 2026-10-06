@@ -1,0 +1,33 @@
+dataset salt · detector live · 53 worlds, 106 agents, 11796 exchanges, 3850 labels, 12951 negative controls, 11926 predictions
+overall: recall 0.894 (2601 / 2909), precision 0.882 (6337 correct, 850 false, 0 unjudged)
+
+forwarding (sender relayed its own tool output, not in overall): recall 0.885 (833 / 941), 4739 predictions
+
+route       carrier        class       tier          expected  found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+direct      tool_result    exact       construction         0      0       0       -          3        0      3         0          0      0.000
+direct      tool_result    exact       structural           0      0       0       -         68        0     68         0          0      0.000
+direct      tool_result    normalized  construction         0      0       0       -         20        0     20         0          0      0.000
+direct      tool_result    normalized  structural           0      0       0       -         69        0     69         0          0      0.000
+direct      tool_result    decoded     construction         0      0       0       -        317        0    317         0          0      0.000
+direct      tool_result    decoded     structural           0      0       0       -          1        0      1         0          0      0.000
+direct      user_turn      exact       construction      2664   2358     306   0.885       3528     3512     16         0          0      0.995
+direct      user_turn      exact       structural           0      0       0       -        140        0    140         0          0      0.000
+direct      user_turn      exact       forwarding         142    139       3   0.979       2311     2311      0         0          0      1.000
+direct      user_turn      normalized  construction         0      0       0       -       2825     2825      0         0          0      1.000
+direct      user_turn      normalized  structural           0      0       0       -        134        0    134         0          0      0.000
+direct      user_turn      normalized  forwarding           0      0       0       -       2115     2115      0         0          0      1.000
+direct      user_turn      decoded     construction       245    243       2   0.992          0        0      0         0          0          -
+direct      user_turn      decoded     forwarding         799    694     105   0.869        313      313      0         0          0      1.000
+unobserved  reader_output  exact       construction         0      0       0       -         66        0     66         0          0      0.000
+unobserved  reader_output  normalized  construction         0      0       0       -         16        0     16         0          0      0.000
+
+negative-control violations:
+  rejected_send        182
+  shared_source        138
+  boilerplate          274
+
+false positives: 72.1 per 1k exchanges (850 over 11796)
+top boilerplate sources: (excerpts of dataset text removed for this record)
+
+gates:
+  FAIL  0.885 (bound 0.940)      salt (live, forwarding on): forwarded tool output is found

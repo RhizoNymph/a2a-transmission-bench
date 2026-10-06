@@ -1,0 +1,237 @@
+{
+  "dataset": "swarm-traces",
+  "detector": "reference",
+  "totals": {
+    "worlds": 629,
+    "agents": 1258,
+    "exchanges": 1887,
+    "expectations": 629,
+    "negative_controls": 0,
+    "predictions": 1261
+  },
+  "overall": {
+    "expected": 629,
+    "found": 627,
+    "missed": 2,
+    "suspected": 0,
+    "predicted": 1261,
+    "correct": 1261,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 1.0,
+    "recall": 0.9968203497615262
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 629,
+    "recall": 0.0,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "swarm-traces",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 160,
+      "correct": 160,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    },
+    {
+      "dataset": "swarm-traces",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 473,
+      "correct": 473,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    },
+    {
+      "dataset": "swarm-traces",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 1,
+      "correct": 1,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    },
+    {
+      "dataset": "swarm-traces",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "construction",
+      "expected": 170,
+      "found": 169,
+      "missed": 1,
+      "suspected": 0,
+      "predicted": 169,
+      "correct": 169,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.9941176470588236
+    },
+    {
+      "dataset": "swarm-traces",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "structural",
+      "expected": 459,
+      "found": 458,
+      "missed": 1,
+      "suspected": 0,
+      "predicted": 458,
+      "correct": 458,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.9978213507625272
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "swarm-traces",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 489,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "swarm-traces",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 138,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt: delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: injections read through keyed tools are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2: turns reach the peer's next call",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2: matches in user turns are the peer's turns",
+      "status": "other_dataset"
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": null
+}

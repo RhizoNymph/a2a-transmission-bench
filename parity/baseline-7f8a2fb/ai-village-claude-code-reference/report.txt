@@ -1,0 +1,28 @@
+dataset ai-village · detector reference · 993 worlds, 6595 agents, 81369 exchanges, 15798 labels, 0 negative controls, 338257 predictions
+overall: recall 0.999 (15776 / 15798), precision 1.000 (73754 correct, 0 false, 264503 unjudged)
+
+route    carrier      class       tier          expected  found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+channel  tool_result  exact       -                    0      0       0       -       1601        0      0      1601          0          -
+channel  tool_result  normalized  -                    0      0       0       -        491        0      0       491          0          -
+channel  tool_result  decoded     -                    0      0       0       -         35        0      0        35          0          -
+direct   tool_result  exact       -                    0      0       0       -     192132        0      0    192132          0          -
+direct   tool_result  exact       construction      9148   9130      18   0.998      49912    49912      0         0          0      1.000
+direct   tool_result  normalized  -                    0      0       0       -      42078        0      0     42078          0          -
+direct   tool_result  normalized  construction         0      0       0       -       7746     7746      0         0          0      1.000
+direct   tool_result  decoded     -                    0      0       0       -      21851        0      0     21851          0          -
+direct   tool_result  decoded     construction      6640   6640       0   1.000      16096    16096      0         0          0      1.000
+direct   tool_result  semantic    construction        10      6       4   0.600          0        0      0         0          0          -
+direct   user_turn    exact       -                    0      0       0       -       4350        0      0      4350          0          -
+direct   user_turn    normalized  -                    0      0       0       -       1792        0      0      1792          0          -
+direct   user_turn    decoded     -                    0      0       0       -        173        0      0       173          0          -
+
+gates:
+  skip  (other dataset)          salt: delivered messages that arrive verbatim are found
+  skip  (other dataset)          salt: delivered messages that arrive escaped are found
+  skip  (other dataset)          salt: every construction label
+  skip  (other dataset)          salt: matches in user turns are deliveries
+  skip  (other dataset)          salt: nothing is attributed to a scripted sender
+  skip  (other dataset)          agentdojo: injections read through keyed tools are found
+  skip  (other dataset)          agentdojo: matches in keyed tool results are injections
+  skip  (other dataset)          tau2: turns reach the peer's next call
+  skip  (other dataset)          tau2: matches in user turns are the peer's turns

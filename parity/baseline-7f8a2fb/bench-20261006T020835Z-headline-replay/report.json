@@ -1,0 +1,221 @@
+{
+  "dataset": "demo-swarm/headline",
+  "detector": "gateway-export",
+  "totals": {
+    "worlds": 1,
+    "agents": 20,
+    "exchanges": 254,
+    "expectations": 55,
+    "negative_controls": 76,
+    "predictions": 86
+  },
+  "overall": {
+    "expected": 55,
+    "found": 55,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 55,
+    "correct": 55,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 55,
+    "recall": 0.0,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "demo-swarm/headline",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "construction",
+      "expected": 55,
+      "found": 55,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 54,
+      "correct": 54,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "dataset": "demo-swarm/headline",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 1,
+      "correct": 1,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    },
+    {
+      "dataset": "demo-swarm/headline",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "discarded",
+      "tier": null,
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 31,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 31,
+      "precision": null,
+      "recall": null
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "demo-swarm/headline",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 54,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "demo-swarm/headline",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 1,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "demo-swarm/headline",
+        "route": "channel",
+        "quality": {
+          "type": "discarded"
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 0,
+        "unlabeled": 31
+      }
+    }
+  ],
+  "violations": [],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "demo-swarm/headline: every wiki transmission is found",
+      "status": "pass",
+      "value": 1.0
+    },
+    {
+      "name": "demo-swarm/headline: detections are transmissions",
+      "status": "pass",
+      "value": 1.0
+    },
+    {
+      "name": "demo-swarm/headline: wiki pages read through tool results are found",
+      "status": "pass",
+      "value": 1.0
+    },
+    {
+      "name": "demo-swarm/headline: exact matches in wiki tool results are deliveries",
+      "status": "pass",
+      "value": 1.0
+    },
+    {
+      "name": "demo-swarm/headline: no reread is reported as a transmission",
+      "status": "pass",
+      "value": 0.0
+    },
+    {
+      "name": "demo-swarm/boilerplate: false positives per 1k exchanges stay bounded",
+      "status": "other_dataset"
+    },
+    {
+      "name": "demo-swarm/boilerplate: every wiki transmission is still found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "demo-swarm/boilerplate: template text does not swamp detections",
+      "status": "other_dataset"
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": {
+    "false_positives": 0,
+    "exchanges": 254,
+    "per_1k_exchanges": 0.0,
+    "sources": []
+  }
+}

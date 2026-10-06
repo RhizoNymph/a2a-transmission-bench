@@ -1,0 +1,352 @@
+{
+  "dataset": "tau2",
+  "detector": "live",
+  "totals": {
+    "worlds": 10832,
+    "agents": 18016,
+    "exchanges": 264793,
+    "expectations": 119256,
+    "negative_controls": 106465,
+    "predictions": 186320
+  },
+  "overall": {
+    "expected": 119256,
+    "found": 118422,
+    "missed": 834,
+    "suspected": 0,
+    "predicted": 186320,
+    "correct": 186219,
+    "false_positive": 101,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 0.9994579218548734,
+    "recall": 0.9930066411752868
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 119256,
+    "recall": 0.0,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 61,
+      "correct": 0,
+      "false_positive": 61,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 13,
+      "correct": 0,
+      "false_positive": 13,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 119256,
+      "found": 118422,
+      "missed": 834,
+      "suspected": 0,
+      "predicted": 113190,
+      "correct": 113163,
+      "false_positive": 27,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.9997614630267692,
+      "recall": 0.9930066411752868
+    },
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 73043,
+      "correct": 73043,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    },
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "decoded",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 13,
+      "correct": 13,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "tau2",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 61,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "tau2",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 93856,
+        "false_detection": 27,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "tau2",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 13,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "tau2",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 18684,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [
+    {
+      "dataset": "tau2",
+      "reason": "shared_source",
+      "count": 74
+    },
+    {
+      "dataset": "tau2",
+      "reason": "boilerplate",
+      "count": 27
+    }
+  ],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt (live): delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): injections read through keyed tools are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): decoded matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swarm-traces (live): decoded tokens are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swarm-traces (live): decoded matches are the planted tokens",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2 (live): turns reach the peer's next call",
+      "status": "pass",
+      "value": 0.9930066411752868
+    },
+    {
+      "name": "tau2 (live): matches in user turns are the peer's turns",
+      "status": "pass",
+      "value": 0.9998550304436068
+    },
+    {
+      "name": "ai-village (live): other agents' talk reaches the Claude Code agent",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel reads of other agents' lines are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel matches are the labelled lines",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): planted file transmissions are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): channel matches are the planted file",
+      "status": "other_dataset"
+    },
+    {
+      "name": "open-swe (live): background false positives stay bounded",
+      "status": "other_dataset"
+    },
+    {
+      "name": "lmcache (live): background false positives stay bounded",
+      "status": "other_dataset"
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": {
+    "false_positives": 101,
+    "exchanges": 264793,
+    "per_1k_exchanges": 0.3814300226969746,
+    "sources": [
+      {
+        "reason": "shared_source",
+        "count": 48
+      },
+      {
+        "reason": "shared_source",
+        "count": 25
+      },
+      {
+        "reason": "boilerplate",
+        "count": 25
+      },
+      {
+        "reason": "boilerplate",
+        "count": 2
+      },
+      {
+        "reason": "shared_source",
+        "count": 1
+      }
+    ]
+  }
+}

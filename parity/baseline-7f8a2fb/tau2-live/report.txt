@@ -1,0 +1,37 @@
+dataset tau2 · detector live · 10832 worlds, 18016 agents, 264793 exchanges, 119256 labels, 106465 negative controls, 186320 predictions
+overall: recall 0.993 (118422 / 119256), precision 0.999 (186219 correct, 101 false, 0 unjudged)
+
+route   carrier      class       tier        expected   found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+direct  tool_result  exact       structural         0       0       0       -         61        0     61         0          0      0.000
+direct  tool_result  normalized  structural         0       0       0       -         13        0     13         0          0      0.000
+direct  user_turn    exact       structural    119256  118422     834   0.993     113190   113163     27         0          0      1.000
+direct  user_turn    normalized  structural         0       0       0       -      73043    73043      0         0          0      1.000
+direct  user_turn    decoded     structural         0       0       0       -         13       13      0         0          0      1.000
+
+negative-control violations:
+  shared_source        74
+  boilerplate          27
+
+false positives: 0.4 per 1k exchanges (101 over 264793)
+top boilerplate sources: (excerpts of dataset text removed for this record)
+
+gates:
+  skip  (other dataset)          salt (live): delivered messages that arrive verbatim are found
+  skip  (other dataset)          salt (live): delivered messages that arrive escaped are found
+  skip  (other dataset)          salt (live): every construction label
+  skip  (other dataset)          salt (live): matches in user turns are deliveries
+  skip  (other dataset)          salt (live): nothing is attributed to a scripted sender
+  skip  (other dataset)          agentdojo (live): injections read through keyed tools are found
+  skip  (other dataset)          agentdojo (live): decoded matches in keyed tool results are injections
+  skip  (other dataset)          agentdojo (live): matches in keyed tool results are injections
+  skip  (other dataset)          swarm-traces (live): decoded tokens are found
+  skip  (other dataset)          swarm-traces (live): decoded matches are the planted tokens
+  pass  0.993                    tau2 (live): turns reach the peer's next call
+  pass  1.000                    tau2 (live): matches in user turns are the peer's turns
+  skip  (other dataset)          ai-village (live): other agents' talk reaches the Claude Code agent
+  skip  (other dataset)          wiki (live): channel reads of other agents' lines are found
+  skip  (other dataset)          wiki (live): channel matches are the labelled lines
+  skip  (other dataset)          swe-splice (live): planted file transmissions are found
+  skip  (other dataset)          swe-splice (live): channel matches are the planted file
+  skip  (other dataset)          open-swe (live): background false positives stay bounded
+  skip  (other dataset)          lmcache (live): background false positives stay bounded

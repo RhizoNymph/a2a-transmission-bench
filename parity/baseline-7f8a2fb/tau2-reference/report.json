@@ -1,0 +1,421 @@
+{
+  "dataset": "tau2",
+  "detector": "reference",
+  "totals": {
+    "worlds": 10832,
+    "agents": 18016,
+    "exchanges": 264793,
+    "expectations": 119256,
+    "negative_controls": 106465,
+    "predictions": 241794
+  },
+  "overall": {
+    "expected": 119256,
+    "found": 119085,
+    "missed": 171,
+    "suspected": 0,
+    "predicted": 241794,
+    "correct": 241233,
+    "false_positive": 561,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 0.9976798431722872,
+    "recall": 0.9985661098812638
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 119256,
+    "recall": 0.0,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 282,
+      "correct": 0,
+      "false_positive": 282,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 199,
+      "correct": 0,
+      "false_positive": 199,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 119256,
+      "found": 119085,
+      "missed": 171,
+      "suspected": 0,
+      "predicted": 220626,
+      "correct": 220626,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.9985661098812638
+    },
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 17542,
+      "correct": 17542,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    },
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "decoded",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 3065,
+      "correct": 3065,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    },
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "system_prompt",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 57,
+      "correct": 0,
+      "false_positive": 57,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "tau2",
+      "route": "direct",
+      "carrier": "system_prompt",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 23,
+      "correct": 0,
+      "false_positive": 23,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "tau2",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 280,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "tau2",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 113068,
+        "false_detection": 0,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "tau2",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "system_prompt"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 18,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "tau2",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 195,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "tau2",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "system_prompt"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 8,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [
+    {
+      "dataset": "tau2",
+      "reason": "shared_source",
+      "count": 481
+    }
+  ],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt: delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: injections read through keyed tools are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2: turns reach the peer's next call",
+      "status": "pass",
+      "value": 0.9985661098812638
+    },
+    {
+      "name": "tau2: matches in user turns are the peer's turns",
+      "status": "pass",
+      "value": 1.0
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": {
+    "false_positives": 561,
+    "exchanges": 264793,
+    "per_1k_exchanges": 2.118636066663394,
+    "sources": [
+      {
+        "reason": "shared_source",
+        "count": 92
+      },
+      {
+        "reason": "shared_source",
+        "count": 87
+      },
+      {
+        "reason": "shared_source",
+        "count": 51
+      },
+      {
+        "reason": "shared_source",
+        "count": 48
+      },
+      {
+        "reason": "shared_source",
+        "count": 39
+      },
+      {
+        "reason": "shared_source",
+        "count": 35
+      },
+      {
+        "reason": "shared_source",
+        "count": 17
+      },
+      {
+        "reason": "shared_source",
+        "count": 16
+      },
+      {
+        "reason": "shared_source",
+        "count": 14
+      },
+      {
+        "reason": "shared_source",
+        "count": 12
+      },
+      {
+        "reason": "shared_source",
+        "count": 9
+      },
+      {
+        "reason": "shared_source",
+        "count": 8
+      },
+      {
+        "reason": "shared_source",
+        "count": 6
+      },
+      {
+        "reason": "shared_source",
+        "count": 4
+      },
+      {
+        "reason": "shared_source",
+        "count": 4
+      },
+      {
+        "reason": "shared_source",
+        "count": 4
+      },
+      {
+        "reason": "shared_source",
+        "count": 3
+      },
+      {
+        "reason": "shared_source",
+        "count": 3
+      },
+      {
+        "reason": "shared_source",
+        "count": 3
+      },
+      {
+        "reason": "shared_source",
+        "count": 3
+      }
+    ]
+  }
+}

@@ -1,0 +1,463 @@
+{
+  "dataset": "open_swe",
+  "detector": "live",
+  "totals": {
+    "worlds": 13,
+    "agents": 208,
+    "exchanges": 14311,
+    "expectations": 0,
+    "negative_controls": 214665,
+    "predictions": 274
+  },
+  "overall": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 197,
+    "correct": 0,
+    "false_positive": 197,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": 0.0,
+    "recall": null
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 0,
+    "recall": null,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "open_swe",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "discarded",
+      "tier": null,
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 77,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 77,
+      "precision": null,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 31,
+      "correct": 0,
+      "false_positive": 31,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 66,
+      "correct": 0,
+      "false_positive": 66,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 6,
+      "correct": 0,
+      "false_positive": 6,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "unobserved",
+      "carrier": "reader_output",
+      "class": "exact",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 88,
+      "correct": 0,
+      "false_positive": 88,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    },
+    {
+      "dataset": "open_swe",
+      "route": "unobserved",
+      "carrier": "reader_output",
+      "class": "normalized",
+      "tier": "structural",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 6,
+      "correct": 0,
+      "false_positive": 6,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 0.0,
+      "recall": null
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "channel",
+        "quality": {
+          "type": "discarded"
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 0,
+        "unlabeled": 70
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 28,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 35,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 6,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "unobserved",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "reader_output"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 87,
+        "unlabeled": 0
+      }
+    },
+    {
+      "key": {
+        "dataset": "open_swe",
+        "route": "unobserved",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "reader_output"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 4,
+        "unlabeled": 0
+      }
+    }
+  ],
+  "violations": [
+    {
+      "dataset": "open_swe",
+      "reason": "boilerplate",
+      "count": 197
+    }
+  ],
+  "access_only_under_controls": [
+    {
+      "dataset": "open_swe",
+      "class": "discarded",
+      "reason": "boilerplate",
+      "count": 77
+    }
+  ],
+  "gates": [
+    {
+      "name": "salt (live): delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt (live): nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): injections read through keyed tools are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): decoded matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo (live): matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swarm-traces (live): decoded tokens are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swarm-traces (live): decoded matches are the planted tokens",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2 (live): turns reach the peer's next call",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2 (live): matches in user turns are the peer's turns",
+      "status": "other_dataset"
+    },
+    {
+      "name": "ai-village (live): other agents' talk reaches the Claude Code agent",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel reads of other agents' lines are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "wiki (live): channel matches are the labelled lines",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): planted file transmissions are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "swe-splice (live): channel matches are the planted file",
+      "status": "other_dataset"
+    },
+    {
+      "name": "open-swe (live): background false positives stay bounded",
+      "status": "pass",
+      "value": 13.765634826357347
+    },
+    {
+      "name": "lmcache (live): background false positives stay bounded",
+      "status": "other_dataset"
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": {
+    "false_positives": 197,
+    "exchanges": 14311,
+    "per_1k_exchanges": 13.765634826357347,
+    "sources": [
+      {
+        "reason": "boilerplate",
+        "count": 19
+      },
+      {
+        "reason": "boilerplate",
+        "count": 17
+      },
+      {
+        "reason": "boilerplate",
+        "count": 16
+      },
+      {
+        "reason": "boilerplate",
+        "count": 16
+      },
+      {
+        "reason": "boilerplate",
+        "count": 12
+      },
+      {
+        "reason": "boilerplate",
+        "count": 9
+      },
+      {
+        "reason": "boilerplate",
+        "count": 9
+      },
+      {
+        "reason": "boilerplate",
+        "count": 8
+      },
+      {
+        "reason": "boilerplate",
+        "count": 8
+      },
+      {
+        "reason": "boilerplate",
+        "count": 6
+      },
+      {
+        "reason": "boilerplate",
+        "count": 5
+      },
+      {
+        "reason": "boilerplate",
+        "count": 5
+      },
+      {
+        "reason": "boilerplate",
+        "count": 5
+      },
+      {
+        "reason": "boilerplate",
+        "count": 5
+      },
+      {
+        "reason": "boilerplate",
+        "count": 4
+      },
+      {
+        "reason": "boilerplate",
+        "count": 4
+      },
+      {
+        "reason": "boilerplate",
+        "count": 4
+      },
+      {
+        "reason": "boilerplate",
+        "count": 4
+      },
+      {
+        "reason": "boilerplate",
+        "count": 4
+      },
+      {
+        "reason": "boilerplate",
+        "count": 4
+      }
+    ]
+  }
+}

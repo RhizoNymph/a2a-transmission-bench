@@ -1,0 +1,32 @@
+dataset demo-swarm/boilerplate · detector gateway-export · 1 worlds, 20 agents, 247 exchanges, 50 labels, 135 negative controls, 211 predictions
+overall: recall 1.000 (50 / 50), precision 0.883 (166 correct, 22 false, 0 unjudged)
+
+route       carrier        class       tier          expected  found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+channel     tool_result    exact       construction        50     50       0   1.000        106       99      7         0          0      0.934
+channel     tool_result    normalized  construction         0      0       0       -         67       67      0         0          0      1.000
+channel     tool_result    discarded   -                    0      0       0       -         23        0      0         0         23          -
+unobserved  reader_output  exact       construction         0      0       0       -         15        0     15         0          0      0.000
+
+access-only predictions under negative controls (not violations, not gated):
+  dismissed on reread controls: 2
+
+false positives: 89.1 per 1k exchanges (22 over 247)
+
+gates:
+  skip  (other dataset)          demo-swarm/headline: every wiki transmission is found
+  skip  (other dataset)          demo-swarm/headline: detections are transmissions
+  skip  (other dataset)          demo-swarm/headline: wiki pages read through tool results are found
+  skip  (other dataset)          demo-swarm/headline: exact matches in wiki tool results are deliveries
+  skip  (other dataset)          demo-swarm/headline: no reread is reported as a transmission
+  pass  89.069                   demo-swarm/boilerplate: false positives per 1k exchanges stay bounded
+  pass  1.000                    demo-swarm/boilerplate: every wiki transmission is still found
+  pass  0.883                    demo-swarm/boilerplate: template text does not swamp detections
+
+truth rows 108: sessions 29 (247 exchanges, 0 excluded outside run window), transmissions 50 (0 without a sender exchange), self-reads 0, rereads 2, misses 7 (133 controls), unattributed reads 0 (unjudged), key groups 20, dropped 0
+gateway: 93 exported transmissions, 93 with evidence, 211 predictions
+
+join diagnostics
+
+| row | side | failure | effect | count |
+| --- | --- | --- | --- | ---: |
+| agent_cluster | row | key_group_not_a_cluster | noted | 20 |

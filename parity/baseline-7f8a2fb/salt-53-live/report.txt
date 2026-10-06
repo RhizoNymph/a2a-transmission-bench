@@ -1,0 +1,45 @@
+dataset salt · detector live · 53 worlds, 106 agents, 11796 exchanges, 3850 labels, 12951 negative controls, 4517 predictions
+overall: recall 0.854 (2484 / 2909), precision 0.955 (3487 correct, 164 false, 0 unjudged)
+
+forwarding (sender relayed its own tool output, not in overall): recall 0.481 (453 / 941), 866 predictions
+
+route       carrier        class       tier          expected  found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+direct      tool_result    decoded     construction         0      0       0       -         62        0     62         0          0      0.000
+direct      user_turn      exact       construction      2664   2251     413   0.845       2151     2135     16         0          0      0.993
+direct      user_turn      exact       structural           0      0       0       -          3        0      3         0          0      0.000
+direct      user_turn      exact       forwarding         142    129      13   0.908        304      304      0         0          0      1.000
+direct      user_turn      normalized  construction         0      0       0       -       1352     1352      0         0          0      1.000
+direct      user_turn      normalized  structural           0      0       0       -          1        0      1         0          0      0.000
+direct      user_turn      normalized  forwarding           0      0       0       -        405      405      0         0          0      1.000
+direct      user_turn      decoded     construction       245    233      12   0.951          0        0      0         0          0          -
+direct      user_turn      decoded     forwarding         799    324     475   0.406        157      157      0         0          0      1.000
+unobserved  reader_output  exact       construction         0      0       0       -         67        0     67         0          0      0.000
+unobserved  reader_output  normalized  construction         0      0       0       -         15        0     15         0          0      0.000
+
+negative-control violations:
+  rejected_send        41
+  boilerplate          4
+
+false positives: 13.9 per 1k exchanges (164 over 11796)
+top boilerplate sources: (excerpts of dataset text removed for this record)
+
+gates:
+  pass  0.845                    salt (live): delivered messages that arrive verbatim are found
+  pass  0.951                    salt (live): delivered messages that arrive escaped are found
+  pass  0.854                    salt (live): every construction label
+  pass  0.995                    salt (live): matches in user turns are deliveries
+  pass  0.000                    salt (live): nothing is attributed to a scripted sender
+  skip  (other dataset)          agentdojo (live): injections read through keyed tools are found
+  skip  (other dataset)          agentdojo (live): decoded matches in keyed tool results are injections
+  skip  (other dataset)          agentdojo (live): matches in keyed tool results are injections
+  skip  (other dataset)          swarm-traces (live): decoded tokens are found
+  skip  (other dataset)          swarm-traces (live): decoded matches are the planted tokens
+  skip  (other dataset)          tau2 (live): turns reach the peer's next call
+  skip  (other dataset)          tau2 (live): matches in user turns are the peer's turns
+  skip  (other dataset)          ai-village (live): other agents' talk reaches the Claude Code agent
+  skip  (other dataset)          wiki (live): channel reads of other agents' lines are found
+  skip  (other dataset)          wiki (live): channel matches are the labelled lines
+  skip  (other dataset)          swe-splice (live): planted file transmissions are found
+  skip  (other dataset)          swe-splice (live): channel matches are the planted file
+  skip  (other dataset)          open-swe (live): background false positives stay bounded
+  skip  (other dataset)          lmcache (live): background false positives stay bounded

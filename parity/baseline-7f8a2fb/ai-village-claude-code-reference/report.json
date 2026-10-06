@@ -1,0 +1,507 @@
+{
+  "dataset": "ai-village",
+  "detector": "reference",
+  "totals": {
+    "worlds": 993,
+    "agents": 6595,
+    "exchanges": 81369,
+    "expectations": 15798,
+    "negative_controls": 0,
+    "predictions": 338257
+  },
+  "overall": {
+    "expected": 15798,
+    "found": 15776,
+    "missed": 22,
+    "suspected": 0,
+    "predicted": 338257,
+    "correct": 73754,
+    "false_positive": 0,
+    "unjudged": 264503,
+    "dismissed": 0,
+    "precision": 1.0,
+    "recall": 0.99860741866059
+  },
+  "out_of_reach": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "forwarding": {
+    "expected": 0,
+    "found": 0,
+    "missed": 0,
+    "suspected": 0,
+    "predicted": 0,
+    "correct": 0,
+    "false_positive": 0,
+    "unjudged": 0,
+    "dismissed": 0,
+    "precision": null,
+    "recall": null
+  },
+  "access_only": {
+    "labels": 0,
+    "expected": 15798,
+    "recall": 0.0,
+    "expected_access": 0,
+    "found_access": 0,
+    "access_recall": null
+  },
+  "rows": [
+    {
+      "dataset": "ai-village",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": null,
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 1601,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 1601,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    {
+      "dataset": "ai-village",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": null,
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 491,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 491,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    {
+      "dataset": "ai-village",
+      "route": "channel",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": null,
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 35,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 35,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    {
+      "dataset": "ai-village",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": null,
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 192132,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 192132,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    {
+      "dataset": "ai-village",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "exact",
+      "tier": "construction",
+      "expected": 9148,
+      "found": 9130,
+      "missed": 18,
+      "suspected": 0,
+      "predicted": 49912,
+      "correct": 49912,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 0.9980323567993004
+    },
+    {
+      "dataset": "ai-village",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": null,
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 42078,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 42078,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    {
+      "dataset": "ai-village",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "normalized",
+      "tier": "construction",
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 7746,
+      "correct": 7746,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": null
+    },
+    {
+      "dataset": "ai-village",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": null,
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 21851,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 21851,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    {
+      "dataset": "ai-village",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "decoded",
+      "tier": "construction",
+      "expected": 6640,
+      "found": 6640,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 16096,
+      "correct": 16096,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "dataset": "ai-village",
+      "route": "direct",
+      "carrier": "tool_result",
+      "class": "semantic",
+      "tier": "construction",
+      "expected": 10,
+      "found": 6,
+      "missed": 4,
+      "suspected": 0,
+      "predicted": 0,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 0,
+      "dismissed": 0,
+      "precision": null,
+      "recall": 0.6
+    },
+    {
+      "dataset": "ai-village",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "exact",
+      "tier": null,
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 4350,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 4350,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    {
+      "dataset": "ai-village",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "normalized",
+      "tier": null,
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 1792,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 1792,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    },
+    {
+      "dataset": "ai-village",
+      "route": "direct",
+      "carrier": "user_turn",
+      "class": "decoded",
+      "tier": null,
+      "expected": 0,
+      "found": 0,
+      "missed": 0,
+      "suspected": 0,
+      "predicted": 173,
+      "correct": 0,
+      "false_positive": 0,
+      "unjudged": 173,
+      "dismissed": 0,
+      "precision": null,
+      "recall": null
+    }
+  ],
+  "transmissions": [
+    {
+      "key": {
+        "dataset": "ai-village",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 0,
+        "unlabeled": 488
+      }
+    },
+    {
+      "key": {
+        "dataset": "ai-village",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 0,
+        "unlabeled": 88
+      }
+    },
+    {
+      "key": {
+        "dataset": "ai-village",
+        "route": "channel",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 0,
+        "unlabeled": 2
+      }
+    },
+    {
+      "key": {
+        "dataset": "ai-village",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 13281,
+        "false_detection": 0,
+        "unlabeled": 52700
+      }
+    },
+    {
+      "key": {
+        "dataset": "ai-village",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "exact",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 0,
+        "unlabeled": 1105
+      }
+    },
+    {
+      "key": {
+        "dataset": "ai-village",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 115,
+        "false_detection": 0,
+        "unlabeled": 5212
+      }
+    },
+    {
+      "key": {
+        "dataset": "ai-village",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "normalized",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 0,
+        "unlabeled": 97
+      }
+    },
+    {
+      "key": {
+        "dataset": "ai-village",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "tool_result"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 275,
+        "false_detection": 0,
+        "unlabeled": 1404
+      }
+    },
+    {
+      "key": {
+        "dataset": "ai-village",
+        "route": "direct",
+        "quality": {
+          "type": "content",
+          "data": {
+            "class": "decoded",
+            "carrier": "user_turn"
+          }
+        }
+      },
+      "counts": {
+        "genuine": 0,
+        "false_detection": 0,
+        "unlabeled": 7
+      }
+    }
+  ],
+  "violations": [],
+  "access_only_under_controls": [],
+  "gates": [
+    {
+      "name": "salt: delivered messages that arrive verbatim are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: delivered messages that arrive escaped are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: every construction label",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: matches in user turns are deliveries",
+      "status": "other_dataset"
+    },
+    {
+      "name": "salt: nothing is attributed to a scripted sender",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: injections read through keyed tools are found",
+      "status": "other_dataset"
+    },
+    {
+      "name": "agentdojo: matches in keyed tool results are injections",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2: turns reach the peer's next call",
+      "status": "other_dataset"
+    },
+    {
+      "name": "tau2: matches in user turns are the peer's turns",
+      "status": "other_dataset"
+    }
+  ],
+  "failures": [],
+  "unscored": {
+    "worlds": 0,
+    "ingested": 0
+  },
+  "misses": [],
+  "false_positives": [],
+  "background": null
+}

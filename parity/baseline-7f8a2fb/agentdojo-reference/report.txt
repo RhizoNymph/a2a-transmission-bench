@@ -1,0 +1,39 @@
+dataset agentdojo · detector reference · 2259 worlds, 4146 agents, 11235 exchanges, 2683 labels, 3774 negative controls, 3999 predictions
+overall: recall 1.000 (2324 / 2324), precision 0.811 (3172 correct, 740 false, 0 unjudged)
+
+out of reach (missed by design, not in overall): found 87 / 359, 87 predictions
+
+route    carrier      class       tier          expected  found  missed  recall  predicted  correct  false  unjudged  dismissed  precision
+channel  tool_result  normalized  out_of_reach       359     87     272   0.242         87       87      0         0          0      1.000
+direct   tool_result  exact       construction         0      0       0       -        328      142    186         0          0      0.433
+direct   tool_result  normalized  construction       294    294       0   1.000       1736     1289    447         0          0      0.743
+direct   tool_result  decoded     construction      2030   2030       0   1.000       1803     1741     62         0          0      0.966
+direct   user_turn    exact       structural           0      0       0       -         36        0     36         0          0      0.000
+direct   user_turn    normalized  structural           0      0       0       -          9        0      9         0          0      0.000
+
+negative-control violations:
+  boilerplate          45
+
+false positives: 65.9 per 1k exchanges (740 over 11235)
+top boilerplate sources: (excerpts of dataset text removed for this record)
+
+gates:
+  skip  (other dataset)          salt: delivered messages that arrive verbatim are found
+  skip  (other dataset)          salt: delivered messages that arrive escaped are found
+  skip  (other dataset)          salt: every construction label
+  skip  (other dataset)          salt: matches in user turns are deliveries
+  skip  (other dataset)          salt: nothing is attributed to a scripted sender
+  pass  1.000                    agentdojo: injections read through keyed tools are found
+  pass  0.820                    agentdojo: matches in keyed tool results are injections
+  skip  (other dataset)          tau2: turns reach the peer's next call
+  skip  (other dataset)          tau2: matches in user turns are the peer's turns
+
+agentdojo: 2259 runs, 1887 attacked
+| class | slots | share | labels |
+| --- | ---: | ---: | ---: |
+| exact | 0 | 0.0% | 0 |
+| whitespace | 645 | 21.8% | 653 |
+| json_string | 986 | 33.3% | 871 |
+| yaml_string | 1055 | 35.6% | 1159 |
+| absent | 275 | 9.3% | 0 |
+second hop (heuristic, unlabelled): 339 of 414 successful attacks wrote an attacker indicator into a tool call
