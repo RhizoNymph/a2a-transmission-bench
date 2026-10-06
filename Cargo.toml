@@ -2,6 +2,7 @@
 resolver = "3"
 members = [
     "crates/corpus",
+    "crates/datasets/salt",
     "crates/format",
     "crates/reference",
     "crates/resource",
