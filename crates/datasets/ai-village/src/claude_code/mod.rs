@@ -54,7 +54,7 @@ use super::provider;
 use super::schema::{ChatRow, EventRow};
 use super::stream::Table;
 use super::tables::{AgentInfo, Directory, events_by_id, load_directory};
-use super::text::{class_name, need, tier};
+use super::text::{class_name, need};
 use super::time::parse_timestamp;
 use super::{DATASET, Error};
 use calls::Context;
@@ -306,7 +306,7 @@ impl ClaudeCodeStream {
                 let at_location =
                     in_message(reader_exchange, &result.message, result.part, start, end)?;
                 let needs = need(&message, &talk.escaped);
-                let tier = tier(&needs, Tier::Construction);
+                let tier = needs.tier(Tier::Construction);
                 *self
                     .stats
                     .labels_by_need

@@ -47,7 +47,7 @@ use super::super::labels::LabelIds;
 use super::super::location::in_message;
 use super::super::schema::{EventRow, TurnRow};
 use super::super::stream::{Table, decode};
-use super::super::text::{need, tier};
+use super::super::text::need;
 use super::super::time::{Day, parse_timestamp};
 use super::super::{DATASET, Error};
 use super::calls::{self, Call, Origin};
@@ -320,7 +320,7 @@ impl Labels<'_> {
                     delivery.end,
                 )?;
                 let needs = need(&sender_call.message, content);
-                let tier = tier(&needs, Tier::Structural);
+                let tier = needs.tier(Tier::Structural);
                 stats.count_need(&needs);
                 stats.chat_labels += 1;
                 let label = ExpectedTransmission::new(TransmissionFields {
@@ -471,7 +471,7 @@ impl Labels<'_> {
                     };
                     let at = in_message(*reader_exchange, result, 0, start, end)?;
                     let needs = need(&writer_call.message, &line);
-                    let tier = tier(&needs, Tier::Heuristic);
+                    let tier = needs.tier(Tier::Heuristic);
                     stats.count_need(&needs);
                     stats.repo_labels += 1;
                     *stats

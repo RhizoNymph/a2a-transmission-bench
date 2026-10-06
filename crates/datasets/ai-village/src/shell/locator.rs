@@ -155,7 +155,9 @@ impl Loc {
                 let style = ForgeStyle::of_host(&repository.host);
                 let kind = match kind {
                     ThreadKind::MergeRequest => Thread::Change,
-                    ThreadKind::Issue | ThreadKind::Pull => Thread::Issue,
+                    // GitHub pulls are issues (one number space), as
+                    // crosstalk's locator reads them.
+                    ThreadKind::Issue => Thread::Issue,
                 };
                 Some(ForgeRepo(repository).thread(style, kind, *number))
             }
@@ -172,10 +174,13 @@ impl Loc {
                 tool: tool.clone(),
                 key: key.clone(),
             }),
-            Resource::File { path } => Some(Self::File {
-                host: None,
+            Resource::File { host, path } => Some(Self::File {
+                host: host.clone(),
                 path: path.clone(),
             }),
+            // No shell command names an MCP tool's resource, and it is not
+            // a shared web resource (crosstalk's `Locator::Mcp` has no kind).
+            Resource::Mcp { .. } => None,
         }
     }
 }

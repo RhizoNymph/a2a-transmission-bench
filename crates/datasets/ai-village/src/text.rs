@@ -1,27 +1,9 @@
 //! Locating labelled text and deciding the match it needs.
 
-use a2a_bench_format::labels::{Codec, MatchNeed};
+use a2a_bench_format::labels::MatchNeed;
 use a2a_bench_format::message::{AssistantPart, Body, Message};
 
 use super::fold::{fold, fold_plain, unescape_once};
-
-/// The `Undecodable` codec name of text escaped two string levels deep.
-pub const TWO_STRING_LEVELS: &str = "json_string+json_string";
-
-/// Text serialised once as a JSON string: `decoded [json_string]`.
-pub fn json_string() -> MatchNeed {
-    MatchNeed::Decoded {
-        codecs: vec![Codec::JsonString],
-    }
-}
-
-/// Text that arrives only after two string levels are undone: out of
-/// reach, since a decoded chain holds at most one string codec.
-pub fn two_string_levels() -> MatchNeed {
-    MatchNeed::Undecodable {
-        codec: TWO_STRING_LEVELS.to_owned(),
-    }
-}
 
 /// `text` as the contents of a JSON string (no quotes), escaped the way
 /// both `JSON.stringify` and serde_json escape: `"`, `\`, `\b`, `\f`, `\n`,
@@ -73,7 +55,7 @@ pub fn part_texts(message: &Message) -> Vec<String> {
 /// - `normalized` when they occur after case and whitespace folding alone;
 /// - `decoded [json_string]` when they do once one string level is undone
 ///   on either side, then folded;
-/// - out of reach ([`two_string_levels`]) when undoing exactly two string
+/// - out of reach ([`MatchNeed::two_string_levels`]) when undoing exactly two string
 ///   levels on one side makes them equal;
 /// - `decoded [json_string]` when only the matching fold (escapes undone
 ///   at any depth) makes them equal, with no one- or two-level reading;
@@ -88,7 +70,7 @@ pub fn need(response: &Message, read: &str) -> MatchNeed {
         && !value.trim().is_empty()
         && texts.iter().any(|text| text.contains(&value))
     {
-        return json_string();
+        return MatchNeed::json_string();
     }
     let plain = fold_plain(read);
     let plain = plain.trim_end();
@@ -113,7 +95,7 @@ pub fn need(response: &Message, read: &str) -> MatchNeed {
                 .any(|text| text.contains(needle))
     };
     if one_level(read_once) || unescaped.iter().any(|text| text.contains(plain)) {
-        return json_string();
+        return MatchNeed::json_string();
     }
     let read_twice = fold_plain(&unescape_once(&unescape_once(read)));
     let read_twice = read_twice.trim_end();
@@ -123,13 +105,13 @@ pub fn need(response: &Message, read: &str) -> MatchNeed {
             .iter()
             .any(|text| fold_plain(&unescape_once(&unescape_once(text))).contains(plain));
     if two_levels {
-        return two_string_levels();
+        return MatchNeed::two_string_levels();
     }
     // Equal under the matching fold only, with no one- or two-level
     // reading of the whole text: classed as one string level.
     let folded = fold(read);
     if !folded.trim().is_empty() && texts.iter().any(|text| fold(text).contains(&folded)) {
-        return json_string();
+        return MatchNeed::json_string();
     }
     MatchNeed::Semantic
 }
@@ -149,19 +131,6 @@ pub fn visible_text(body: &Body) -> String {
             .collect::<Vec<_>>()
             .join("\n"),
         _ => String::new(),
-    }
-}
-
-/// The tier a label with `need` gets: `out_of_reach` when the need is,
-/// `in_reach` otherwise.
-pub fn tier(
-    need: &MatchNeed,
-    in_reach: a2a_bench_format::labels::Tier,
-) -> a2a_bench_format::labels::Tier {
-    if need.out_of_reach() {
-        a2a_bench_format::labels::Tier::OutOfReach
-    } else {
-        in_reach
     }
 }
 

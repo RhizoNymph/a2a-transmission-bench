@@ -8,7 +8,7 @@ use a2a_bench_corpus::source::TraceSource;
 use a2a_bench_corpus::world::World;
 use a2a_bench_dataset_ai_village::shell::outcome::WriteOutcome;
 use a2a_bench_dataset_ai_village::shell::{Access, Op, Payload, Shell};
-use a2a_bench_dataset_ai_village::text::{json_escape, json_string, need, tier, two_string_levels};
+use a2a_bench_dataset_ai_village::text::{json_escape, need};
 use a2a_bench_dataset_ai_village::time::{Day, parse_timestamp};
 use a2a_bench_dataset_ai_village::window::repo::{AccessLog, Link, TurnRef};
 use a2a_bench_dataset_ai_village::{AiVillageSource, Mode, Stats};
@@ -497,10 +497,13 @@ fn escapes_need_one_string_level_and_two_are_out_of_reach() {
     // Delivered escaped once, with its whitespace re-wrapped: one string
     // level undone and folded.
     let rewrapped = once.replace(' ', "  ");
-    assert_eq!(need(&raw, &rewrapped), json_string());
+    assert_eq!(need(&raw, &rewrapped), MatchNeed::json_string());
     // Escaped twice: no spec decoder undoes two levels.
     let deep = need(&raw, &twice);
-    assert_eq!(deep, two_string_levels());
-    assert_eq!(tier(&deep, Tier::Structural), Tier::OutOfReach);
-    assert_eq!(tier(&json_string(), Tier::Structural), Tier::Structural);
+    assert_eq!(deep, MatchNeed::two_string_levels());
+    assert_eq!(deep.tier(Tier::Structural), Tier::OutOfReach);
+    assert_eq!(
+        MatchNeed::json_string().tier(Tier::Structural),
+        Tier::Structural
+    );
 }

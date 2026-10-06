@@ -407,7 +407,7 @@ access-only pairs 303, resources 6,691, lexer refusals 72; GUI turns
 | `src/tables.rs` | reusable passes | `load_directory`, `load_sessions`, `scan_turns`, `scan_events`, `events_by_id`, `scan_chat`, `scan_memories`, `load_goals`, `Directory`, `Memories`, `Goals` |
 | `src/time.rs` | timestamps, village days, windows | `parse_timestamp`, `format_seconds`, `village_day`, `Day`, `Window`, `TimeError` |
 | `src/rooms.rs` | room membership over time | `RoomTimeline` |
-| `src/text.rs` | locating text, match needs | `need`, `json_escape`, `find`, `tier`, `class_name`, `json_string`, `two_string_levels`, `visible_text` |
+| `src/text.rs` | locating text, match needs (built with the format's `MatchNeed::json_string`, `MatchNeed::two_string_levels`; tiers by `MatchNeed::tier`) | `need`, `json_escape`, `find`, `class_name`, `visible_text` |
 | `src/fold.rs` | the folds needs are decided under | `fold`, `fold_plain`, `unescape_once` |
 | `src/location.rs` | checked locations | `in_message`, `LocationError` |
 | `src/labels.rs` | label ids | `LabelIds` |
@@ -420,7 +420,7 @@ access-only pairs 303, resources 6,691, lexer refusals 72; GUI turns
 | `src/shell/interp/` (`mod`, `git`, `forge`, `net`) | the command table | `run`, `ShellRun`, `ShellState` |
 | `src/shell/http/` (`mod`, `sites`, `mediawiki`) | HTTP requests and site rules | `HttpRequest`, `Method`, `candidates`, `sites::apply`, `form_fields` |
 | `src/shell/outcome.rs` | write outcomes | `WriteOutcome`, `CommandRule`, `judge` |
-| `src/shell/locator.rs` | locators, clones, paths, bench resources | `Loc` (`kind`, `resource`, `of_site`), `RepoId`, `RepoBindings`, `AbsolutePath`, `ForgeRepo`, `file_locator` |
+| `src/shell/locator.rs` | locators, clones, paths, bench resources (`of_site`: a thread is an issue page unless it is a GitLab merge request, since the format's GitHub pulls are issues; a `file` keeps its host; an `mcp` resource has no shell locator) | `Loc` (`kind`, `resource`, `of_site`), `RepoId`, `RepoBindings`, `AbsolutePath`, `ForgeRepo`, `file_locator` |
 | `src/shell/payload.rs`, `split.rs` | authored text; the simple word splitter | `authored`, `heredoc_bodies`, `commands`, `heredoc_argument` |
 | `tests/ai_village/` | ct-eval's tests ported (fixture, units, shell, claude_code, window) | |
 | `tests/spec.rs` | runs the spec table above | |
