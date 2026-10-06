@@ -40,6 +40,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "a2a-bench-score"
+version = "0.1.0"
+dependencies = [
+ "a2a-bench-format",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
 name = "ahash"
 version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
