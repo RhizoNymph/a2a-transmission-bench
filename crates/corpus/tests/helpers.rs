@@ -10,13 +10,14 @@ use a2a_bench_corpus::helpers::background::{BackgroundWorld, Call, Trajectory};
 use a2a_bench_corpus::helpers::chat::{
     ChatError, ChatFunction, ChatMessage, ChatToolCall, bodies, convert,
 };
+use a2a_bench_corpus::helpers::media::media_kind;
 use a2a_bench_corpus::helpers::rng::SplitMix64;
 use a2a_bench_corpus::world::StopReason;
 use a2a_bench_format::exchange::Fidelity;
 use a2a_bench_format::files::Coverage;
 use a2a_bench_format::ids::SourceRef;
 use a2a_bench_format::labels::{Label, NegativeReason, Tier};
-use a2a_bench_format::message::{AssistantPart, Body, ToolArguments, ToolPart};
+use a2a_bench_format::message::{AssistantPart, Body, MediaKind, ToolArguments, ToolPart};
 use common::{dataset, ok, says, user, world_key};
 
 fn chat(role: &str, content: &str) -> ChatMessage {
@@ -199,4 +200,26 @@ fn the_source_digest_covers_names_and_contents_in_path_order() {
     // Paths outside the root, or climbing out of it, are refused.
     assert!(source_digest(root, ["/elsewhere/x".into()]).is_err());
     assert!(source_digest(root, ["../x".into()]).is_err());
+}
+
+#[test]
+fn media_types_map_to_kinds() {
+    for (given, kind) in [
+        ("image/png", MediaKind::Image),
+        ("IMAGE/JPEG", MediaKind::Image),
+        ("image", MediaKind::Image),
+        ("audio/wav", MediaKind::Audio),
+        ("application/pdf", MediaKind::Document),
+        ("application/pdf; name=a.pdf", MediaKind::Document),
+        (
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            MediaKind::Document,
+        ),
+        ("text/plain", MediaKind::Document),
+        ("video/mp4", MediaKind::Other),
+        ("application/zip", MediaKind::Other),
+        ("", MediaKind::Other),
+    ] {
+        assert_eq!(media_kind(given), kind, "{given}");
+    }
 }
