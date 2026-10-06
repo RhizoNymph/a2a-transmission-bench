@@ -34,9 +34,14 @@ fn write_messages(worlds: &[(&str, Vec<&str>)]) -> Vec<u8> {
 fn read_all(bytes: &[u8]) -> Result<Vec<(String, usize)>, ReadError> {
     let mut reader = FileReader::<Messages, _>::open(Cursor::new(bytes))?;
     let mut out = Vec::new();
+    assert!(reader.trailer().is_none());
     while let Some(section) = reader.next_world()? {
         out.push((section.world.key.to_string(), section.rows.len()));
     }
+    let trailer = reader
+        .trailer()
+        .expect("a checked trailer after the last world");
+    assert_eq!(usize::try_from(trailer.worlds).unwrap(), out.len());
     Ok(out)
 }
 

@@ -8,11 +8,11 @@ use a2a_bench_format::check::{
     check_predictions,
 };
 use a2a_bench_format::ids::{DetectorAgent, TransmissionRef};
-use a2a_bench_format::labels::{CarrierKind, ExchangeAgent, Label, MatchClass, Route};
+use a2a_bench_format::labels::{CarrierKind, ExchangeAgent, Label, MatchClass};
 use a2a_bench_format::location::{ByteRange, Location};
 use a2a_bench_format::predictions::{
-    Attribution, ContentEvidence, MatchKind, Prediction, Quality, State, Transmission,
-    TransmissionFields, Unattributed,
+    Attribution, ContentEvidence, MatchKind, PredictedRoute, Prediction, Quality, State,
+    Transmission, TransmissionFields, Unattributed,
 };
 use a2a_bench_format::resource::Resource;
 
@@ -209,8 +209,8 @@ fn predictions(fixture: &common::Fixture, read_at: Location) -> Vec<Prediction> 
         origin_at: None,
         kind: MatchKind::Exact,
         carrier: CarrierKind::ToolResult,
-        route: Route::Channel {
-            resource: Resource::Url(common::PAGE.into()),
+        route: PredictedRoute::Channel {
+            resources: vec![Resource::Url(common::PAGE.into())],
         },
     };
     let transmission = Transmission::new(TransmissionFields {

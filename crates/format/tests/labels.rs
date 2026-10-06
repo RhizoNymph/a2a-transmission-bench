@@ -154,7 +154,7 @@ fn clusters_need_two_distinct_agents() {
     let fields = |agents: &[&str]| ClusterFields {
         id: common::label_id("k1"),
         agents: agents.iter().map(|a| common::agent(a)).collect(),
-        kind: ClusterKind::KeyGroup,
+        cluster: ClusterKind::KeyGroup,
         tier: Tier::Structural,
         source: SourceRef::new("f", "/k"),
     };
@@ -174,4 +174,65 @@ fn tiers_outside_overall() {
     assert!(Tier::Construction.in_overall());
     assert!(!Tier::OutOfReach.in_overall());
     assert!(!Tier::Forwarding.in_overall());
+}
+
+#[test]
+fn a_cluster_row_round_trips_through_the_label_tag() {
+    let cluster = AgentCluster::new(ClusterFields {
+        id: common::label_id("k1"),
+        agents: vec![common::agent("alice"), common::agent("bob")],
+        cluster: ClusterKind::KeyGroup,
+        tier: Tier::Structural,
+        source: SourceRef::new("f", "/k"),
+    })
+    .unwrap();
+    let label = Label::AgentCluster(cluster);
+    let json = serde_json::to_string(&label).unwrap();
+    assert_eq!(json.matches("\"kind\"").count(), 1, "{json}");
+    assert_eq!(serde_json::from_str::<Label>(&json).unwrap(), label);
+}
+
+#[test]
+fn every_label_kind_round_trips() {
+    let fixture = common::fixture();
+    let rows = vec![
+        Label::Transmission(common::transmission(&fixture)),
+        Label::AccessOnly(ExpectedAccess::new(common::transmission_fields(&fixture)).unwrap()),
+        Label::NegativeControl(NegativeControl::new(control(&fixture)).unwrap()),
+    ];
+    for row in rows {
+        let json = serde_json::to_string(&row).unwrap();
+        assert_eq!(serde_json::from_str::<Label>(&json).unwrap(), row);
+    }
+}
+
+#[test]
+fn need_helpers_match_crosstalk_eval() {
+    use a2a_bench_format::labels::{Codec, json_escapes};
+    assert_eq!(
+        MatchNeed::through_json_string("plain text"),
+        MatchNeed::Exact
+    );
+    assert_eq!(
+        MatchNeed::through_json_string("say \"hi\""),
+        MatchNeed::Decoded {
+            codecs: vec![Codec::JsonString]
+        }
+    );
+    assert!(json_escapes("a\nb") && json_escapes("back\\slash") && !json_escapes("é"));
+    assert_eq!(
+        MatchNeed::two_string_levels(),
+        MatchNeed::Undecodable {
+            codec: "json_string+json_string".into()
+        }
+    );
+    assert_eq!(
+        MatchNeed::two_string_levels().tier(Tier::Construction),
+        Tier::OutOfReach
+    );
+    assert_eq!(
+        MatchNeed::Exact.tier(Tier::Construction),
+        Tier::Construction
+    );
+    assert!(MatchNeed::sender_medium_unobserved(MatchClass::Exact).out_of_reach());
 }
