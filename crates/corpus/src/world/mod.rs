@@ -71,6 +71,7 @@ pub struct World {
     labels: Vec<Label>,
     agent_of: BTreeMap<ExchangeId, AgentKey>,
     coverage: Coverage,
+    notes: BTreeMap<String, u64>,
 }
 
 impl World {
@@ -111,6 +112,7 @@ impl World {
             labels,
             agent_of,
             coverage,
+            notes: BTreeMap::new(),
         })
     }
 
@@ -181,4 +183,25 @@ impl World {
     pub fn coverage(&self) -> Coverage {
         self.coverage
     }
+
+    /// Counts the converter reports for this world (things it dropped or
+    /// did not label), by name; the export writes them into the manifest's
+    /// world entry as `notes`.
+    pub fn notes(&self) -> &BTreeMap<String, u64> {
+        &self.notes
+    }
+
+    /// Adds `n` to note `name`. A note that stays at 0 is not recorded.
+    pub fn add_note(&mut self, name: &str, n: u64) {
+        add_note(&mut self.notes, name, n);
+    }
+}
+
+/// Adds `n` to note `name` in `notes`, recording nothing for 0.
+pub(crate) fn add_note(notes: &mut BTreeMap<String, u64>, name: &str, n: u64) {
+    if n == 0 {
+        return;
+    }
+    let count = notes.entry(name.to_owned()).or_insert(0);
+    *count = count.saturating_add(n);
 }

@@ -41,9 +41,10 @@ Overview:
       a2a-bench-cli. The a2a-bench binary (export, validate, run, score, diff).
   data_flow: >
     dataset files -> converter (TraceSource of checked Worlds) ->
-    corpus::export -> export dir (manifest, messages,
-    exchanges, labels). The runner hands a detector only the input view
-    (manifest without label counts, messages, exchanges); the detector writes
+    corpus::export -> export dir (manifest with per-world label counts and
+    converter notes, messages, exchanges, labels). The runner hands a
+    detector only the input view (manifest without label counts or notes,
+    messages, exchanges); the detector writes
     predictions.jsonl. a2a-bench score reads labels, exchanges and
     predictions and writes report.json, a table and gate outcomes. Detectors
     are external processes; crosstalk's adapter (ct-bench-detect) lives in
@@ -55,7 +56,7 @@ Features Index:
     depends_on: []
     doc: docs/features/format.md
   corpus:
-    description: World builder, virtual clock, trace sources, export writer and input view, datasets.toml, dev/holdout splits, converter helpers
+    description: World builder (with per-world notes), virtual clock, trace sources, export writer and input view, source digest IO, datasets.toml, dev/holdout splits, converter helpers
     entry_points: [crates/corpus/src/lib.rs, crates/corpus/src/export/mod.rs, crates/corpus/src/world/builder.rs]
     depends_on: [format]
     doc: docs/features/corpus.md
