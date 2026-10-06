@@ -1,0 +1,43 @@
+//! Reference vectors from crosstalk at the pinned commit, for the bench's
+//! format tests: exchange id derivation and canonical JSON.
+use crosstalk_eval::ids::exchange_id;
+use crosstalk_eval::keys::{DatasetId, SourceRef};
+use crosstalk_spec::observed::message::json::canonicalize;
+use crosstalk_spec::support::Timestamp;
+use serde_json::json;
+
+fn main() {
+    let ids: Vec<_> = [
+        ("salt", "trace-0001.json.gz", "/episodes/0/messages/3", 1_767_225_601_000_000u64),
+        ("salt", "f", "/z", 1_767_225_600_001_000),
+        ("ai-village", "claude_code_messages.jsonl.gz", "/row/17", 1_769_385_600_123_456),
+        ("demo-swarm/headline", "", "", 0),
+        ("wiki", "a/b c", "/ü/\u{1F600}", 1_767_225_699_999_999),
+    ]
+    .into_iter()
+    .map(|(d, f, p, at)| {
+        let id = exchange_id(&DatasetId::new(d), &SourceRef::new(f, p), Timestamp::from_micros(at));
+        json!({"dataset": d, "file": f, "path": p, "at_us": at, "id": id.ulid_text()})
+    })
+    .collect();
+    let inputs = [
+        r#"{"b":1,"a":2}"#, r#"{"\u20ac":1,"\r":2,"\ud83d\ude00":3,"\ufb33":4,"1":5}"#,
+        "1.0", "1e21", "1e20", "123456789012345678901234567890", "-0", "0.000001", "1e-7",
+        "1.5e30", "-12.340e-2", "[1,2.50,true,null,\"x\"]", r#""\u0001\u001f\"\\\/\b\f\n\r\t é""#,
+        r#"{"a":1,"a":2}"#, " { \"k\" : [ ] } ", "1E400", "0.1e-5", "100e-2", "9007199254740993",
+    ];
+    let canonical: Vec<_> = inputs
+        .iter()
+        .map(|t| match canonicalize(t) {
+            Ok(c) => json!({"input": t, "canonical": c.0}),
+            Err(e) => json!({"input": t, "error": format!("{e:?}")}),
+        })
+        .collect();
+    let rejects = ["[1,]", "01", "{\"a\":1,}", "\"\\ud800\"", "\"\u{1}\"", "1.", "-", "[1] x", "\"\\x\""];
+    let rejected: Vec<_> = rejects
+        .iter()
+        .map(|t| json!({"input": t, "rejected": canonicalize(t).is_err()}))
+        .collect();
+    let out = json!({"crosstalk": "7f8a2fb", "exchange_ids": ids, "canonical_json": canonical, "rejects": rejected});
+    println!("{}", serde_json::to_string_pretty(&out).unwrap_or_default());
+}

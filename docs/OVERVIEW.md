@@ -6,7 +6,8 @@ Overview:
     datasets into a provider-neutral on-disk format (messages, exchanges,
     labels), runs any detector as a separate process over the inputs, and
     scores the detector's predictions against the labels with regression
-    gates per detector. Status: design (docs/design/separation.md); no code yet.
+    gates per detector. Status: design approved (docs/design/separation.md);
+    the format crate exists, the rest is being ported.
   subsystems:
     format: >
       a2a-bench-format. On-disk types for messages, exchanges, labels and
@@ -36,6 +37,11 @@ Overview:
     are external processes; crosstalk's adapter (ct-bench-detect) lives in
     the crosstalk repo and depends only on a2a-bench-format.
 Features Index:
+  format:
+    description: The on-disk format a2a-bench/1 - messages, exchanges, labels, predictions, manifest, framing, cross-file checks
+    entry_points: [crates/format/src/lib.rs]
+    depends_on: []
+    doc: docs/features/format.md
   separation:
     description: Design for splitting crosstalk-eval into this bench, the format, the detector contract, parity and versioning
     entry_points: []

@@ -1,0 +1,4 @@
+target
+# empty placeholders the agent sandbox mounts into working directories
+.claude/
+.mcp.json
