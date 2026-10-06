@@ -127,6 +127,43 @@ Every remaining difference, explained:
 
 No signed-message id differences arose: every messages file is byte-identical.
 
+## P5: crosstalk's adapter (ct-bench-detect) vs ct-eval
+
+Run by crosstalk-rollouts at crosstalk 4d3d2c3 (PR #112 HEAD, stacked on
+#108): `ct-bench-detect` on the bench input view and `ct-eval run
+--detector live --predictions-out` on the same selection write
+**byte-identical** predictions files (header and trailer included) on
+SALT `--limit 53` forwarding off, SALT `--limit 53` forwarding on, and
+wiki `--demo`. ct-bench-detect also checks every part's bench text against
+crosstalk-spec's `part_text` and fails a world on any mismatch; none did,
+which closes P1 directly.
+
+## P6: end to end (bench scorer on ct-bench-detect predictions vs ct-eval's live report, same commit)
+
+Detection has changed since the 7f8a2fb baseline, so P6 compares like
+with like: ct-eval live reports and ct-bench-detect predictions both at
+crosstalk 4d3d2c3, scored by `a2a-bench score --gates
+gates/crosstalk-live.toml --examples 0` on the 4d3d2c3 golden exports.
+
+| Run | Result | Recall / precision | Gates |
+| --- | --- | --- | --- |
+| wiki `--demo`, forwarding off | equal (84 values) | 0.985 / 1.000 | none apply |
+| SALT `--limit 53`, forwarding off | equal (93 values) | 0.854 / 0.955 | 5/5 pass |
+| SALT `--limit 53`, forwarding on | equal (82 values) | 0.894 / 0.882 | forwarding gate fails on both sides (0.885 < 0.94; the 0.86 bound is on `chore/gates-salt-forwarding-on`) |
+
+The only listed differences are the lengths of the `misses` and
+`false_positives` example lists, because ct-eval's reports were written with
+its default 50 examples and the bench with `--examples 0`. They are not
+counts. Per-run outputs: `p6/`.
+
+## P7: node0 bench runs
+
+Pending: `ct-bench-detect from-export` output exports and labels cleanly
+(254 / 247 exchanges, 385 / 432 label rows, no failed worlds), but the
+completed demo-swarm export's manifest digest differs from the one the
+predictions name. The fix (a demo-swarm export keeps its capture's
+input-view manifest exactly) is on `fix/cli-parity-followups`.
+
 ## P1: part text (indirect)
 
 P4's `messages.jsonl` digests are equal on all seven converter runs (1,061,585 messages,
