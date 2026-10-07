@@ -13,7 +13,8 @@ scores its predictions and diffs exports or predictions for parity. Design:
   source digest of the files read; converter version and bench commit;
   source revision detection (HF snapshot, HF `--local-dir` metadata, git
   HEAD, else `unknown`) and pinning; dev and holdout splits; the
-  holdout commitment file. demo-swarm through its own entry point.
+  holdout commitment file. demo-swarm through its own entry point, dev or
+  holdout (a whole run with a holdout seed, committed one line per run).
 - `validate`: every format check over an export (or an input view) and,
   optionally, a predictions file. Counts only.
 - `input-view`: the detector's input directory.
@@ -38,8 +39,10 @@ scores its predictions and diffs exports or predictions for parity. Design:
   nothing, `datasets.toml` pins nothing).
 - `diff --agreement` (design §5.2) and gates keyed by dataset version
   (design §8): not built.
-- An end-to-end demo-swarm test: the crate has no synthetic capture
-  fixture on disk; the CLI path is the crate's `write_export`.
+- The demo-swarm runs themselves: node0 makes them and crosstalk's
+  adapter writes their captures and predictions. The CLI's demo-swarm
+  tests (`tests/demo_swarm_holdout.rs`) build a synthetic capture with the
+  crate's test fixture.
 
 ## Commands
 
@@ -50,7 +53,9 @@ a2a-bench export --dataset <id> --out <dir> [--root <data root>] [--dataset-dir 
                  [dataset flags…]
 a2a-bench export --dataset demo-swarm --inputs <capture dir> --truth <truth.jsonl> --out <dir>
                  [--run-lead-ms N] [--run-slack-ms N]
-                 (capture dir: messages.jsonl, exchanges.jsonl, manifest.json)
+                 [--split holdout --release <detector>@<version> [--seed N] [--splits <dir>]]
+                 (capture dir: messages.jsonl, exchanges.jsonl, manifest.json;
+                  bench.env in it or its parent names a holdout run's seed)
 a2a-bench validate <export dir> [--predictions <file>]
 a2a-bench input-view <export dir> <dest>
 a2a-bench run --export <dir> --detector-cmd "<program> [args…]" --out <dir>
@@ -87,7 +92,7 @@ times and record no pace.
 | `swe_splice` (`swe-splice`) | `…-swe-splice` | `--limit`, `--include…`, `--count` (40), seed `--corpus-seed` | yes |
 | `cipher` | `…-cipher` | `--limit`, `--include…`, `--count` (24), seed `--corpus-seed` | yes |
 | `ai-village` | `…-ai-village` | `--mode window\|claude-code` (window), `--from` (2026-07-13), `--to` (2026-07-17), `--hours`, `--limit` | no |
-| `demo-swarm` | `…-demo-swarm` | `--inputs`, `--truth`, `--run-lead-ms`, `--run-slack-ms` | no |
+| `demo-swarm` | `…-demo-swarm` | `--inputs`, `--truth`, `--run-lead-ms`, `--run-slack-ms`, `--seed` (holdout only) | no |
 
 ## Data and control flow
 
@@ -98,6 +103,17 @@ export
   demo-swarm ─▶ Inputs {root: deepest dir holding inputs and truth, truth, messages, exchanges, manifest}
              ─▶ demo_swarm::write_export(…, bench converter): manifest = the capture's manifest.json
                 (source, converter, selection, revision = run id) + labels; bench provenance in diagnostics.json
+             holdout (--split holdout --release <detector>@<version>):
+               --out outside any git repository, else refused (before anything is read)
+               truth header ─▶ run id, seed
+               seed: bench.env in --inputs, else its parent (seed=N, else --seed N in swarm=), else --seed
+                     both given and different ─▶ refused; ≠ truth header's seed ─▶ refused;
+                     < 1,000,000 ─▶ refused (not a holdout run); nothing written
+               demo_swarm::write_holdout_export: capture must be a dev view; same input-view check as dev;
+                 then split = holdout, selection.release = the release,
+                      selection.capture_digest = the capture manifest's digest (hex)
+               commitment(manifest) ─▶ entry "<run id> <seed> <hex>" in splits/demo-swarm@1.holdout.commit
+                 (a list sorted by run id): absent ─▶ added; same ─▶ matches; other seed or commitment ─▶ refused
   holdout ─▶ --out outside any git repository (enclosing_repository), else refused
   datasets.toml (--config, else the repo's, else DEFAULT) ─▶ data root (--root overrides)
   dataset dir = --dataset-dir, else root / datasets.<id>.path; source.path = that path as configured
@@ -119,6 +135,7 @@ export
 validate
   read_manifest ─▶ open messages, exchanges, labels (if present), predictions (if given)
   headers' datasets = manifest's; predictions' manifest_digest = Manifest::digest
+    (or, for a demo-swarm holdout export, its checked capture digest)
   per exchanges world: next world of each other file, same key
     WorldInputs::new ─▶ check_labels ─▶ check_predictions; counts by row kind
   trailers (counts, digest) ─▶ = manifest.files; manifest worlds (keys, order, exchanges, label rows)
@@ -134,7 +151,11 @@ run
 score
   read_manifest ─▶ run_release; holdout: header version = tag (tagged_detector), --out outside repos, Disclosure::Holdout
   examples = 0 for swarm-traces
-  score_export(export, predictions, ScoreOptions {canonicalizer: ResourceCanon, example_cap})
+  demo_swarm::holdout::capture_digest(manifest): a demo-swarm holdout export's selection.capture_digest,
+    which must equal the digest of its capture view (input view, split dev, release and
+    capture_digest removed), else refused; None for every other export
+  score_export(export, predictions, ScoreOptions {canonicalizer: ResourceCanon, example_cap, capture_digest})
+    predictions' manifest_digest = the export's, or the capture digest
   GateSearch::from_env(--gates).load() ─▶ for_run(detector.name, variant).evaluate(score)
   Report::new ─▶ out/report.json, out/report.txt ─▶ table on stdout ─▶ exit_code (2 on a failed gate)
 
@@ -167,11 +188,12 @@ diff
 | `src/repo.rs` | the checkout's paths and identity | `BENCH_GIT`, `CONVERTER_VERSION`, `root`, `datasets_config`, `splits_dir`, `converter` |
 | `src/canon.rs` | the scorer's seam filled with `a2a_bench_resource::canonicalize` | `ResourceCanon` |
 | `src/revision.rs` | a dataset dir's revision (HF snapshot, HF local dir, git, unknown), the pin | `Revision` (`HfSnapshot`, `HfLocalDir`, `Mixed`, `Git`, `Unknown`), `UNKNOWN`, `MIXED`, `HF_DOWNLOAD_CACHE`, `source_revision`, `check_pin`, `Pin`, `RevisionError` |
-| `src/holdout.rs` | commitment, commit file, release and repository rules | `COMMIT_CONTEXT`, `commitment`, `commit_path`, `record_or_check`, `Committed`, `outside_repository`, `run_release`, `tagged_detector`, `HoldoutError` |
+| `src/holdout/mod.rs` | commitment, commit file, release and repository rules | `COMMIT_CONTEXT`, `commitment`, `commit_path`, `record_or_check`, `Committed`, `outside_repository`, `run_release`, `tagged_detector`, `HoldoutError` |
+| `src/holdout/demo_swarm.rs` | demo-swarm holdout runs: the seed (bench.env, `--seed`, truth) and the per-run commitment list | `MIN_SEED`, `BENCH_ENV`, `bench_env_seed`, `run_seed`, `RunSeed`, `SeedFrom`, `SeedError`, `Entry`, `record_or_check` |
 | `src/safe.rs` | error text without dataset text | `read_error` |
 | `src/datasets/mod.rs` | the datasets | `DatasetName` (`id`, `version`, `paced`) |
 | `src/datasets/flags.rs` | dataset flags, applicability, pace, AI Village options | `DatasetFlags` (`check`, `pace`, `seed`, `ai_village`), `VillageMode`, `FlagError`, `DEFAULT_PACE_MIN_MS`, `DEFAULT_PACE_MAX_MS` |
-| `src/datasets/dispatch.rs` | per-dataset `Options` and `source`, the export and source digest | `export`, `export_demo_swarm`, `ExportRequest`, `ExportSummary`, `DatasetError` |
+| `src/datasets/dispatch.rs` | per-dataset `Options` and `source`, the export and source digest | `export`, `export_demo_swarm` (dev or holdout), `demo_swarm_inputs`, `ExportRequest`, `ExportSummary`, `DatasetError` |
 | `src/commands/export.rs` | `export` | `ExportArgs`, `SplitArg`, `export`, `ExportOutcome` (`render`), `ExportCommandError` |
 | `src/commands/validate.rs` | `validate` | `ValidateArgs`, `validate`, `ValidateReport` (`passed`, `render`), `Finding`, `ValidateError` |
 | `src/commands/input_view.rs` | `input-view` | `InputViewArgs`, `input_view`, `render` |
@@ -184,6 +206,7 @@ diff
 | `tests/common/mod.rs` | the binaries (`a2a-reference` found beside `a2a-bench`, built with `$CARGO` if missing), fixtures, scratch dirs inside and outside git | |
 | `tests/e2e.rs` | export → validate → run → score → gates on SALT; reruns byte-identical; input view; tampering; diff; every fixture converter; flags; pins | |
 | `tests/holdout.rs` | holdout refusals, commitment, release runs, aggregate reports | |
+| `tests/demo_swarm_holdout.rs` | demo-swarm holdout runs over the crate's synthetic capture (`#[path]` to its fixture): manifest marks, seed rule, commit list, inside-repo refusal, dev unchanged, the capture's predictions and the reference detector scored with aggregates, image-digest releases | |
 | `tests/canon.rs` | channel resources differing only in canonical form align | |
 | `tests/units.rs` | revisions (HF symlink, HF local dir common and mixed, git guard, unknown), pins, commitment, flags, names |
 | `tests/diff_agents.rs` | `diff --normalize-ids`: same split under other names diffs empty, another split differs, header-only differences reported apart | |
@@ -213,6 +236,25 @@ diff
   equal to the export's release, a detector whose header `version` is the
   tag, and an output outside any git repository, and write an aggregate
   report (`Disclosure::Holdout`). A dev export refuses `--holdout-release`.
+- **demo-swarm holdouts are whole runs.** A run is a holdout run when its
+  seed (from `bench.env`, else `--seed`; equal to the truth header's) is at
+  least 1,000,000; anything else is refused before any file is written.
+  The export is the capture's manifest plus labels, with exactly three
+  marks: `split: holdout`, `selection.release` and
+  `selection.capture_digest` (the capture manifest's `Manifest::digest`).
+  Its input view therefore has its own digest, which a detector run on it
+  (`run`) names; the adapter's predictions name the capture's, which
+  `score` and `validate` accept only for a demo-swarm holdout export and
+  only after rebuilding the capture view from the export (marks undone)
+  and finding the recorded digest equal. Any other digest is refused. The
+  commitment list `splits/demo-swarm@1.holdout.commit` holds one line per
+  run, `<run id> <seed> <commitment hex>`, sorted by run id, the
+  commitment being the usual one over the run's one world key and labels
+  digest; a listed run must come back with the same seed and commitment.
+  `--seed` on a dev export is refused; dev exports are otherwise as before.
+- **Releases.** `<detector>@<version>` splits at the first `@`; the
+  version may hold `:` (crosstalk's gateway export is versioned by image
+  digest, `crosstalk-gateway-export@sha256:…`), not `@`, `/` or `\`.
 - **`diff --normalize-ids` names agents by exchange sets.** Exchange sets
   are disjoint within a world, so `~<smallest exchange>` is unique; two
   detectors that split exchanges into agents identically diff empty

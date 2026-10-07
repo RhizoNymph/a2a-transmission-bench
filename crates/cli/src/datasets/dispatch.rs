@@ -13,7 +13,7 @@ use a2a_bench_corpus::export::{
     DigestError, ExportError, FilesRead, ManifestInfo, export as write_export, write_manifest,
 };
 use a2a_bench_corpus::source::TraceSource;
-use a2a_bench_corpus::split::Selection;
+use a2a_bench_corpus::split::{Release, Selection};
 use a2a_bench_dataset_agentdojo as agentdojo;
 use a2a_bench_dataset_ai_village as ai_village;
 use a2a_bench_dataset_cipher as cipher;
@@ -289,12 +289,11 @@ fn resolve(path: &Path) -> Result<PathBuf, DatasetError> {
     })
 }
 
-/// Exports a labelled demo-swarm run: the capture in `flags.inputs`
-/// (`messages.jsonl`, `exchanges.jsonl`, `manifest.json`) and
-/// `flags.truth`. The manifest is the capture's plus truth (source,
-/// converter, selection are the capture's); the bench's version and the
-/// truth's path and BLAKE3 go to `diagnostics.json`.
-pub fn export_demo_swarm(flags: &DatasetFlags, out: &Path) -> Result<ExportSummary, DatasetError> {
+/// The demo-swarm run `flags` name: the `--inputs` dir (absolute) and the
+/// files read from it and `--truth`.
+pub fn demo_swarm_inputs(
+    flags: &DatasetFlags,
+) -> Result<(PathBuf, demo_swarm::Inputs), DatasetError> {
     flags.check(DatasetName::DemoSwarm)?;
     let missing = |flag| {
         DatasetError::Flags(FlagError::Missing {
@@ -314,12 +313,33 @@ pub fn export_demo_swarm(flags: &DatasetFlags, out: &Path) -> Result<ExportSumma
         exchanges: inputs_abs.join("exchanges.jsonl"),
         manifest: inputs_abs.join(demo_swarm::CAPTURE_MANIFEST_FILE),
     };
+    Ok((inputs_abs, inputs))
+}
+
+/// Exports a labelled demo-swarm run: the capture in `flags.inputs`
+/// (`messages.jsonl`, `exchanges.jsonl`, `manifest.json`) and
+/// `flags.truth`. The manifest is the capture's plus truth (source,
+/// converter, selection are the capture's); the bench's version and the
+/// truth's path and BLAKE3 go to `diagnostics.json`. With `release`, the
+/// export is that release's holdout (`demo_swarm::write_holdout_export`);
+/// the seed rule and the commitment are the caller's.
+pub fn export_demo_swarm(
+    flags: &DatasetFlags,
+    out: &Path,
+    release: Option<&Release>,
+) -> Result<ExportSummary, DatasetError> {
+    let (_, inputs) = demo_swarm_inputs(flags)?;
     let defaults = demo_swarm::Options::default();
     let options = demo_swarm::Options {
         run_lead_ms: flags.run_lead_ms.unwrap_or(defaults.run_lead_ms),
         run_slack_ms: flags.run_slack_ms.unwrap_or(defaults.run_slack_ms),
     };
-    let exported = demo_swarm::write_export(&inputs, out, &options, repo::converter())?;
+    let exported = match release {
+        None => demo_swarm::write_export(&inputs, out, &options, repo::converter())?,
+        Some(release) => {
+            demo_swarm::write_holdout_export(&inputs, out, &options, repo::converter(), release)?
+        }
+    };
     Ok(ExportSummary {
         manifest: exported.manifest,
         failed: Vec::new(),

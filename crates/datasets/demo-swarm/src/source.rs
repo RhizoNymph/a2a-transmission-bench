@@ -14,7 +14,7 @@ use a2a_bench_corpus::export::{
     write_manifest,
 };
 use a2a_bench_corpus::source::TraceSource;
-use a2a_bench_corpus::split::Selection;
+use a2a_bench_corpus::split::{Release, Selection};
 use a2a_bench_corpus::world::World;
 use a2a_bench_format::ids::{DatasetId, InvalidKey, WorldKey};
 use a2a_bench_format::manifest::Converter;
@@ -24,6 +24,7 @@ use serde::Serialize;
 use crate::Options;
 use crate::capture::{self, CaptureError};
 use crate::capture_manifest::{self, CAPTURE_MANIFEST_FILE, CaptureManifestError};
+use crate::holdout::{self, HoldoutError};
 use crate::label::{DiagnosticsReport, LabelError, Labelled, label};
 use crate::truth_file::{self, TruthFile, TruthFileError};
 
@@ -62,6 +63,8 @@ pub enum Error {
         "the export's input view differs from the capture's manifest at {paths:?}: the capture is not exactly the labelled run"
     )]
     NotTheCapture { paths: Vec<String> },
+    #[error("the holdout export: {0}")]
+    Holdout(#[from] HoldoutError),
     #[error("encoding {DIAGNOSTICS_FILE}: {0}")]
     Encode(serde_json::Error),
     #[error("removing {path}: {source}")]
@@ -249,6 +252,32 @@ pub fn write_export(
     options: &Options,
     bench: Converter,
 ) -> Result<Exported<Infallible>, Error> {
+    write(inputs, out_dir, options, bench, None)
+}
+
+/// [`write_export`] for a holdout run and `release`: the same checks
+/// against the capture (its input view must equal the capture's), then the
+/// manifest is marked as the release's holdout ([`holdout::mark`]: `split:
+/// holdout`, `selection.release`, `selection.capture_digest`). The capture
+/// must be a dev view. Whether the run is a holdout run (its seed) and the
+/// commitment are the caller's.
+pub fn write_holdout_export(
+    inputs: &Inputs,
+    out_dir: &Path,
+    options: &Options,
+    bench: Converter,
+    release: &Release,
+) -> Result<Exported<Infallible>, Error> {
+    write(inputs, out_dir, options, bench, Some(release))
+}
+
+fn write(
+    inputs: &Inputs,
+    out_dir: &Path,
+    options: &Options,
+    bench: Converter,
+    release: Option<&Release>,
+) -> Result<Exported<Infallible>, Error> {
     let mut source = DemoSwarmSource::open(inputs, options)?;
     let manifest_path = inputs.at(&inputs.manifest);
     let in_manifest = |problem| Error::CaptureManifest {
@@ -263,6 +292,9 @@ pub fn write_export(
         &options.settings(),
     )
     .map_err(in_manifest)?;
+    if release.is_some() {
+        holdout::check_capture(&capture)?;
+    }
     let labelling = Labelling {
         bench,
         truth: truth_ref(&inputs.truth, &inputs.at(&inputs.truth))?,
@@ -288,6 +320,9 @@ pub fn write_export(
             source,
         })?;
         return Err(Error::NotTheCapture { paths });
+    }
+    if let Some(release) = release {
+        holdout::mark(&mut exported.manifest, &capture, release)?;
     }
     write_manifest(out_dir, &exported.manifest)?;
     write_diagnostics(out_dir, source.labelled(), options, &labelling)?;

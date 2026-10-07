@@ -13,7 +13,9 @@
 //! swarm-traces is always scored with `--examples 0` (its labels are real
 //! attack payloads). A holdout export needs `--holdout-release`, a detector
 //! at that tag and an output outside any git repository, and gets an
-//! aggregate-only report.
+//! aggregate-only report. A demo-swarm holdout export also accepts
+//! predictions naming the capture it was made from
+//! (`selection.capture_digest`, checked against the export).
 
 use std::fs::File;
 use std::io::BufReader;
@@ -26,6 +28,8 @@ use a2a_bench_score::report::gates::{GateError, GateSearch, GatesFrom};
 use a2a_bench_score::report::{Disclosure, Report, ReportError};
 use a2a_bench_score::run::{DEFAULT_EXAMPLES, RunError, ScoreOptions, score_export};
 use clap::Args;
+
+use a2a_bench_dataset_demo_swarm::holdout::{self as swarm_holdout, HoldoutError as CaptureError};
 
 use crate::canon::ResourceCanon;
 use crate::holdout::{self, HoldoutError};
@@ -63,6 +67,8 @@ pub enum ScoreError {
     Export(#[from] ExportError),
     #[error(transparent)]
     Holdout(#[from] HoldoutError),
+    #[error(transparent)]
+    Capture(#[from] CaptureError),
     #[error("opening {path}: {source}")]
     Open {
         path: PathBuf,
@@ -146,6 +152,7 @@ pub fn score(request: &ScoreRequest<'_>) -> Result<Report, ScoreError> {
         ScoreOptions {
             example_cap: examples,
             canonicalizer: Box::new(ResourceCanon),
+            capture_digest: swarm_holdout::capture_digest(&manifest)?,
             ..ScoreOptions::default()
         },
     )?;

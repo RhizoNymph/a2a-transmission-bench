@@ -6,7 +6,9 @@ mod flags;
 
 use clap::ValueEnum;
 
-pub use dispatch::{DatasetError, ExportRequest, ExportSummary, export, export_demo_swarm};
+pub use dispatch::{
+    DatasetError, ExportRequest, ExportSummary, demo_swarm_inputs, export, export_demo_swarm,
+};
 pub use flags::{DatasetFlags, FlagError, VillageMode};
 
 /// A dataset the CLI exports. Values are the bench's dataset ids; ct-eval's

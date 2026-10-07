@@ -338,7 +338,17 @@ pub fn validate(args: &ValidateArgs) -> Result<ValidateReport, ValidateError> {
         }
     }
     if let Some(reader) = predictions.as_ref().and_then(|p| p.reader.as_ref()) {
+        let capture = a2a_bench_dataset_demo_swarm::holdout::capture_digest(&manifest);
+        if let Err(error) = &capture {
+            findings.push(Finding {
+                file: "manifest.json",
+                world: None,
+                problem: error.to_string(),
+            });
+        }
+        let capture = capture.ok().flatten();
         match manifest.digest() {
+            Ok(_) if capture == Some(reader.header().manifest_digest) => {}
             Ok(digest) if digest != reader.header().manifest_digest => findings.push(Finding {
                 file: "predictions",
                 world: None,

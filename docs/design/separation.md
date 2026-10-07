@@ -714,6 +714,11 @@ same mix as dev.
   per-label, per-world or example output (no missed-label lists, no
   violation sources, no diagnostics with excerpts), so a release report
   cannot be mined for the labels.
+- **demo-swarm's holdout unit is a whole run**, not a world of a
+  dev list's complement: a fresh node0 run made with a seed of at least
+  1,000,000, kept under `~/Data/ai/agents/demo-swarm-holdout/<run>/`,
+  exported with `--split holdout --release <detector>@<version>` and
+  committed one line per run (`<run id> <seed> <commitment>`).
 - **Commitment.** Each holdout's world list and labels digest is
   committed as a BLAKE3 hash (`splits/<dataset>@<n>.holdout.commit`), so
   any later release can be checked against the same holdout without
