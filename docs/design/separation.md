@@ -722,7 +722,11 @@ same mix as dev.
 This is procedural protection, not secrecy: the data sits on the same
 machine, so anyone can run a converter over it. The protection is that
 no normal command produces holdout files, and that the rule is written
-down for every session.
+down for every session. The repository is public, so the dev lists (and
+by complement which worlds are held out) and the commitment files are
+public too; that is by design. Holdout exports, predictions and reports
+are never committed, and holdout demo-swarm runs live only under the
+data root.
 
 ### 9.3 Who may run it
 
@@ -760,8 +764,9 @@ touches every crate's registration. Acceptable; resolved at merge.
 ## 11. Decisions (user, 2026-10-05)
 
 1. **Holdout:** yes; designed in §9.
-2. **Repository:** private, `RhizoNymph/a2a-transmission-bench`. Public
-   later, once parity is proven and the holdout is in place.
+2. **Repository:** `RhizoNymph/a2a-transmission-bench`, private while it
+   was built; made public on 2026-10-06, after parity P1–P7 passed, at the
+   user's request.
 3. **Dependency:** crosstalk depends on `a2a-bench-format` through a git
    tag, with the exact revision pinned by `Cargo.lock`. No mirrored
    structs.
