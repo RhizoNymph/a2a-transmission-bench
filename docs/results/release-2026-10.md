@@ -1,7 +1,63 @@
 # Release results, 2026-10
 
-crosstalk's live detector against the bench's naive baseline `a2a-reference`,
-both scored by a2a-transmission-bench on the public datasets' parity selections.
+crosstalk against the bench's naive baseline `a2a-reference`, both scored by
+a2a-transmission-bench, in two parts:
+
+1. **Held out** (below first): six fresh demo-swarm runs made for this release
+   and never scored or inspected on crosstalk's side. This is the number that
+   says how crosstalk does on traffic it was not tuned on.
+2. **Public datasets** (dev data): the datasets crosstalk was developed and tuned
+   on, at their parity selections. Useful for comparison with the baseline, but
+   not a held-out measurement.
+
+## Held-out results (fresh demo-swarm runs)
+
+Six runs of crosstalk's demo swarm through crosstalk's gateway on node0, made
+for this release under the bench's holdout protocol (design §9): seeds
+1000001–1000006 (a range dev runs never use), three `headline` and three
+`boilerplate` scenarios interleaved; saved without scoring (no report, no
+metrics on the crosstalk side), stored outside every repository, and scored
+once by the bench owner. Per-run outputs stay outside the repository; this
+document reports aggregates only (design §9.2). Each run's commitment (run id,
+seed, BLAKE3 over its world key and labels digest) is in
+`splits/demo-swarm@1.holdout.commit`.
+
+- **crosstalk:** staging `7d678e275e8672ee4d500d8c5a5ce113671ae9ff`, gateway image
+  `sha256:cde5eaafcf5a504cc677f25a79c1670dd63e50c413b8d7d3aee2b270121abece` (all six
+  runs; the predictions' `detector.version`), memory mode. Predictions are the
+  gateway's own exported transmissions (`crosstalk-gateway-export`, variant
+  `default`), with attribution and origins from the gateway's conversation reads,
+  turned into bench files by `ct-bench-detect from-export`.
+- **Bench:** tag `a2a-bench-v1.0.1` (`f845bb45e57b58e1a3e710b52d7df70ad0c0aea0`),
+  gates from that tag's `gates/crosstalk-gateway-export.toml`.
+- **Reference:** `a2a-reference` `0.1.0` (same tag), run by the bench on each
+  run's input view.
+- **Date:** 2026-10-07 (UTC), runs `20261007T030635Z` to `20261007T033135Z`.
+
+Recall is over the runs' labelled wiki transmissions; precision over the
+predictions the labels judge; FP/1k is false positives per 1,000 exchanges.
+Counts are summed over the three runs of each scenario.
+
+| scenario (3 runs each) | detector | recall | precision | FP/1k | reread controls violated | runs passing every gate |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| headline | crosstalk | 1.000 (153/153) | 1.000 (153 correct, 0 false) | 0.0 | 0 | 3/3 |
+| headline | a2a-reference | 1.000 (153/153) | 0.927 (153 correct, 12 false) | 15.9 | 0 | no gates |
+| boilerplate | crosstalk | 1.000 (139/139) | 0.890 (585 correct, 72 false) | 96.1 | 0 | 2/3 |
+| boilerplate | a2a-reference | 1.000 (139/139) | 0.044 (693 correct, 14,978 false) | 19,997.3 | 0 | no gates |
+
+- `headline` traffic writes wiki pages with distinctive text; `boilerplate`
+  traffic fills pages with shared template sentences, the hard case for content
+  matching.
+- One `boilerplate` run failed crosstalk's false-positives gate (FP/1k ≤ 115);
+  the scenario's summed FP/1k is 96.1, and every other boilerplate gate (recall
+  ≥ 0.95, precision ≥ 0.86) passed on all three runs. Reported as measured; the
+  gate was set from dev runs before these were made.
+- The exchange counts the rates use: headline 755, boilerplate 749.
+- crosstalk's `detector.version` here is the gateway image digest (the export path
+  has no adapter build); the crosstalk commit above is the one that built it.
+
+
+Provenance of the public-dataset table (section below):
 
 - **Bench:** `ddccf4f7475ac6c44a362b4b429e3d82611f4852` (`git describe`:
   `a2a-bench-format-v1.0.0-2-gddccf4f`), `a2a-bench` and `a2a-reference` built with
@@ -14,6 +70,8 @@ both scored by a2a-transmission-bench on the public datasets' parity selections.
   `detector.variant = forwarding-off`.
 - **Reference:** `a2a-reference` `0.1.0`, variant `max-postings-50`.
 - **Date:** 2026-10-06 (runs 19:35 to 20:04 PDT), one machine, one detector at a time.
+  `a2a-bench-v1.0.1` differs from `ddccf4f` only by demo-swarm holdout exports,
+  which these datasets do not use.
 - **Dataset sources** (from each export's `manifest.json`: `source.revision`, and
   `source.digest`, the bench's digest of the files its converter read):
 
@@ -153,6 +211,30 @@ run ai-village-claude-code "" --dataset ai-village --mode claude-code
 mirror ct-eval's live settings in the parity baseline. Each run directory holds
 `report.txt` and `report.json`.
 
-## Held-out results (fresh demo-swarm runs)
+### Held-out runs
 
-pending
+On node0, crosstalk at `7d678e2`: `deploy/run.sh bench --holdout` with seeds
+1000001–1000006 (swarm, watermark wait, `ct-eval swarm-fetch`, exchange-log and
+blobs snapshot, `ct-bench-detect fetch`, `ct-bench-detect from-export --run <run>
+--out <run>/bench-input`; no scoring). Then, per run, with the bench at
+`a2a-bench-v1.0.1` and output outside every git repository:
+
+```text
+V=$(head -1 <run>/bench-input/predictions.jsonl | jq -r .detector.version)
+
+a2a-bench export --dataset demo-swarm --inputs <run>/bench-input --truth <run>/truth.jsonl \
+  --out <out>/export-crosstalk --split holdout --release crosstalk-gateway-export@$V
+a2a-bench score --export <out>/export-crosstalk --predictions <run>/bench-input/predictions.jsonl \
+  --out <out>/crosstalk --gates gates/crosstalk-gateway-export.toml --examples 0 \
+  --holdout-release crosstalk-gateway-export@$V
+
+a2a-bench export --dataset demo-swarm --inputs <run>/bench-input --truth <run>/truth.jsonl \
+  --out <out>/export-reference --split holdout --release reference@0.1.0
+a2a-bench run --export <out>/export-reference --detector-cmd a2a-reference \
+  --out <out>/reference --gates gates/reference.toml --examples 0 --holdout-release reference@0.1.0
+```
+
+The scenario totals sum each `report.json`'s `overall` counts and
+`totals.exchanges` over the three runs of a scenario and derive the ratios from
+the sums. The held-out run directories are not published; the commitment file
+lets a later release check it scored the same runs and labels.
