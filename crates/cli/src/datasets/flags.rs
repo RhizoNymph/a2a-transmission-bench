@@ -99,6 +99,10 @@ pub struct DatasetFlags {
     /// demo-swarm: run window margin after the truth's last row, in ms.
     #[arg(long)]
     pub run_slack_ms: Option<u64>,
+    /// demo-swarm holdout: the run's seed, when no bench.env beside the
+    /// inputs names it.
+    #[arg(long = "seed")]
+    pub swarm_seed: Option<u64>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -150,6 +154,7 @@ impl DatasetFlags {
         flag(self.truth.is_some(), "truth");
         flag(self.run_lead_ms.is_some(), "run-lead-ms");
         flag(self.run_slack_ms.is_some(), "run-slack-ms");
+        flag(self.swarm_seed.is_some(), "seed");
         given
     }
 
@@ -172,7 +177,7 @@ impl DatasetFlags {
             }
             DatasetName::SweSplice | DatasetName::Cipher => &["limit", "include", "count"],
             DatasetName::AiVillage => &["mode", "from", "to", "hours", "limit"],
-            DatasetName::DemoSwarm => &["inputs", "truth", "run-lead-ms", "run-slack-ms"],
+            DatasetName::DemoSwarm => &["inputs", "truth", "run-lead-ms", "run-slack-ms", "seed"],
         };
         for flag in self.given() {
             let paced = dataset.paced() && PACE.contains(&flag);

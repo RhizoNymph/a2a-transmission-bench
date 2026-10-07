@@ -23,7 +23,8 @@ fn open(path: &Path) -> Result<BufReader<File>, RunError> {
 /// Scores `predictions` against the export in `export` (its
 /// `manifest.json`, `messages.jsonl`, `exchanges.jsonl` and
 /// `labels.jsonl`). The predictions must name the export's manifest digest
-/// (whatever `options.manifest_digest` says) and dataset, and each export
+/// (whatever `options.manifest_digest` says), or `options.capture_digest`
+/// when the caller gives one, and the export's dataset, and each export
 /// file's trailer digest must be the one `manifest.files` records (whatever
 /// `options.file_digests` says), so files from another export are refused.
 /// The summary carries the manifest's converter notes ([`DatasetNotes`]).

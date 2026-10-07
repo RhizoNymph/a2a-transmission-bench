@@ -28,6 +28,7 @@
 pub mod capture;
 pub mod capture_manifest;
 pub mod diagnostics;
+pub mod holdout;
 pub mod label;
 pub mod locate;
 pub mod resolve;
@@ -48,7 +49,7 @@ pub use label::{CaptureCounts, DiagnosticsReport, LabelError, Labelled, label};
 pub use resolve::{AgentIndex, ResolveCounts};
 pub use source::{
     DIAGNOSTICS_FILE, DemoSwarmSource, Error, Inputs, Labelling, TruthRef, write_diagnostics,
-    write_export,
+    write_export, write_holdout_export,
 };
 pub use window::{DEFAULT_LEAD_MS, DEFAULT_SLACK_MS, Margins, RunWindow};
 

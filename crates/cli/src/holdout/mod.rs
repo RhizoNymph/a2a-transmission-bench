@@ -7,6 +7,11 @@
 //! then the hex of the labels file's trailer digest. It is written as one
 //! hex line to `splits/<dataset>@<n>.holdout.commit`; once the file exists,
 //! a holdout export of the same version must reproduce it.
+//!
+//! demo-swarm's holdout unit is a whole run, not a world of a dev list's
+//! complement: [`demo_swarm`] holds its seed rule and its commitment list.
+
+pub mod demo_swarm;
 
 use std::path::{Path, PathBuf};
 
@@ -49,6 +54,15 @@ pub enum HoldoutError {
     Write {
         path: PathBuf,
         source: std::io::Error,
+    },
+    #[error("the truth header's run id is empty or holds whitespace")]
+    InvalidRun,
+    #[error("{path} commits run {run} with seed {committed}, this export's is {actual}; refused")]
+    SeedChanged {
+        path: PathBuf,
+        run: String,
+        committed: u64,
+        actual: u64,
     },
     #[error("{path} does not hold a commitment")]
     Malformed { path: PathBuf },

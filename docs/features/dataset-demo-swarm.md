@@ -28,6 +28,10 @@ is a legitimate label source (design §5.3).
   completes the export (the corpus export writer, the capture's manifest
   kept as the export's input view, then `diagnostics.json` with the
   bench's labelling provenance).
+- `write_holdout_export`: the same export marked as one release's
+  holdout (a whole run is demo-swarm's holdout unit, design §9.2), and the
+  capture digest a holdout export's predictions may name
+  (`holdout::capture_digest`).
 
 ## Non-scope
 
@@ -39,7 +43,8 @@ is a legitimate label source (design §5.3).
   kept in the same table (`missing_evidence`, `unknown_detected_agent`,
   `detected_agent_conflict`, `unpredictable`, `outside_run_window`): the
   adapter and the scorer.
-- The CLI wiring (another workstream).
+- The CLI wiring (`docs/features/cli.md`), including whether a run is a
+  holdout run (its seed) and the commitment list.
 - Dataset bytes: tests build a synthetic run.
 
 ## Inputs
@@ -127,7 +132,36 @@ write_export(inputs, out_dir, options, bench converter)
       any ─▶ manifest.json removed, NotTheCapture {top-level paths}
   write_manifest ──▶ manifest.json (input view = the capture's; same digest)
   write_diagnostics(…, labelling) ──▶ diagnostics.json {labelling, report…}
+
+write_holdout_export(inputs, out_dir, options, bench converter, release)
+  as write_export, plus: holdout::check_capture (split dev, no release or
+  capture_digest in its selection) before anything is written; after the
+  input-view comparison, holdout::mark:
+    split ─▶ holdout
+    selection.release ─▶ release ("<detector>@<version>")
+    selection.capture_digest ─▶ the capture manifest's Manifest::digest (hex)
+  ─▶ manifest.json; diagnostics.json as for dev
+
+holdout::capture_digest(export manifest)
+  not split holdout of demo-swarm/<scenario> ─▶ None
+  selection.capture_digest missing or not a digest ─▶ error
+  capture_view(export) = input view, split dev, release and capture_digest removed
+  its digest ≠ the recorded one ─▶ error; else Some(recorded)
 ```
+
+### Holdout exports
+
+A demo-swarm holdout is a whole run (a fresh node0 run with a seed of at
+least 1,000,000), not a world of a dev list's complement. The adapter
+writes the capture as a dev input view and its predictions name that
+view's digest; the bench must not rewrite them. So the holdout export's
+manifest differs from the capture's only in `split` and the two holdout
+selection entries, and records the capture's digest
+(`selection.capture_digest`) so the scorer can accept predictions that
+name it. That digest is never trusted as written: it must equal the digest
+of the capture view rebuilt from the export. A detector run on the
+holdout export's own input view (`a2a-bench run`) names the export's
+digest, which is accepted as for every export.
 
 ### The join (per row)
 
@@ -187,7 +221,8 @@ exchange is kept without it (`invalid_label`, writer side,
 | `src/resolve/check.rs` | one label against the world | (crate-internal `Checker`) |
 | `src/diagnostics.rs` | the typed join-diagnostics table | `Diagnostic`, `Diagnostics` (`table`, `by_failure`, `render`, `named`), `DiagnosticCount`, `JoinFailure`, `RowKind`, `Side`, `Effect` |
 | `src/label.rs` | labelling one capture | `label`, `Labelled` (`report`), `CaptureCounts`, `DiagnosticsReport`, `LabelError` |
-| `src/source.rs` | trace source, export, diagnostics file | `DemoSwarmSource` (`open`, `labelled`, `into_labelled`, `files_read`, `run`), `Inputs` (`in_dir`; `truth`, `messages`, `exchanges`, `manifest`), `write_export`, `write_diagnostics`, `Labelling`, `TruthRef`, `read_truth`, `DIAGNOSTICS_FILE`, `Error` |
+| `src/source.rs` | trace source, export, diagnostics file | `DemoSwarmSource` (`open`, `labelled`, `into_labelled`, `files_read`, `run`), `Inputs` (`in_dir`; `truth`, `messages`, `exchanges`, `manifest`), `write_export`, `write_holdout_export`, `write_diagnostics`, `Labelling`, `TruthRef`, `read_truth`, `DIAGNOSTICS_FILE`, `Error` |
+| `src/holdout.rs` | the holdout marks on a capture's manifest and the capture digest a holdout export's predictions may name | `CAPTURE_DIGEST_KEY`, `check_capture`, `mark`, `is_holdout`, `capture_view`, `capture_digest`, `HoldoutError` |
 | `tests/swarm_truth/` | ported ct-eval tests over a synthetic capture (`fixture.rs`; `truth`, `join`, `window`, `sessions`, `scenario`, `export`) | |
 | `tests/real_truth.rs` | ignored: row counts of a real truth file (`DEMO_SWARM_TRUTH`) | |
 
@@ -204,6 +239,10 @@ exchange is kept without it (`invalid_label`, writer side,
   converter, selection and pace are the capture's; the bench's own
   version and commit and the truth file's path and BLAKE3 are in
   `diagnostics.json` under `labelling`, never in the manifest.
+- **A holdout export is the capture marked, nothing else.** Its input
+  view equals the capture's but for `split` (dev → holdout),
+  `selection.release` and `selection.capture_digest`; the recorded capture
+  digest must be the digest of that view with the marks undone.
 - **Exchange ids are the gateway's**, carried; exchanges are copied from
   the capture verbatim (client included). A capture holding exactly the
   run gives back its `messages.jsonl` byte for byte.

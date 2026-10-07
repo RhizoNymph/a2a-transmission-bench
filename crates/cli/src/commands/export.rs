@@ -6,6 +6,7 @@
 //!        [--split dev|holdout --release <detector>@<tag>] [--allow-revision]
 //!        [dataset flags…]
 //! export --dataset demo-swarm --inputs <dir> --truth <truth.jsonl> --out <dir>
+//!        [--split holdout --release <detector>@<version> [--seed N] [--splits <dir>]]
 //! ```
 //!
 //! The dataset's directory comes from `--dataset-dir`, else `datasets.toml`
@@ -13,6 +14,10 @@
 //! revision is checked against the pin (design §8). The split comes from
 //! `splits/<dataset>@<n>.dev.toml` (dev, or unsplit when there is none); a
 //! holdout export also writes or checks `splits/<dataset>@<n>.holdout.commit`.
+//!
+//! demo-swarm's holdout unit is a whole run ([`holdout::demo_swarm`]): the
+//! capture's run, made with a holdout seed, exported for the release, its
+//! entry added to or checked against `splits/demo-swarm@1.holdout.commit`.
 
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
@@ -22,10 +27,13 @@ use a2a_bench_corpus::split::{Release, Selection, SplitError};
 use a2a_bench_format::ids::{DatasetId, InvalidKey};
 use clap::{Args, ValueEnum};
 
+use a2a_bench_dataset_demo_swarm as demo_swarm;
+
 use crate::datasets::{
-    DatasetError, DatasetFlags, DatasetName, ExportRequest, ExportSummary,
+    DatasetError, DatasetFlags, DatasetName, ExportRequest, ExportSummary, demo_swarm_inputs,
     export as export_dataset, export_demo_swarm,
 };
+use crate::holdout::demo_swarm::{self as swarm_holdout, Entry, RunSeed, SeedError};
 use crate::holdout::{self, Committed, HoldoutError};
 use crate::repo;
 use crate::revision::{Pin, Revision, RevisionError, check_pin, source_revision};
@@ -85,8 +93,10 @@ pub enum ExportCommandError {
     ReleaseRequired,
     #[error("--release applies only to --split holdout")]
     ReleaseWithoutHoldout,
-    #[error("demo-swarm has no holdout split")]
-    NoDemoSwarmHoldout,
+    #[error("--seed applies only to a demo-swarm holdout export")]
+    SeedWithoutHoldout,
+    #[error(transparent)]
+    Seed(#[from] SeedError),
     #[error(transparent)]
     Config(#[from] ConfigError),
     #[error(transparent)]
@@ -110,6 +120,8 @@ pub struct ExportOutcome {
     pub pin: Pin,
     /// The holdout commitment, for a holdout export.
     pub committed: Option<Committed>,
+    /// The run's seed, for a demo-swarm holdout export.
+    pub seed: Option<RunSeed>,
 }
 
 impl ExportOutcome {
@@ -160,6 +172,17 @@ impl ExportOutcome {
             }
             None => {}
         }
+        if let Some(seed) = &self.seed {
+            let _ = writeln!(
+                out,
+                "holdout run seed {} (from {})",
+                seed.seed,
+                match &seed.from {
+                    swarm_holdout::SeedFrom::BenchEnv(path) => path.display().to_string(),
+                    swarm_holdout::SeedFrom::Flag => "--seed".to_owned(),
+                }
+            );
+        }
         out
     }
 }
@@ -198,17 +221,10 @@ pub fn export(args: &ExportArgs) -> Result<ExportOutcome, ExportCommandError> {
         (SplitArg::Holdout, Some(text)) => Some(text.parse()?),
     };
     if dataset == DatasetName::DemoSwarm {
-        if release.is_some() {
-            return Err(ExportCommandError::NoDemoSwarmHoldout);
-        }
-        let summary = export_demo_swarm(&args.flags, &args.out).map_err(Box::new)?;
-        return Ok(ExportOutcome {
-            out: args.out.clone(),
-            revision: summary.manifest.source.revision.clone(),
-            summary,
-            pin: Pin::Unpinned,
-            committed: None,
-        });
+        return match release {
+            None => export_swarm_dev(args),
+            Some(release) => export_swarm_holdout(args, &release),
+        };
     }
     if release.is_some() {
         holdout::outside_repository(&args.out)?;
@@ -281,5 +297,60 @@ pub fn export(args: &ExportArgs) -> Result<ExportOutcome, ExportCommandError> {
         revision: revision.as_str().to_owned(),
         pin,
         committed,
+        seed: None,
+    })
+}
+
+/// A demo-swarm dev export: the capture plus truth, as before holdouts.
+fn export_swarm_dev(args: &ExportArgs) -> Result<ExportOutcome, ExportCommandError> {
+    if args.flags.swarm_seed.is_some() {
+        return Err(ExportCommandError::SeedWithoutHoldout);
+    }
+    let summary = export_demo_swarm(&args.flags, &args.out, None).map_err(Box::new)?;
+    Ok(ExportOutcome {
+        out: args.out.clone(),
+        revision: summary.manifest.source.revision.clone(),
+        summary,
+        pin: Pin::Unpinned,
+        committed: None,
+        seed: None,
+    })
+}
+
+/// A demo-swarm holdout export (module docs): `--out` outside every
+/// repository, a holdout seed that is the truth's, the export marked for
+/// `release`, then the run's commitment entry.
+fn export_swarm_holdout(
+    args: &ExportArgs,
+    release: &Release,
+) -> Result<ExportOutcome, ExportCommandError> {
+    holdout::outside_repository(&args.out)?;
+    let (inputs_dir, inputs) = demo_swarm_inputs(&args.flags).map_err(Box::new)?;
+    let truth = demo_swarm::source::read_truth(&inputs.truth)
+        .map_err(|error| Box::new(DatasetError::DemoSwarm(error)))?;
+    let seed = swarm_holdout::run_seed(&inputs_dir, args.flags.swarm_seed, truth.header.seed)?;
+    tracing::info!(
+        run = %truth.header.run,
+        seed = seed.seed,
+        release = %release,
+        "exporting a demo-swarm holdout run"
+    );
+    let summary = export_demo_swarm(&args.flags, &args.out, Some(release)).map_err(Box::new)?;
+    let splits = args.splits.clone().unwrap_or_else(repo::splits_dir);
+    let id = DatasetId::new(DatasetName::DemoSwarm.id())?;
+    let path = holdout::commit_path(&splits, &id, DatasetName::DemoSwarm.version());
+    let entry = Entry::new(
+        &truth.header.run,
+        seed.seed,
+        holdout::commitment(&summary.manifest)?,
+    )?;
+    let committed = swarm_holdout::record_or_check(&path, &entry)?;
+    Ok(ExportOutcome {
+        out: args.out.clone(),
+        revision: summary.manifest.source.revision.clone(),
+        summary,
+        pin: Pin::Unpinned,
+        committed: Some(committed),
+        seed: Some(seed),
     })
 }

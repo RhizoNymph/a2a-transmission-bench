@@ -51,6 +51,11 @@ pub struct ScoreOptions {
     /// The manifest digest the predictions must name; `None` checks
     /// nothing (the caller has no manifest).
     pub manifest_digest: Option<Digest>,
+    /// A second manifest digest the predictions may name instead of
+    /// `manifest_digest`: for a demo-swarm holdout export, the digest of
+    /// the capture it was completed from, whose predictions name it.
+    /// `None` accepts only `manifest_digest`.
+    pub capture_digest: Option<Digest>,
     /// The trailer digests the manifest records for the export's files
     /// (`manifest.files`); `None` checks nothing. The labels digest is
     /// checked when the manifest has one.
@@ -63,6 +68,7 @@ impl Default for ScoreOptions {
             example_cap: DEFAULT_EXAMPLES,
             canonicalizer: Box::new(AsGiven),
             manifest_digest: None,
+            capture_digest: None,
             file_digests: None,
         }
     }
@@ -262,8 +268,10 @@ pub fn score_streams<M: BufRead, E: BufRead, L: BufRead, P: BufRead>(
         &dataset,
         predictions.header().dataset(),
     )?;
+    let named = predictions.header().manifest_digest;
     if let Some(export) = options.manifest_digest
-        && export != predictions.header().manifest_digest
+        && export != named
+        && options.capture_digest != Some(named)
     {
         return Err(RunError::ManifestDigest {
             export,
