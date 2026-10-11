@@ -18,6 +18,7 @@ use std::process::Output;
 
 use a2a_bench_cli::holdout::demo_swarm::bench_env_seed;
 use a2a_bench_corpus::split::Release;
+use a2a_bench_dataset_demo_swarm::VERSION;
 use a2a_bench_format::files::Predictions;
 use a2a_bench_format::ids::Digest;
 use a2a_bench_format::jsonl::{FileReader, FileWriter};
@@ -59,7 +60,8 @@ impl Setup {
     }
 
     fn commit(&self) -> PathBuf {
-        self.splits().join("demo-swarm@1.holdout.commit")
+        self.splits()
+            .join(format!("demo-swarm@{VERSION}.holdout.commit"))
     }
 
     fn out(&self, name: &str) -> PathBuf {
@@ -616,4 +618,151 @@ fn a_capture_that_is_not_a_dev_view_is_refused() {
     );
     assert!(!out.join("manifest.json").exists());
     assert!(!setup.commit().exists());
+}
+
+// ---- captures at an older dataset version ----
+
+/// Sets the capture's manifest to dataset version 1, as an adapter that
+/// knows only `@1` writes it, and returns the capture's digest.
+fn capture_at_v1(setup: &Setup) -> Digest {
+    let path = setup.capture().join("manifest.json");
+    let mut m = json(&path);
+    m["dataset_version"] = 1.into();
+    std::fs::write(&path, serde_json::to_vec_pretty(&m).unwrap()).unwrap();
+    let manifest: a2a_bench_format::manifest::Manifest =
+        serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    manifest.digest().unwrap()
+}
+
+/// The adapter's predictions for the capture: the reference detector run
+/// on `export`, renamed as the gateway export and naming `capture`.
+fn capture_predictions(setup: &Setup, export: &Path, capture: Digest) -> PathBuf {
+    let run_dir = setup.inside.path().join("capture-run");
+    let cmd = format!("'{}'", reference().display());
+    let reference_gates = gates(setup.inside.path(), "reference");
+    let ran = run_str(&[
+        "run",
+        "--export",
+        s(export),
+        "--detector-cmd",
+        &cmd,
+        "--out",
+        s(&run_dir),
+        "--gates",
+        s(&reference_gates),
+    ]);
+    assert_code(&ran, 0);
+    let predictions = setup.inside.path().join("capture-predictions.jsonl");
+    repoint(
+        &run_dir.join("predictions.jsonl"),
+        &predictions,
+        GATEWAY,
+        IMAGE,
+        Some(capture),
+    );
+    predictions
+}
+
+#[test]
+fn a_v1_captures_predictions_score_against_its_export_at_the_current_version() {
+    let Some(setup) = setup() else { return };
+    let capture = capture_at_v1(&setup);
+    let dev = setup.inside.path().join("dev");
+    assert_code(&export(&setup, &dev, &[]), 0);
+    let m = manifest(&dev);
+    assert_eq!(m["dataset_version"], VERSION);
+    assert_eq!(m["selection"]["capture_dataset_version"], 1);
+    assert_eq!(m["selection"]["capture_digest"], capture.to_hex());
+
+    let predictions = capture_predictions(&setup, &dev, capture);
+    let gateway_gates = gates(setup.inside.path(), GATEWAY);
+    let score = |out: &str| {
+        run_str(&[
+            "score",
+            "--export",
+            s(&dev),
+            "--predictions",
+            s(&predictions),
+            "--out",
+            s(&setup.inside.path().join(out)),
+            "--gates",
+            s(&gateway_gates),
+        ])
+    };
+    assert_code(&score("s1"), 0);
+    let validated = run_str(&["validate", s(&dev), "--predictions", s(&predictions)]);
+    assert_code(&validated, 0);
+
+    // A recorded capture version the export does not imply: refused.
+    let mut m = manifest(&dev);
+    m["selection"]["capture_dataset_version"] = (i64::from(VERSION) + 1).into();
+    std::fs::write(
+        dev.join("manifest.json"),
+        serde_json::to_vec_pretty(&m).unwrap(),
+    )
+    .unwrap();
+    let tampered = score("s2");
+    assert_code(&tampered, 1);
+    assert!(
+        stderr(&tampered).contains("capture_dataset_version"),
+        "{}",
+        stderr(&tampered)
+    );
+}
+
+#[test]
+fn a_v1_holdout_capture_exports_and_scores_at_the_current_version() {
+    let Some(setup) = setup() else { return };
+    let capture = capture_at_v1(&setup);
+    let release = gateway_release(IMAGE);
+    let export_dir = setup.out("holdout");
+    let exported = holdout(&setup, &export_dir, &release);
+    assert_code(&exported, 0);
+    assert!(setup.commit().exists());
+    let m = manifest(&export_dir);
+    assert_eq!(m["split"], "holdout");
+    assert_eq!(m["dataset_version"], VERSION);
+    assert_eq!(m["selection"]["capture_dataset_version"], 1);
+    assert_eq!(m["selection"]["capture_digest"], capture.to_hex());
+
+    let dev = setup.inside.path().join("dev");
+    assert_code(&export(&setup, &dev, &[]), 0);
+    let predictions = capture_predictions(&setup, &dev, capture);
+    let gateway_gates = gates(setup.inside.path(), GATEWAY);
+    let scored = run_str(&[
+        "score",
+        "--export",
+        s(&export_dir),
+        "--predictions",
+        s(&predictions),
+        "--out",
+        s(&setup.out("s1")),
+        "--gates",
+        s(&gateway_gates),
+        "--holdout-release",
+        &release,
+    ]);
+    assert_code(&scored, 0);
+    assert_eq!(
+        json(&setup.out("s1").join("report.json"))["disclosure"],
+        "holdout"
+    );
+}
+
+#[test]
+fn a_capture_newer_than_the_converter_is_refused_by_export() {
+    let Some(setup) = setup() else { return };
+    let path = setup.capture().join("manifest.json");
+    let mut m = json(&path);
+    m["dataset_version"] = (VERSION + 1).into();
+    std::fs::write(&path, serde_json::to_vec_pretty(&m).unwrap()).unwrap();
+    let out = setup.inside.path().join("dev");
+    let refused = export(&setup, &out, &[]);
+    assert_code(&refused, 1);
+    assert!(
+        stderr(&refused).contains("dataset version"),
+        "{}",
+        stderr(&refused)
+    );
+    assert!(!out.join("manifest.json").exists());
 }

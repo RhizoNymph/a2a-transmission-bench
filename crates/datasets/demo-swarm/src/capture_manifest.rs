@@ -1,10 +1,15 @@
 //! The capture's `manifest.json`: the input view crosstalk's adapter wrote
 //! and its predictions name (`Manifest::digest`). The bench only adds
 //! truth to a capture, so the completed export's manifest must have this
-//! manifest as its input view: same format, dataset, version, split,
-//! source, converter, selection, pace, worlds (key, exchanges) and
-//! message and exchange digests. The bench adds the labels digest and each
-//! world's label count and notes, which the input view drops.
+//! manifest as its input view: same format, dataset, split, source,
+//! converter, selection, pace, worlds (key, exchanges) and message and
+//! exchange digests. The bench adds the labels digest and each world's
+//! label count and notes, which the input view drops.
+//!
+//! The dataset version may be older than this converter's: the capture's
+//! messages and exchanges do not change with a label fix, so an export at
+//! [`VERSION`] is made from it and records the capture's digest and
+//! version ([`crate::capture_view`]). A newer version is refused.
 
 use std::path::Path;
 
@@ -13,6 +18,7 @@ use a2a_bench_format::manifest::{Manifest, Setting};
 use serde_json::Value;
 
 use crate::VERSION;
+use crate::capture_view::{CAPTURE_DIGEST_KEY, CAPTURE_VERSION_KEY};
 
 /// The capture manifest's file name, beside its `messages.jsonl`.
 pub const CAPTURE_MANIFEST_FILE: &str = "manifest.json";
@@ -29,8 +35,10 @@ pub enum CaptureManifestError {
         found: DatasetId,
         expected: DatasetId,
     },
-    #[error("it is dataset version {found}, this converter writes {VERSION}")]
+    #[error("it is dataset version {found}, this converter writes 1 to {VERSION}")]
     Version { found: u32 },
+    #[error("its selection already holds {0:?}, which the export records")]
+    Reserved(&'static str),
     #[error("it does not hold exactly the truth's world")]
     Worlds,
     #[error("its selection is not the run window's margins the labels use")]
@@ -52,7 +60,7 @@ pub fn read(path: &Path) -> Result<Manifest, CaptureManifestError> {
 }
 
 /// Checks that `capture` is an input view of `dataset`'s one world `world`,
-/// at this converter's version, cut with `selection`.
+/// at this converter's version or an older one, cut with `selection`.
 pub fn check(
     capture: &Manifest,
     dataset: &DatasetId,
@@ -68,10 +76,15 @@ pub fn check(
             expected: dataset.clone(),
         });
     }
-    if capture.dataset_version != VERSION {
+    if !(1..=VERSION).contains(&capture.dataset_version) {
         return Err(CaptureManifestError::Version {
             found: capture.dataset_version,
         });
+    }
+    for key in [CAPTURE_DIGEST_KEY, CAPTURE_VERSION_KEY] {
+        if capture.selection.contains_key(key) {
+            return Err(CaptureManifestError::Reserved(key));
+        }
     }
     if capture.worlds.len() != 1 || capture.worlds.iter().any(|entry| &entry.key != world) {
         return Err(CaptureManifestError::Worlds);
@@ -82,13 +95,15 @@ pub fn check(
     Ok(())
 }
 
-/// The top-level manifest fields where `export`'s input view and
-/// `capture` differ (values never shown).
+/// The top-level manifest fields where `export`'s input view, at the
+/// capture's dataset version, and `capture` differ (values never shown).
 pub fn differences(
     export: &Manifest,
     capture: &Manifest,
 ) -> Result<Vec<String>, serde_json::Error> {
-    let view = serde_json::to_value(export.input_view())?;
+    let mut view = export.input_view();
+    view.dataset_version = capture.dataset_version;
+    let view = serde_json::to_value(view)?;
     let capture = serde_json::to_value(capture)?;
     let (Value::Object(view), Value::Object(capture)) = (view, capture) else {
         return Ok(vec!["/".to_owned()]);

@@ -1,23 +1,31 @@
 //! The resolver: truth rows plus the capture's in-window exchanges become
 //! one bench world of labels over the gateway's exchange ids.
 //!
-//! Join rules (ct-eval's):
+//! Join rules (dataset version 2; `@1` joined at the truth's turn first):
 //!
 //! - **Agents.** The agent key is the truth's agent name. A session id
 //!   belongs to the agent its `session` row names; a session with no such
 //!   row belongs to the agent the other rows name for it. An exchange
 //!   belongs to its session's agent; one in a session no row names is not
 //!   the world's.
-//! - **Reader.** The session's exchange at ordinal `reader_turn`, checked by
-//!   finding a tool result for `content.at.tool_use_id` whose text hashes
-//!   to `content.blake3`. When that exchange does not hold the tool result,
-//!   the session's first exchange that does is used and the row is
-//!   reported (`turn_mismatch`). A tool result whose bytes do not hash right
-//!   drops the row (`hash_mismatch`).
-//! - **Writer.** The session's exchange at `writer_turn`, checked by its
-//!   response's `PUT` tool call `writer_tool_use_id` whose `body` hashes to
-//!   `content.blake3`; the same fallback. A writer that cannot be joined
-//!   leaves the label without a sender exchange.
+//! - **Turns never join.** Rows are joined by session and tool use id
+//!   alone; the truth's `reader_turn` and `writer_turn` are compared with
+//!   the found exchange's ordinal and a difference is reported
+//!   (`turn_mismatch`, kept), including a turn past the session's end. A
+//!   later request carries the reader's tool result again as history, so
+//!   a stale turn would otherwise join one exchange late, silently.
+//! - **Reader.** The session's first exchange, in ordinal order, whose
+//!   request holds a tool result for `content.at.tool_use_id`
+//!   (`reader_tool_use_id` for a miss), its text checked against
+//!   `content.blake3`. A tool result whose bytes do not hash right drops
+//!   the row (`hash_mismatch`); one no exchange holds drops it
+//!   (`tool_use_missing`). Transmissions, self-reads, rereads, misses and
+//!   unattributed reads all join this way.
+//! - **Writer.** The exchange whose response holds the `PUT` tool call
+//!   `writer_tool_use_id`, its `body` checked against `content.blake3`;
+//!   when several responses hold it, the first, reported
+//!   (`tool_use_repeated`). A writer that cannot be joined leaves the label
+//!   without a sender exchange.
 //! - **Location.** The whole text of the reader's tool result part.
 //!
 //! Rows become:

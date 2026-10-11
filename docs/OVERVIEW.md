@@ -108,7 +108,7 @@ Features Index:
     depends_on: [format, corpus]
     doc: docs/features/dataset-swarm.md
   dataset-demo-swarm:
-    description: demo-swarm/headline and demo-swarm/boilerplate - crosstalk demo swarm runs labelled from the swarm's truth v2 over the adapter's bench capture (session + turn join, tool_use_id and BLAKE3 cross-checks, run window, typed join diagnostics); the export only adds truth, keeping the capture's manifest as its input view so the adapter's predictions score; a holdout export (a whole run) marks it split holdout with the release and the capture's digest
+    description: demo-swarm/headline and demo-swarm/boilerplate - crosstalk demo swarm runs labelled from the swarm's truth v2 over the adapter's bench capture (dataset version 2: join by session and tool_use_id alone, the first exchange carrying the tool result, BLAKE3 check, turns only reported as diagnostics; run window, typed join diagnostics; captures at an older dataset version are exported at the converter's, recording the capture's digest and version so the adapter's predictions still score); the export only adds truth, keeping the capture's manifest as its input view so the adapter's predictions score; a holdout export (a whole run) marks it split holdout with the release and the capture's digest
     entry_points: [crates/datasets/demo-swarm/src/lib.rs, crates/datasets/demo-swarm/src/source.rs, crates/datasets/demo-swarm/src/label.rs]
     depends_on: [format, corpus, resource]
     doc: docs/features/dataset-demo-swarm.md

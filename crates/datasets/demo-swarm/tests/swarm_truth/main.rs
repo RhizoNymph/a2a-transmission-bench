@@ -6,11 +6,13 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+mod capture_version;
 mod export;
 mod fixture;
 mod join;
 mod scenario;
 mod sessions;
+mod tool_use;
 mod truth;
 mod window;
 

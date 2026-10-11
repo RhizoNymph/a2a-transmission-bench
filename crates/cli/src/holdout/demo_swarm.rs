@@ -8,7 +8,7 @@
 //! no `bench.env` seed, `--seed` is required. Both given must agree, and
 //! the seed must be the truth header's.
 //!
-//! Runs accumulate, so `splits/demo-swarm@1.holdout.commit` is a list, one
+//! Runs accumulate, so `splits/demo-swarm@<version>.holdout.commit` is a list, one
 //! line per run, sorted by run id:
 //!
 //! ```text
