@@ -4,8 +4,10 @@ Labels for crosstalk's demo swarm: a traffic generator whose agents read
 and write wiki pages through crosstalk's gateway, and which writes its own
 ground truth (`truth.jsonl`, version 2) as it runs. A run is exported as
 `demo-swarm/headline` or `demo-swarm/boilerplate`, as the truth header's
-`scenario` says (missing means `headline`). Version `@1` reproduces
-crosstalk-eval's `swarm` labels at 7f8a2fb (`src/datasets/swarm_truth/`).
+`scenario` says (missing means `headline`). The current version is `@2`,
+which joins truth rows to exchanges by tool use id alone; `@1`
+reproduced crosstalk-eval's `swarm` labels at 7f8a2fb
+(`src/datasets/swarm_truth/`), joined turn first (see "Versions").
 
 The truth is written by the traffic generator, not by any detector, so it
 is a legitimate label source (design §5.3).
@@ -19,8 +21,9 @@ is a legitimate label source (design §5.3).
   world are refused.
 - The run window `[header start − lead, latest row time + slack]`
   (defaults 5 s and 60 s), both ends inclusive.
-- The join of truth rows to the capture's exchanges by session and turn,
-  cross-checked by tool use id and the BLAKE3 of the page body.
+- The join of truth rows to the capture's exchanges by session and tool
+  use id, checked by the BLAKE3 of the page body; the truth's turns are
+  only cross-checked (`turn_mismatch`).
 - Labels for every row kind, each checked against the world as a reader
   checks it, and the typed join-diagnostics table, written as
   `diagnostics.json` beside the labels.
@@ -67,14 +70,15 @@ What the capture must be (the contract with crosstalk's adapter):
 - each exchange carries the gateway's minted id, `at_us` = the exchange's
   start, `client.session` = the harness session id
   (`x-claude-code-session-id`), and `client.turn` = its 0-based ordinal in
-  the session. `client.turn` is only cross-checked (below); the join uses
-  the ordinal computed as ct-eval computed it;
+  the session. `client.turn` is only cross-checked against the ordinal
+  computed as ct-eval computed it (below); neither is used to join;
 - tool results as `tool` messages in request order, the `PUT`'s arguments
   as canonical JSON (the format's normalisation rules), so a result's part
   text is exactly the page body the truth hashes.
 
 - `manifest.json` is the input view the adapter's predictions name
-  (`Manifest::digest`): dataset the truth's, version `@1`, exactly the
+  (`Manifest::digest`): dataset the truth's, version `@2` (this
+  converter's `VERSION`; a capture of another version is refused), exactly the
   truth's world, `selection` equal to the margins used here
   (`run_lead_ms`, `run_slack_ms`), and file digests and exchange count
   that are the capture's own.
@@ -121,7 +125,7 @@ TraceSource::worlds() ──▶ the one World
 write_export(inputs, out_dir, options, bench converter)
   DemoSwarmSource::open (above)
   capture_manifest::read(inputs.manifest) ── missing or not a manifest ─▶ CaptureManifest {Read}
-  capture_manifest::check: an input view; dataset = truth's; version 1; worlds = [truth world];
+  capture_manifest::check: an input view; dataset = truth's; version 2; worlds = [truth world];
                            selection = Options::settings()          ─ else ─▶ CaptureManifest {…}
   Labelling {bench: converter, truth {path as given, BLAKE3 of its bytes}}
   ManifestInfo = the capture's {dataset, version, source, converter, selection, pace}
@@ -165,22 +169,46 @@ digest, which is accepted as for every export.
 
 ### The join (per row)
 
-- **Reader**: session `reader_session`, exchange at ordinal `reader_turn`
-  first, then every other exchange of the session in order; the first one
-  whose request holds a tool result for the call id (the last such result
-  in the request) is the reader exchange. Its text must hash (BLAKE3) to
-  `content.blake3`, else `hash_mismatch` and the row is dropped. Found at
-  another ordinal: `turn_mismatch`, kept. Not found: `turn_out_of_range`
-  when the turn is past the session's exchanges, else `tool_use_missing`;
-  dropped. Unknown session: `unknown_session`, dropped. A result without
-  text, or with empty text: `body`, dropped.
-- **Writer** (transmissions only): session `writer_session`, ordinal
-  `writer_turn` first, the same fallback; the response's tool call with
-  the call id must be a `PUT` with string `method`, `url` and `body`
-  (`not_a_put`) whose `body` hashes to `content.blake3`
-  (`hash_mismatch`). Any failure keeps the label without a sender
-  exchange (`kept_without_sender`).
+Rows are joined by session and tool use id alone; the truth's turns are
+diagnostics only. A reader's tool result is carried again, as history, by
+every later request of its session, so a turn cannot pick among the
+exchanges carrying it: when the session's turn counter ran ahead of the
+capture (a request refused before reaching the gateway, or read but not
+captured during a gateway restart), the exchange at the stated turn
+carries the same result with the same hash, and a turn-first join landed
+the label one exchange late with nothing reported (`@1`; node0 run
+20261007T152245Z: 3 misses and 3 false positives).
+
+- **Reader**: session `reader_session`; the reader exchange is the
+  session's *first* exchange in ordinal order (`at_us`, then id, the order
+  `sessions.rs` numbers) whose request holds a tool result for
+  `content.at.tool_use_id` (`reader_tool_use_id` for a miss, which has no
+  content); within that request, the last such result. Its text must hash
+  (BLAKE3) to `content.blake3`, else `hash_mismatch` and the row is
+  dropped (later exchanges are not tried). Found at another ordinal than
+  `reader_turn`, including a turn past the session's last exchange:
+  `turn_mismatch` (the stated and the found turn), kept. Not held by any
+  exchange of the session: `tool_use_missing`, dropped, whatever the turn.
+  Unknown session: `unknown_session`, dropped. A result without text, or
+  with empty text: `body`, dropped. Transmissions, self-reads, rereads,
+  misses and unattributed reads all go through this join.
+- **Writer** (transmissions only): session `writer_session`; the exchange
+  whose response holds the tool call `writer_tool_use_id`. When more than
+  one response holds it (a retried request), the first is joined and
+  `tool_use_repeated` (noted) reports how many did. The call must be a
+  `PUT` with string `method`, `url` and `body` (`not_a_put`) whose `body`
+  hashes to `content.blake3` (`hash_mismatch`); not held anywhere:
+  `tool_use_missing`. Any failure keeps the label without a sender
+  exchange (`kept_without_sender`). Found at another ordinal than
+  `writer_turn`: `turn_mismatch`, kept.
 - **Location**: the whole text of the reader's tool result part.
+- **No `turn_out_of_range`.** `@1` dropped a row as `turn_out_of_range`
+  when its turn was past the session's exchanges and no exchange held the
+  tool use. A turn no longer decides anything, so that case is
+  `tool_use_missing`, and a turn past the end whose tool use *is* held is
+  one more `turn_mismatch` (kept): the failure was merged away rather
+  than kept as a kept-row diagnostic, since `turn_mismatch` already says
+  both turns.
 
 ### Rows to labels
 
@@ -216,14 +244,14 @@ exchange is kept without it (`invalid_label`, writer side,
 | `src/sessions.rs` | exchanges by session, ordinals | `Sessions` (`index`, `get`), `Session` (`at`, `ordinal`) |
 | `src/locate.rs` | tool results and `PUT` calls in exchanges | `tool_result`, `write_call`, `FoundResult`, `FoundCall`, `LocateError`, `MessageIndex` |
 | `src/resolve/mod.rs` | agents, claims, the row loop | `AgentIndex`, `ResolveCounts` |
-| `src/resolve/join.rs` | reader and writer joins | (crate-internal) |
+| `src/resolve/join.rs` | reader and writer joins by session and tool use id; turns cross-checked | (crate-internal) |
 | `src/resolve/rows.rs` | rows to checked labels (needs from the format's `MatchNeed::through_json_string`) | |
 | `src/resolve/check.rs` | one label against the world | (crate-internal `Checker`) |
 | `src/diagnostics.rs` | the typed join-diagnostics table | `Diagnostic`, `Diagnostics` (`table`, `by_failure`, `render`, `named`), `DiagnosticCount`, `JoinFailure`, `RowKind`, `Side`, `Effect` |
 | `src/label.rs` | labelling one capture | `label`, `Labelled` (`report`), `CaptureCounts`, `DiagnosticsReport`, `LabelError` |
 | `src/source.rs` | trace source, export, diagnostics file | `DemoSwarmSource` (`open`, `labelled`, `into_labelled`, `files_read`, `run`), `Inputs` (`in_dir`; `truth`, `messages`, `exchanges`, `manifest`), `write_export`, `write_holdout_export`, `write_diagnostics`, `Labelling`, `TruthRef`, `read_truth`, `DIAGNOSTICS_FILE`, `Error` |
 | `src/holdout.rs` | the holdout marks on a capture's manifest and the capture digest a holdout export's predictions may name | `CAPTURE_DIGEST_KEY`, `check_capture`, `mark`, `is_holdout`, `capture_view`, `capture_digest`, `HoldoutError` |
-| `tests/swarm_truth/` | ported ct-eval tests over a synthetic capture (`fixture.rs`; `truth`, `join`, `window`, `sessions`, `scenario`, `export`) | |
+| `tests/swarm_truth/` | ported ct-eval tests over a synthetic capture (`fixture.rs`; `truth`, `join`, `tool_use` (the join by tool use id, `@2`), `window`, `sessions`, `scenario`, `export`) | |
 | `tests/real_truth.rs` | ignored: row counts of a real truth file (`DEMO_SWARM_TRUTH`) | |
 
 ## Invariants and constraints
@@ -235,7 +263,8 @@ exchange is kept without it (`invalid_label`, writer side,
   `manifest.json` plus `files.labels` and each world's `labels` and
   `notes`; its `input_view()` equals the capture's manifest and its
   `digest()` is the one the capture's predictions name (tested; on the
-  two saved node0 runs `score` accepts the adapter's predictions). Source,
+  two saved node0 runs `score` accepted the adapter's predictions at `@1`;
+  at `@2` the adapter must write a version-2 capture). Source,
   converter, selection and pace are the capture's; the bench's own
   version and commit and the truth file's path and BLAKE3 are in
   `diagnostics.json` under `labelling`, never in the manifest.
@@ -280,13 +309,9 @@ exchange is kept without it (`invalid_label`, writer side,
   them, exchanges or not.
 - A session's owner is the alphabetically first agent of its `session`
   rows, else of the other rows naming it, not the first in file order.
-- The reader is the *last* matching tool result in the request; the
-  fallback exchange is the first of the session (in ordinal order) that
-  holds one, after the one at the named turn.
+- The reader is the *last* matching tool result in the request.
 - A reader hash mismatch drops the row; a writer hash mismatch keeps it
   without a sender. A miss is joined with no digest check.
-- `turn_out_of_range` versus `tool_use_missing` depends only on whether
-  the named turn is past the session's exchange count.
 - `needs` (the format's `MatchNeed::through_json_string`) is `decoded [json_string]` whenever the body holds a character
   JSON escapes, since the writer's `PUT` carried it escaped, even though
   the reader's tool result is raw.
@@ -307,8 +332,50 @@ exchange is kept without it (`invalid_label`, writer side,
 | labels have no id | `line/<n>`, misses `line/<n>/<sender>` | the format requires unique ids |
 | `Locator::Url {scheme, host, path, query}` | `Resource::Url(<canonical text>)` | the bench's resource shape; same canonical text |
 | — | `client_turn_mismatch` (noted) | cross-checks the adapter's `client.turn` |
+| reader and writer joined at the stated turn first, then the first other exchange holding the tool use | joined by tool use id alone: the first exchange holding it; turns only reported (`@2`) | a later request carries the same tool result as history, so a stale turn joined one exchange late, silently |
+| `turn_out_of_range` (dropped) | `tool_use_missing` when nothing holds the tool use, else `turn_mismatch` (kept) (`@2`) | the turn no longer decides the join |
+| — | `tool_use_repeated` (noted, writer) (`@2`) | the first of several responses holding the `PUT` is joined |
 | detection diagnostics in the same table | not here | the adapter's and the scorer's |
 | `Effect::PredictionsDropped` | removed | detection only |
+
+## Versions
+
+Per the design's versioning rule (§8: bump when a converter change alters
+any exported byte for the same inputs):
+
+| Version | Join | Changed |
+| --- | --- | --- |
+| `@1` | turn first, then the session's first other exchange holding the tool use; `turn_out_of_range` dropped rows | ct-eval's labels at 7f8a2fb |
+| `@2` | tool use id alone; turns only reported | labels move for runs whose truth turns ran ahead of the capture; `turn_out_of_range` is gone (merged into `tool_use_missing` and `turn_mismatch`); `tool_use_repeated` added |
+
+- **Captures carry the version.** The capture's `manifest.json` is the
+  export's input view, so its `dataset_version` must be this converter's
+  (`2`); a `@1` capture is refused (`CaptureManifest {Version}`) before
+  anything is written. crosstalk's adapter writes the version it targets
+  (`ct-bench-detect`'s `DATASET_VERSION`), and its predictions name that
+  manifest's digest.
+- **Gates apply to every version.** A gate names a dataset id without a
+  version (`dataset = "demo-swarm/headline"`), and the scorer matches the
+  dataset id only, so `gates/crosstalk-gateway-export.toml` applies to
+  `@2` exports as it did to `@1`.
+- **Holdout commitments are per version.** The list is
+  `splits/<dataset>@<version>.holdout.commit`: `@2` holdout exports record
+  into `splits/demo-swarm@2.holdout.commit`; `demo-swarm@1.holdout.commit`
+  keeps the `@1` commitments unchanged.
+- **Where turns were right, `@2` is `@1`.** The reader at the right turn
+  is the first exchange carrying the result, so labels are unchanged. On
+  the node0 runs 20261006T020835Z, 20261006T021639Z and the dev trial
+  20261007T025349Z, `labels.jsonl`, `messages.jsonl`, `exchanges.jsonl`
+  and `diagnostics.json` are byte-identical under both versions;
+  `manifest.json` differs in one byte, `"dataset_version": 1` → `2`.
+- **W8 (node0 20261007T152245Z, a gateway restart mid-run).** Under `@1`
+  the gateway export scored recall 0.925 (37 / 40), precision 0.925
+  (3 false), four headline gates failing; under `@2`, with the truth as
+  written, 40 / 40 and 0 false, every gate passing: the result crosstalk
+  got only by shifting the truth's turns. The one row `@1` dropped as
+  `turn_out_of_range` is `tool_use_missing` under `@2`: its `GET` is the
+  response of the session's last captured exchange, and no captured
+  request carries its result.
 
 ## Real-data comparison
 

@@ -112,7 +112,7 @@ export
                demo_swarm::write_holdout_export: capture must be a dev view; same input-view check as dev;
                  then split = holdout, selection.release = the release,
                       selection.capture_digest = the capture manifest's digest (hex)
-               commitment(manifest) ─▶ entry "<run id> <seed> <hex>" in splits/demo-swarm@1.holdout.commit
+               commitment(manifest) ─▶ entry "<run id> <seed> <hex>" in splits/demo-swarm@<version>.holdout.commit
                  (a list sorted by run id): absent ─▶ added; same ─▶ matches; other seed or commitment ─▶ refused
   holdout ─▶ --out outside any git repository (enclosing_repository), else refused
   datasets.toml (--config, else the repo's, else DEFAULT) ─▶ data root (--root overrides)
@@ -247,7 +247,8 @@ diff
   `score` and `validate` accept only for a demo-swarm holdout export and
   only after rebuilding the capture view from the export (marks undone)
   and finding the recorded digest equal. Any other digest is refused. The
-  commitment list `splits/demo-swarm@1.holdout.commit` holds one line per
+  commitment list `splits/demo-swarm@<version>.holdout.commit` (`@2` now;
+  the `@1` list keeps `@1`'s commitments) holds one line per
   run, `<run id> <seed> <commitment hex>`, sorted by run id, the
   commitment being the usual one over the run's one world key and labels
   digest; a listed run must come back with the same seed and commitment.
