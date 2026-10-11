@@ -21,12 +21,13 @@ use a2a_bench_format::manifest::Converter;
 
 use serde::Serialize;
 
-use crate::Options;
 use crate::capture::{self, CaptureError};
 use crate::capture_manifest::{self, CAPTURE_MANIFEST_FILE, CaptureManifestError};
+use crate::capture_view::{self, CaptureViewError};
 use crate::holdout::{self, HoldoutError};
 use crate::label::{DiagnosticsReport, LabelError, Labelled, label};
 use crate::truth_file::{self, TruthFile, TruthFileError};
+use crate::{Options, VERSION};
 
 /// The file the diagnostics report is written to, beside the labels.
 pub const DIAGNOSTICS_FILE: &str = "diagnostics.json";
@@ -65,6 +66,10 @@ pub enum Error {
     NotTheCapture { paths: Vec<String> },
     #[error("the holdout export: {0}")]
     Holdout(#[from] HoldoutError),
+    #[error("recording the capture view: {0}")]
+    CaptureView(#[from] CaptureViewError),
+    #[error("the recorded capture view does not digest to the capture's manifest")]
+    CaptureViewNotTheCapture,
     #[error("encoding {DIAGNOSTICS_FILE}: {0}")]
     Encode(serde_json::Error),
     #[error("removing {path}: {source}")]
@@ -239,8 +244,11 @@ fn truth_ref(path: &Path, at: &Path) -> Result<TruthRef, Error> {
 /// The bench only adds truth: the manifest is the capture's
 /// (`inputs.manifest`, an input view) plus the labels digest and each
 /// world's label count and notes, so its input view, and the digest the
-/// capture's predictions name, are the capture's. A capture manifest that
-/// is missing, not an input view, of another dataset, version or world, or
+/// capture's predictions name, are the capture's. A capture at an older
+/// dataset version is exported at [`VERSION`], recording the capture's
+/// digest and version ([`capture_view::record`]) so its predictions still
+/// score. A capture manifest that is missing, not an input view, of
+/// another dataset or world, of a newer version, or
 /// cut with other margins than `options` is refused before anything is
 /// written; an export whose input view still differs (the capture holds
 /// more than the labelled run, or its digests are not its files') is
@@ -258,7 +266,8 @@ pub fn write_export(
 /// [`write_export`] for a holdout run and `release`: the same checks
 /// against the capture (its input view must equal the capture's), then the
 /// manifest is marked as the release's holdout ([`holdout::mark`]: `split:
-/// holdout`, `selection.release`, `selection.capture_digest`). The capture
+/// holdout`, `selection.release`; [`capture_view::record`]:
+/// `selection.capture_digest`, and the capture's version if older). The capture
 /// must be a dev view. Whether the run is a holdout run (its seed) and the
 /// commitment are the caller's.
 pub fn write_holdout_export(
@@ -301,7 +310,7 @@ fn write(
     };
     let info = ManifestInfo {
         dataset: capture.dataset.clone(),
-        dataset_version: capture.dataset_version,
+        dataset_version: VERSION,
         source: capture.source.clone(),
         converter: capture.converter.clone(),
         selection: capture.selection.clone(),
@@ -323,6 +332,13 @@ fn write(
     }
     if let Some(release) = release {
         holdout::mark(&mut exported.manifest, &capture, release)?;
+    }
+    if release.is_some() || capture.dataset_version != VERSION {
+        capture_view::record(&mut exported.manifest, &capture)?;
+        let capture_digest = capture.digest().map_err(CaptureViewError::Digest)?;
+        if capture_view::capture_digest(&exported.manifest)? != Some(capture_digest) {
+            return Err(Error::CaptureViewNotTheCapture);
+        }
     }
     write_manifest(out_dir, &exported.manifest)?;
     write_diagnostics(out_dir, source.labelled(), options, &labelling)?;

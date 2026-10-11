@@ -338,7 +338,7 @@ pub fn validate(args: &ValidateArgs) -> Result<ValidateReport, ValidateError> {
         }
     }
     if let Some(reader) = predictions.as_ref().and_then(|p| p.reader.as_ref()) {
-        let capture = a2a_bench_dataset_demo_swarm::holdout::capture_digest(&manifest);
+        let capture = a2a_bench_dataset_demo_swarm::capture_view::capture_digest(&manifest);
         if let Err(error) = &capture {
             findings.push(Finding {
                 file: "manifest.json",

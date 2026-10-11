@@ -13,8 +13,9 @@
 //! swarm-traces is always scored with `--examples 0` (its labels are real
 //! attack payloads). A holdout export needs `--holdout-release`, a detector
 //! at that tag and an output outside any git repository, and gets an
-//! aggregate-only report. A demo-swarm holdout export also accepts
-//! predictions naming the capture it was made from
+//! aggregate-only report. A demo-swarm export that records the capture it
+//! was made from (a holdout, or a capture at an older dataset version)
+//! also accepts predictions naming that capture
 //! (`selection.capture_digest`, checked against the export).
 
 use std::fs::File;
@@ -29,7 +30,7 @@ use a2a_bench_score::report::{Disclosure, Report, ReportError};
 use a2a_bench_score::run::{DEFAULT_EXAMPLES, RunError, ScoreOptions, score_export};
 use clap::Args;
 
-use a2a_bench_dataset_demo_swarm::holdout::{self as swarm_holdout, HoldoutError as CaptureError};
+use a2a_bench_dataset_demo_swarm::capture_view::{self, CaptureViewError as CaptureError};
 
 use crate::canon::ResourceCanon;
 use crate::holdout::{self, HoldoutError};
@@ -152,7 +153,7 @@ pub fn score(request: &ScoreRequest<'_>) -> Result<Report, ScoreError> {
         ScoreOptions {
             example_cap: examples,
             canonicalizer: Box::new(ResourceCanon),
-            capture_digest: swarm_holdout::capture_digest(&manifest)?,
+            capture_digest: capture_view::capture_digest(&manifest)?,
             ..ScoreOptions::default()
         },
     )?;
