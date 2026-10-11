@@ -49,7 +49,8 @@ rules mean what they meant there (crosstalk `docs/features/eval.md`,
 run::score_export(export dir, predictions path, ScoreOptions)
   read manifest.json ──▶ Manifest::digest ──▶ options.manifest_digest
   (the predictions may instead name options.capture_digest, when the caller gives one:
-   the CLI does for a demo-swarm holdout export)
+   the CLI does for a demo-swarm export that records its capture: a holdout,
+   or one made from a capture at an older dataset version)
                      ──▶ manifest.files   ──▶ options.file_digests
   run::score_streams(Streams { messages, exchanges, labels, predictions })
     FileReader::open × 4 (headers: file kind, format) ─ datasets equal, predictions' manifest_digest equal

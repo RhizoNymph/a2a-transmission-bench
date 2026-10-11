@@ -30,11 +30,13 @@ is a legitimate label source (design §5.3).
 - A `TraceSource` of the one labelled world, and `write_export`, which
   completes the export (the corpus export writer, the capture's manifest
   kept as the export's input view, then `diagnostics.json` with the
-  bench's labelling provenance).
+  bench's labelling provenance). A capture at an older dataset version
+  is exported at this converter's, recording the capture's digest and
+  version (`capture_view`).
 - `write_holdout_export`: the same export marked as one release's
-  holdout (a whole run is demo-swarm's holdout unit, design §9.2), and the
-  capture digest a holdout export's predictions may name
-  (`holdout::capture_digest`).
+  holdout (a whole run is demo-swarm's holdout unit, design §9.2).
+- The capture digest an export's predictions may name instead of its own
+  (`capture_view::capture_digest`), for a holdout or an older capture.
 
 ## Non-scope
 
@@ -77,8 +79,9 @@ What the capture must be (the contract with crosstalk's adapter):
   text is exactly the page body the truth hashes.
 
 - `manifest.json` is the input view the adapter's predictions name
-  (`Manifest::digest`): dataset the truth's, version `@2` (this
-  converter's `VERSION`; a capture of another version is refused), exactly the
+  (`Manifest::digest`): dataset the truth's, a dataset version from 1 to
+  this converter's `VERSION` (`@2`; a newer one, or 0, is refused), no
+  `capture_digest` or `capture_dataset_version` in its selection, exactly the
   truth's world, `selection` equal to the margins used here
   (`run_lead_ms`, `run_slack_ms`), and file digests and exchange count
   that are the capture's own.
@@ -125,33 +128,57 @@ TraceSource::worlds() ──▶ the one World
 write_export(inputs, out_dir, options, bench converter)
   DemoSwarmSource::open (above)
   capture_manifest::read(inputs.manifest) ── missing or not a manifest ─▶ CaptureManifest {Read}
-  capture_manifest::check: an input view; dataset = truth's; version 2; worlds = [truth world];
-                           selection = Options::settings()          ─ else ─▶ CaptureManifest {…}
+  capture_manifest::check: an input view; dataset = truth's; version 1..=VERSION
+                           (else Version); no capture keys in selection (else Reserved);
+                           worlds = [truth world]; selection = Options::settings()
+                                                            ─ else ─▶ CaptureManifest {…}
   Labelling {bench: converter, truth {path as given, BLAKE3 of its bytes}}
-  ManifestInfo = the capture's {dataset, version, source, converter, selection, pace}
+  ManifestInfo = the capture's {dataset, source, converter, selection, pace}, version VERSION
   corpus::export(source, out_dir, info, Unsplit) ──▶ messages, exchanges, labels,
                                                     manifest (world notes = diagnostics by failure)
   manifest.selection, split = the capture's (drops the split's split_list)
-  capture_manifest::differences(manifest.input_view(), capture)
+  capture_manifest::differences(manifest.input_view() at the capture's version, capture)
       any ─▶ manifest.json removed, NotTheCapture {top-level paths}
-  write_manifest ──▶ manifest.json (input view = the capture's; same digest)
+  capture older than VERSION (or a holdout, below): capture_view::record
+    selection.capture_digest ─▶ the capture manifest's Manifest::digest (hex)
+    selection.capture_dataset_version ─▶ the capture's version (only when older)
+    capture_view::capture_digest(manifest) must be that digest (self-check)
+  write_manifest ──▶ manifest.json (input view = the capture's, or records it)
   write_diagnostics(…, labelling) ──▶ diagnostics.json {labelling, report…}
 
 write_holdout_export(inputs, out_dir, options, bench converter, release)
-  as write_export, plus: holdout::check_capture (split dev, no release or
-  capture_digest in its selection) before anything is written; after the
-  input-view comparison, holdout::mark:
+  as write_export, plus: holdout::check_capture (split dev, no release in
+  its selection) before anything is written; after the input-view
+  comparison, holdout::mark:
     split ─▶ holdout
     selection.release ─▶ release ("<detector>@<version>")
-    selection.capture_digest ─▶ the capture manifest's Manifest::digest (hex)
+  then capture_view::record as above (always, for a holdout)
   ─▶ manifest.json; diagnostics.json as for dev
 
-holdout::capture_digest(export manifest)
-  not split holdout of demo-swarm/<scenario> ─▶ None
-  selection.capture_digest missing or not a digest ─▶ error
-  capture_view(export) = input view, split dev, release and capture_digest removed
-  its digest ≠ the recorded one ─▶ error; else Some(recorded)
+capture_view::capture_digest(export manifest)        (score and validate)
+  not demo-swarm/<scenario> ─▶ None
+  no selection.capture_digest: holdout, or capture_dataset_version present ─▶ Missing;
+                               else ─▶ None (the input view is the capture's)
+  capture_digest not a digest, capture_dataset_version not an integer ─▶ Malformed
+  capture_view(export) = input view; holdout: split dev, release removed;
+    capture_digest removed; capture_dataset_version removed and set as the
+    view's version (must be 1 ≤ v < the export's version, else Version)
+  its digest ≠ the recorded one ─▶ Mismatch; else Some(recorded)
 ```
+
+### Exports that record the capture
+
+The adapter writes the capture with the dataset version it knows, and its
+predictions name that manifest's digest; the bench must not rewrite them.
+A label fix bumps only this converter's version: the capture's messages
+and exchanges are the same, so neither the adapter nor its captures
+(holdouts included) have to change. An export made from an older capture
+is at this converter's version and records the capture's digest
+(`selection.capture_digest`) and version
+(`selection.capture_dataset_version`), so the scorer can accept the
+capture's predictions. A capture at the converter's version needs neither
+(its export's input view is the capture's manifest), unless the export is
+a holdout.
 
 ### Holdout exports
 
@@ -159,8 +186,9 @@ A demo-swarm holdout is a whole run (a fresh node0 run with a seed of at
 least 1,000,000), not a world of a dev list's complement. The adapter
 writes the capture as a dev input view and its predictions name that
 view's digest; the bench must not rewrite them. So the holdout export's
-manifest differs from the capture's only in `split` and the two holdout
-selection entries, and records the capture's digest
+manifest differs from the capture's only in `split`, `selection.release`,
+the dataset version (an older capture's, recorded as above) and the
+capture keys, and records the capture's digest
 (`selection.capture_digest`) so the scorer can accept predictions that
 name it. That digest is never trusted as written: it must equal the digest
 of the capture view rebuilt from the export. A detector run on the
@@ -250,8 +278,9 @@ exchange is kept without it (`invalid_label`, writer side,
 | `src/diagnostics.rs` | the typed join-diagnostics table | `Diagnostic`, `Diagnostics` (`table`, `by_failure`, `render`, `named`), `DiagnosticCount`, `JoinFailure`, `RowKind`, `Side`, `Effect` |
 | `src/label.rs` | labelling one capture | `label`, `Labelled` (`report`), `CaptureCounts`, `DiagnosticsReport`, `LabelError` |
 | `src/source.rs` | trace source, export, diagnostics file | `DemoSwarmSource` (`open`, `labelled`, `into_labelled`, `files_read`, `run`), `Inputs` (`in_dir`; `truth`, `messages`, `exchanges`, `manifest`), `write_export`, `write_holdout_export`, `write_diagnostics`, `Labelling`, `TruthRef`, `read_truth`, `DIAGNOSTICS_FILE`, `Error` |
-| `src/holdout.rs` | the holdout marks on a capture's manifest and the capture digest a holdout export's predictions may name | `CAPTURE_DIGEST_KEY`, `check_capture`, `mark`, `is_holdout`, `capture_view`, `capture_digest`, `HoldoutError` |
-| `tests/swarm_truth/` | ported ct-eval tests over a synthetic capture (`fixture.rs`; `truth`, `join`, `tool_use` (the join by tool use id, `@2`), `window`, `sessions`, `scenario`, `export`) | |
+| `src/holdout.rs` | the holdout marks on a capture's manifest (split, release) | `check_capture`, `mark`, `HoldoutError` |
+| `src/capture_view.rs` | the capture's digest and version recorded in an export whose input view is not the capture's, and the capture digest its predictions may name | `CAPTURE_DIGEST_KEY`, `CAPTURE_VERSION_KEY`, `record`, `capture_view`, `capture_digest`, `CaptureViewError` |
+| `tests/swarm_truth/` | ported ct-eval tests over a synthetic capture (`fixture.rs`; `truth`, `join`, `tool_use` (the join by tool use id, `@2`), `capture_version` (older captures exported at the current version), `window`, `sessions`, `scenario`, `export`) | |
 | `tests/real_truth.rs` | ignored: row counts of a real truth file (`DEMO_SWARM_TRUTH`) | |
 
 ## Invariants and constraints
@@ -263,15 +292,20 @@ exchange is kept without it (`invalid_label`, writer side,
   `manifest.json` plus `files.labels` and each world's `labels` and
   `notes`; its `input_view()` equals the capture's manifest and its
   `digest()` is the one the capture's predictions name (tested; on the
-  two saved node0 runs `score` accepted the adapter's predictions at `@1`;
-  at `@2` the adapter must write a version-2 capture). Source,
+  two saved node0 runs `score` accepts the adapter's predictions). A
+  capture at an older dataset version is the one exception: the export
+  is at this converter's version and records the capture's digest and
+  version, from which the capture's manifest is rebuilt exactly. Source,
   converter, selection and pace are the capture's; the bench's own
   version and commit and the truth file's path and BLAKE3 are in
   `diagnostics.json` under `labelling`, never in the manifest.
-- **A holdout export is the capture marked, nothing else.** Its input
+- **A recorded capture is never trusted as written.** An export's input
   view equals the capture's but for `split` (dev → holdout),
-  `selection.release` and `selection.capture_digest`; the recorded capture
-  digest must be the digest of that view with the marks undone.
+  `selection.release`, the dataset version and the capture keys; the
+  recorded capture digest must be the digest of that view with all of
+  them undone (the version set back to `capture_dataset_version`, which
+  must be older than the export's). A tampered digest or version is
+  refused by `score` and `validate`.
 - **Exchange ids are the gateway's**, carried; exchanges are copied from
   the capture verbatim (client included). A capture holding exactly the
   run gives back its `messages.jsonl` byte for byte.
@@ -348,12 +382,13 @@ any exported byte for the same inputs):
 | `@1` | turn first, then the session's first other exchange holding the tool use; `turn_out_of_range` dropped rows | ct-eval's labels at 7f8a2fb |
 | `@2` | tool use id alone; turns only reported | labels move for runs whose truth turns ran ahead of the capture; `turn_out_of_range` is gone (merged into `tool_use_missing` and `turn_mismatch`); `tool_use_repeated` added |
 
-- **Captures carry the version.** The capture's `manifest.json` is the
-  export's input view, so its `dataset_version` must be this converter's
-  (`2`); a `@1` capture is refused (`CaptureManifest {Version}`) before
-  anything is written. crosstalk's adapter writes the version it targets
-  (`ct-bench-detect`'s `DATASET_VERSION`), and its predictions name that
-  manifest's digest.
+- **`@1` captures are accepted at `@2`.** crosstalk's adapter writes
+  `dataset_version: 1` (`ct-bench-detect`'s `DATASET_VERSION`) and need
+  not change: the export is `@2` and records the capture's digest and
+  version, and the adapter's unmodified predictions score against it
+  ("Exports that record the capture"). A capture newer than the
+  converter is refused (`CaptureManifest {Version}`) before anything is
+  written.
 - **Gates apply to every version.** A gate names a dataset id without a
   version (`dataset = "demo-swarm/headline"`), and the scorer matches the
   dataset id only, so `gates/crosstalk-gateway-export.toml` applies to
@@ -365,13 +400,18 @@ any exported byte for the same inputs):
 - **Where turns were right, `@2` is `@1`.** The reader at the right turn
   is the first exchange carrying the result, so labels are unchanged. On
   the node0 runs 20261006T020835Z, 20261006T021639Z and the dev trial
-  20261007T025349Z, `labels.jsonl`, `messages.jsonl`, `exchanges.jsonl`
-  and `diagnostics.json` are byte-identical under both versions;
-  `manifest.json` differs in one byte, `"dataset_version": 1` → `2`.
+  20261007T025349Z, from their original `@1` captures, `labels.jsonl`,
+  `messages.jsonl` and `exchanges.jsonl` are byte-identical under both
+  versions, and `diagnostics.json` differs only in the bench commit under
+  `labelling`. `manifest.json` differs in `"dataset_version": 1` → `2` and
+  the two recorded entries, `capture_dataset_version: 1` and
+  `capture_digest` (the capture's). Scores of the adapter's predictions
+  are the same.
 - **W8 (node0 20261007T152245Z, a gateway restart mid-run).** Under `@1`
   the gateway export scored recall 0.925 (37 / 40), precision 0.925
   (3 false), four headline gates failing; under `@2`, with the truth as
-  written, 40 / 40 and 0 false, every gate passing: the result crosstalk
+  written and the original capture and predictions, 40 / 40 and 0 false,
+  every gate passing: the result crosstalk
   got only by shifting the truth's turns. The one row `@1` dropped as
   `turn_out_of_range` is `tool_use_missing` under `@2`: its `GET` is the
   response of the session's last captured exchange, and no captured

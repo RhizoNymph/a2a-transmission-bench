@@ -103,6 +103,9 @@ export
   demo-swarm ─▶ Inputs {root: deepest dir holding inputs and truth, truth, messages, exchanges, manifest}
              ─▶ demo_swarm::write_export(…, bench converter): manifest = the capture's manifest.json
                 (source, converter, selection, revision = run id) + labels; bench provenance in diagnostics.json
+                capture version < converter VERSION (e.g. ct-bench-detect's @1): exported at VERSION,
+                  selection.capture_digest + selection.capture_dataset_version recorded;
+                capture version > VERSION ─▶ refused
              holdout (--split holdout --release <detector>@<version>):
                --out outside any git repository, else refused (before anything is read)
                truth header ─▶ run id, seed
@@ -112,6 +115,7 @@ export
                demo_swarm::write_holdout_export: capture must be a dev view; same input-view check as dev;
                  then split = holdout, selection.release = the release,
                       selection.capture_digest = the capture manifest's digest (hex)
+                      (+ selection.capture_dataset_version for an older capture)
                commitment(manifest) ─▶ entry "<run id> <seed> <hex>" in splits/demo-swarm@<version>.holdout.commit
                  (a list sorted by run id): absent ─▶ added; same ─▶ matches; other seed or commitment ─▶ refused
   holdout ─▶ --out outside any git repository (enclosing_repository), else refused
@@ -151,9 +155,11 @@ run
 score
   read_manifest ─▶ run_release; holdout: header version = tag (tagged_detector), --out outside repos, Disclosure::Holdout
   examples = 0 for swarm-traces
-  demo_swarm::holdout::capture_digest(manifest): a demo-swarm holdout export's selection.capture_digest,
-    which must equal the digest of its capture view (input view, split dev, release and
-    capture_digest removed), else refused; None for every other export
+  demo_swarm::capture_view::capture_digest(manifest): a demo-swarm export's selection.capture_digest
+    (required for a holdout or when capture_dataset_version is present), which must equal the
+    digest of its capture view (input view; holdout: split dev, release removed; capture keys
+    removed; version = capture_dataset_version, which must be older than the export's), else
+    refused; None for other datasets and for a dev export recording none (same in validate)
   score_export(export, predictions, ScoreOptions {canonicalizer: ResourceCanon, example_cap, capture_digest})
     predictions' manifest_digest = the export's, or the capture digest
   GateSearch::from_env(--gates).load() ─▶ for_run(detector.name, variant).evaluate(score)
@@ -239,20 +245,30 @@ diff
 - **demo-swarm holdouts are whole runs.** A run is a holdout run when its
   seed (from `bench.env`, else `--seed`; equal to the truth header's) is at
   least 1,000,000; anything else is refused before any file is written.
-  The export is the capture's manifest plus labels, with exactly three
-  marks: `split: holdout`, `selection.release` and
-  `selection.capture_digest` (the capture manifest's `Manifest::digest`).
-  Its input view therefore has its own digest, which a detector run on it
-  (`run`) names; the adapter's predictions name the capture's, which
-  `score` and `validate` accept only for a demo-swarm holdout export and
-  only after rebuilding the capture view from the export (marks undone)
-  and finding the recorded digest equal. Any other digest is refused. The
+  The export is the capture's manifest plus labels, with the marks
+  `split: holdout`, `selection.release` and `selection.capture_digest`
+  (the capture manifest's `Manifest::digest`), plus
+  `selection.capture_dataset_version` and the converter's version when
+  the capture is older. Its input view therefore has its own digest,
+  which a detector run on it (`run`) names; the adapter's predictions
+  name the capture's, which `score` and `validate` accept only after
+  rebuilding the capture view from the export (marks undone) and finding
+  the recorded digest equal. Any other digest is refused. The
   commitment list `splits/demo-swarm@<version>.holdout.commit` (`@2` now;
   the `@1` list keeps `@1`'s commitments) holds one line per
   run, `<run id> <seed> <commitment hex>`, sorted by run id, the
   commitment being the usual one over the run's one world key and labels
   digest; a listed run must come back with the same seed and commitment.
   `--seed` on a dev export is refused; dev exports are otherwise as before.
+- **demo-swarm captures at an older dataset version.** A label fix bumps
+  only the converter's version, so crosstalk's adapter and its captures
+  need not change: a `@1` capture exports at `@2` (dev or holdout),
+  recording `selection.capture_digest` and
+  `selection.capture_dataset_version`, and the adapter's unmodified
+  predictions score through the same capture-view check as a holdout's.
+  A capture at the converter's version records nothing on a dev export
+  (its input view is the capture's); one newer than the converter is
+  refused.
 - **Releases.** `<detector>@<version>` splits at the first `@`; the
   version may hold `:` (crosstalk's gateway export is versioned by image
   digest, `crosstalk-gateway-export@sha256:…`), not `@`, `/` or `\`.
