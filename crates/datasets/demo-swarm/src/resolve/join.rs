@@ -1,5 +1,15 @@
-//! Joining a row's reader and writer to captured exchanges: session, turn,
-//! tool use id, then the BLAKE3 of the content.
+//! Joining a row's reader and writer to captured exchanges: by session and
+//! tool use id alone, then the BLAKE3 of the content. The truth's turns
+//! are only cross-checked against the exchange found (`turn_mismatch`).
+//!
+//! A reader's tool result is carried again, as history, by every later
+//! request of its session, so the reader is the session's *first* exchange
+//! (in ordinal order) whose request holds it. A turn is never trusted to
+//! pick among the carrying exchanges: when the session's turn counter ran
+//! ahead of the capture (a request refused before the gateway, or one not
+//! captured), the exchange at the stated turn carries the same result with
+//! the same hash, and a turn-first join would land one exchange late
+//! without a mismatch to show for it.
 
 use a2a_bench_format::exchange::Exchange;
 use a2a_bench_format::ids::ExchangeId;
@@ -27,21 +37,64 @@ pub(crate) struct ReadJoin {
     pub found: FoundResult,
 }
 
-/// The session's exchange at `turn` first, then every other in order.
-fn candidates(session: &Session, turn: u32) -> impl Iterator<Item = &Exchange> {
-    let at_turn = session.at(turn);
-    let skip = at_turn.map(|at| at.id);
-    at_turn.into_iter().chain(
-        session
-            .exchanges
-            .iter()
-            .filter(move |exchange| Some(exchange.id) != skip),
-    )
+/// What a session holds of one tool use.
+enum Held<'e, T> {
+    /// The first exchange holding it, what was found there, and how many
+    /// exchanges hold it.
+    Found {
+        exchange: &'e Exchange,
+        found: T,
+        holding: usize,
+    },
+    NotFound,
+    /// An exchange the search reached could not be read.
+    Failed {
+        exchange: &'e Exchange,
+        error: LocateError,
+    },
+}
+
+/// The session's first exchange, in ordinal order, for which `find` finds
+/// something; with `count_all`, every exchange is searched to count those
+/// holding it, else the search stops at the first.
+fn first_holding<'e, T>(
+    session: &'e Session,
+    count_all: bool,
+    mut find: impl FnMut(&Exchange) -> Result<Option<T>, LocateError>,
+) -> Held<'e, T> {
+    let mut first: Option<(&Exchange, T)> = None;
+    let mut holding = 0;
+    for exchange in &session.exchanges {
+        match find(exchange) {
+            Ok(Some(found)) => {
+                holding += 1;
+                if first.is_none() {
+                    first = Some((exchange, found));
+                }
+                if !count_all {
+                    break;
+                }
+            }
+            Ok(None) => {}
+            // Past the first holding exchange, a failure only ends the count.
+            Err(_) if first.is_some() => break,
+            Err(error) => return Held::Failed { exchange, error },
+        }
+    }
+    match first {
+        Some((exchange, found)) => Held::Found {
+            exchange,
+            found,
+            holding,
+        },
+        None => Held::NotFound,
+    }
 }
 
 impl Resolver<'_> {
-    /// Joins a read: the tool result `call` at `turn` of `session`, checked
-    /// against `digest` when given.
+    /// Joins a read: the first exchange of `session` whose request holds
+    /// the tool result `call`, checked against `digest` when given. `turn`
+    /// is the truth's, only cross-checked.
     pub(crate) fn read(
         &mut self,
         line: usize,
@@ -64,45 +117,6 @@ impl Resolver<'_> {
             );
             return None;
         };
-        for exchange in candidates(session, turn) {
-            let found = match tool_result(exchange, call, self.messages) {
-                Ok(Some(found)) => found,
-                Ok(None) => continue,
-                Err(error) => {
-                    self.body_failure(line, row, Side::Reader, exchange, &error, Effect::Dropped);
-                    return None;
-                }
-            };
-            let id = exchange.id;
-            if digest.is_some_and(|digest| digest != found.digest()) {
-                self.report(
-                    line,
-                    row,
-                    Side::Reader,
-                    JoinFailure::HashMismatch {
-                        session: session_id.to_owned(),
-                        turn,
-                        tool_use_id: call.to_owned(),
-                        exchange: id,
-                    },
-                    Effect::Dropped,
-                );
-                return None;
-            }
-            let site = Site {
-                line,
-                row,
-                side: Side::Reader,
-                session_id,
-                session,
-                turn,
-            };
-            self.check_turn(&site, id, Effect::Kept);
-            return Some(ReadJoin {
-                exchange: id,
-                found,
-            });
-        }
         let site = Site {
             line,
             row,
@@ -111,12 +125,49 @@ impl Resolver<'_> {
             session,
             turn,
         };
-        self.not_found(&site, call, Effect::Dropped);
-        None
+        let messages = self.messages;
+        let (exchange, found) = match first_holding(session, false, |exchange| {
+            tool_result(exchange, call, messages)
+        }) {
+            Held::Found {
+                exchange, found, ..
+            } => (exchange, found),
+            Held::NotFound => {
+                self.not_found(&site, call, Effect::Dropped);
+                return None;
+            }
+            Held::Failed { exchange, error } => {
+                self.body_failure(line, row, Side::Reader, exchange, &error, Effect::Dropped);
+                return None;
+            }
+        };
+        let id = exchange.id;
+        if digest.is_some_and(|digest| digest != found.digest()) {
+            self.report(
+                line,
+                row,
+                Side::Reader,
+                JoinFailure::HashMismatch {
+                    session: session_id.to_owned(),
+                    turn,
+                    tool_use_id: call.to_owned(),
+                    exchange: id,
+                },
+                Effect::Dropped,
+            );
+            return None;
+        }
+        self.check_turn(&site, id, Effect::Kept);
+        Some(ReadJoin {
+            exchange: id,
+            found,
+        })
     }
 
-    /// Joins a transmission's write: the sender's exchange, or `None` (and
-    /// a diagnostic) when it cannot be joined.
+    /// Joins a transmission's write: the exchange whose response holds the
+    /// `PUT` tool use `writer_tool_use_id` (the first, reported, when more
+    /// than one does), or `None` (and a diagnostic) when it cannot be
+    /// joined.
     pub(crate) fn write(&mut self, line: usize, row: &Delivery) -> Option<ExchangeId> {
         let kind = RowKind::Transmission;
         let effect = Effect::KeptWithoutSender;
@@ -136,56 +187,6 @@ impl Resolver<'_> {
             );
             return None;
         };
-        for exchange in candidates(session, turn) {
-            let id = exchange.id;
-            let body = match write_call(exchange, call, self.messages) {
-                Ok(Some(FoundCall::Put { body, .. })) => body,
-                Ok(Some(FoundCall::NotAPut)) => {
-                    self.report(
-                        line,
-                        kind,
-                        Side::Writer,
-                        JoinFailure::NotAPut {
-                            session: session_id.clone(),
-                            tool_use_id: call.clone(),
-                            exchange: id,
-                        },
-                        effect,
-                    );
-                    return None;
-                }
-                Ok(None) => continue,
-                Err(error) => {
-                    self.body_failure(line, kind, Side::Writer, exchange, &error, effect);
-                    return None;
-                }
-            };
-            if HexDigest::blake3_of(body.as_bytes()) != row.content.blake3 {
-                self.report(
-                    line,
-                    kind,
-                    Side::Writer,
-                    JoinFailure::HashMismatch {
-                        session: session_id.clone(),
-                        turn,
-                        tool_use_id: call.clone(),
-                        exchange: id,
-                    },
-                    effect,
-                );
-                return None;
-            }
-            let site = Site {
-                line,
-                row: kind,
-                side: Side::Writer,
-                session_id,
-                session,
-                turn,
-            };
-            self.check_turn(&site, id, Effect::Kept);
-            return Some(id);
-        }
         let site = Site {
             line,
             row: kind,
@@ -194,10 +195,77 @@ impl Resolver<'_> {
             session,
             turn,
         };
-        self.not_found(&site, call, effect);
-        None
+        let messages = self.messages;
+        let (exchange, found, holding) = match first_holding(session, true, |exchange| {
+            write_call(exchange, call, messages)
+        }) {
+            Held::Found {
+                exchange,
+                found,
+                holding,
+            } => (exchange, found, holding),
+            Held::NotFound => {
+                self.not_found(&site, call, effect);
+                return None;
+            }
+            Held::Failed { exchange, error } => {
+                self.body_failure(line, kind, Side::Writer, exchange, &error, effect);
+                return None;
+            }
+        };
+        let id = exchange.id;
+        if holding > 1 {
+            self.report(
+                line,
+                kind,
+                Side::Writer,
+                JoinFailure::ToolUseRepeated {
+                    session: session_id.clone(),
+                    tool_use_id: call.clone(),
+                    exchanges: holding,
+                    exchange: id,
+                },
+                Effect::Noted,
+            );
+        }
+        let body = match found {
+            FoundCall::Put { body, .. } => body,
+            FoundCall::NotAPut => {
+                self.report(
+                    line,
+                    kind,
+                    Side::Writer,
+                    JoinFailure::NotAPut {
+                        session: session_id.clone(),
+                        tool_use_id: call.clone(),
+                        exchange: id,
+                    },
+                    effect,
+                );
+                return None;
+            }
+        };
+        if HexDigest::blake3_of(body.as_bytes()) != row.content.blake3 {
+            self.report(
+                line,
+                kind,
+                Side::Writer,
+                JoinFailure::HashMismatch {
+                    session: session_id.clone(),
+                    turn,
+                    tool_use_id: call.clone(),
+                    exchange: id,
+                },
+                effect,
+            );
+            return None;
+        }
+        self.check_turn(&site, id, Effect::Kept);
+        Some(id)
     }
 
+    /// Reports the truth's turn when it is not the found exchange's
+    /// ordinal; the join stands either way.
     fn check_turn(&mut self, site: &Site<'_>, found: ExchangeId, effect: Effect) {
         let found_turn = site.session.ordinal(found).unwrap_or(u32::MAX);
         if found_turn != site.turn {
@@ -217,21 +285,17 @@ impl Resolver<'_> {
     }
 
     fn not_found(&mut self, site: &Site<'_>, call: &str, effect: Effect) {
-        let exchanges = site.session.exchanges.len();
-        let failure = if usize::try_from(site.turn).map_or(true, |turn| turn >= exchanges) {
-            JoinFailure::TurnOutOfRange {
-                session: site.session_id.to_owned(),
-                turn: site.turn,
-                exchanges,
-            }
-        } else {
+        self.report(
+            site.line,
+            site.row,
+            site.side,
             JoinFailure::ToolUseMissing {
                 session: site.session_id.to_owned(),
                 turn: site.turn,
                 tool_use_id: call.to_owned(),
-            }
-        };
-        self.report(site.line, site.row, site.side, failure, effect);
+            },
+            effect,
+        );
     }
 
     fn body_failure(

@@ -18,6 +18,7 @@ use std::process::Output;
 
 use a2a_bench_cli::holdout::demo_swarm::bench_env_seed;
 use a2a_bench_corpus::split::Release;
+use a2a_bench_dataset_demo_swarm::VERSION;
 use a2a_bench_format::files::Predictions;
 use a2a_bench_format::ids::Digest;
 use a2a_bench_format::jsonl::{FileReader, FileWriter};
@@ -59,7 +60,8 @@ impl Setup {
     }
 
     fn commit(&self) -> PathBuf {
-        self.splits().join("demo-swarm@1.holdout.commit")
+        self.splits()
+            .join(format!("demo-swarm@{VERSION}.holdout.commit"))
     }
 
     fn out(&self, name: &str) -> PathBuf {

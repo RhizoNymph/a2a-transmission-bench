@@ -158,6 +158,9 @@ pub struct Shape {
     pub turn_offset: u32,
     /// An exchange of a session no truth row names (an unrelated client).
     pub stranger: bool,
+    /// a001 ends with a fifth exchange whose response repeats `PUT p1`
+    /// under `toolu_w1` (as a retried request would).
+    pub repeated_put: bool,
 }
 
 struct Log {
@@ -455,6 +458,9 @@ pub fn write_as(
         Some(result("toolu_self", P1)),
     );
     log.turn(&mut a001, text("done"), None);
+    if shape.repeated_put {
+        log.turn(&mut a001, put("toolu_w1", "p1", P1), None);
+    }
     log.turn(
         &mut a002,
         get("toolu_r1", "p1"),

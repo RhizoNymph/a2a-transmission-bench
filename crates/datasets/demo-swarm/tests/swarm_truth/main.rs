@@ -11,6 +11,7 @@ mod fixture;
 mod join;
 mod scenario;
 mod sessions;
+mod tool_use;
 mod truth;
 mod window;
 

@@ -61,8 +61,10 @@ pub const DATASET_PREFIX: &str = "demo-swarm";
 pub const HEADLINE: &str = "demo-swarm/headline";
 pub const BOILERPLATE: &str = "demo-swarm/boilerplate";
 
-/// The dataset version (`demo-swarm/<scenario>@1`): ct-eval's labels.
-pub const VERSION: u32 = 1;
+/// The dataset version (`demo-swarm/<scenario>@2`). `@1` was ct-eval's
+/// labels, joined turn first; `@2` joins by tool use id alone, which moves
+/// labels in runs whose truth turns ran ahead of the capture.
+pub const VERSION: u32 = 2;
 
 /// The model the world's agents are declared with (the swarm's agents talk
 /// to an Anthropic-shaped upstream), as ct-eval declared them.

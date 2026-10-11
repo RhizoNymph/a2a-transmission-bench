@@ -51,34 +51,38 @@ pub enum Side {
 pub enum JoinFailure {
     /// No exchange in the log carries this session id.
     UnknownSession { session: String },
-    /// The session has fewer exchanges than the turn, and no exchange of
-    /// it holds the tool use.
-    TurnOutOfRange {
-        session: String,
-        turn: u32,
-        exchanges: usize,
-    },
-    /// The tool use is in the session, but at another ordinal than the
-    /// truth's turn. The row was joined to the exchange holding it.
+    /// The row was joined (by tool use id) to an exchange at another
+    /// ordinal than the truth's turn, including a turn past the session's
+    /// last exchange. Turns are never used to join; reported only, and the
+    /// row is kept.
     TurnMismatch {
         session: String,
         turn: u32,
         found_turn: u32,
         exchange: ExchangeId,
     },
-    /// The tool use is where the truth says, but its bytes do not hash to
-    /// `content.blake3`.
+    /// The tool use was found (`turn` is the truth's), but its bytes do not
+    /// hash to `content.blake3`.
     HashMismatch {
         session: String,
         turn: u32,
         tool_use_id: String,
         exchange: ExchangeId,
     },
-    /// No exchange of the session holds the tool use.
+    /// No exchange of the session holds the tool use (`turn` is the
+    /// truth's, whether or not the session reaches it).
     ToolUseMissing {
         session: String,
         turn: u32,
         tool_use_id: String,
+    },
+    /// More than one response of the writer's session holds the `PUT` tool
+    /// use; the first (`exchange`) is joined. Reported only.
+    ToolUseRepeated {
+        session: String,
+        tool_use_id: String,
+        exchanges: usize,
+        exchange: ExchangeId,
     },
     /// The writer's tool call is not a `PUT` with a string body.
     NotAPut {
@@ -127,10 +131,10 @@ impl JoinFailure {
     pub fn name(&self) -> &'static str {
         match self {
             Self::UnknownSession { .. } => "unknown_session",
-            Self::TurnOutOfRange { .. } => "turn_out_of_range",
             Self::TurnMismatch { .. } => "turn_mismatch",
             Self::HashMismatch { .. } => "hash_mismatch",
             Self::ToolUseMissing { .. } => "tool_use_missing",
+            Self::ToolUseRepeated { .. } => "tool_use_repeated",
             Self::NotAPut { .. } => "not_a_put",
             Self::Body { .. } => "body",
             Self::BadUrl { .. } => "bad_url",

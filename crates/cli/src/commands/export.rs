@@ -17,7 +17,7 @@
 //!
 //! demo-swarm's holdout unit is a whole run ([`holdout::demo_swarm`]): the
 //! capture's run, made with a holdout seed, exported for the release, its
-//! entry added to or checked against `splits/demo-swarm@1.holdout.commit`.
+//! entry added to or checked against `splits/demo-swarm@<version>.holdout.commit`.
 
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};

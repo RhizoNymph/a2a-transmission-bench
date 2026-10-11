@@ -1,5 +1,5 @@
-//! The join: truth rows to the capture's exchanges by session + turn,
-//! checked by tool use id and BLAKE3, and the labels it makes.
+//! The join: truth rows to the capture's exchanges by session and tool
+//! use id, checked by BLAKE3, and the labels it makes.
 
 use a2a_bench_dataset_demo_swarm::{Effect, JoinFailure, RowKind, Side};
 use a2a_bench_format::ids::{LabelId, SourceRef};
@@ -235,7 +235,7 @@ fn an_unknown_session_and_a_missing_turn_are_reported() {
         failures,
         [
             (Some(2), Side::Reader, "unknown_session", Effect::Dropped),
-            (Some(3), Side::Reader, "turn_out_of_range", Effect::Dropped),
+            (Some(3), Side::Reader, "tool_use_missing", Effect::Dropped),
             (
                 Some(4),
                 Side::Writer,
