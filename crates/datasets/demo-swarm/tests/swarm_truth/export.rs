@@ -48,6 +48,65 @@ fn exported(name: &str, truth: &[serde_json::Value]) -> (fixture::Written, std::
     (written, out)
 }
 
+/// Two agents' exchanges in one microsecond, the later agent's under the
+/// smaller id: the export keeps the capture's (`at_us`, id) order, so its
+/// input view is the capture's and the export is not refused.
+#[test]
+fn exchanges_in_one_microsecond_keep_the_captures_order() {
+    let dir = fixture::dir("export-tied");
+    let run = dir.join("run");
+    std::fs::create_dir_all(&run).unwrap();
+    let written = fixture::write_shaped(
+        &run,
+        &fixture::truth_rows(),
+        Shape {
+            tied: true,
+            ..Shape::default()
+        },
+    );
+    let (a001_last, a002_first) = (written.a001[3].id, written.a002[0].id);
+    let order: Vec<_> = written
+        .exchanges
+        .iter()
+        .map(|exchange| exchange.id)
+        .collect();
+    let at = |id| order.iter().position(|held| *held == id).unwrap();
+    assert!(
+        at(a002_first) < at(a001_last),
+        "the capture puts a002 first"
+    );
+    let out = dir.join("export");
+    write_export(&written.inputs, &out, &Options::default(), converter())
+        .expect("the export is written");
+    for name in ["messages.jsonl", "exchanges.jsonl"] {
+        assert_eq!(
+            std::fs::read(written.dir.join(name)).unwrap(),
+            std::fs::read(out.join(name)).unwrap(),
+            "{name}"
+        );
+    }
+    let exchanges = sections::<Exchanges>(&out.join("exchanges.jsonl"));
+    let labels = sections::<Labels>(&out.join("labels.jsonl"));
+    let rows: Vec<Exchange> = exchanges[0]
+        .rows
+        .iter()
+        .map(|ExchangeRow::Exchange(exchange)| exchange.clone())
+        .collect();
+    let held: Vec<Message> = sections::<Messages>(&out.join("messages.jsonl"))[0]
+        .rows
+        .iter()
+        .map(|MessageRow::Message(message)| message.clone())
+        .collect();
+    let inputs = WorldInputs::new(
+        &exchanges[0].world.key,
+        held,
+        exchanges[0].world.clone(),
+        rows,
+    )
+    .expect("the inputs check");
+    check_labels(&inputs, &labels[0].rows).expect("the labels check");
+}
+
 #[test]
 fn the_export_reads_back_through_every_check() {
     let (_, out) = exported("export-roundtrip", &fixture::truth_rows());

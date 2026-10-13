@@ -5,7 +5,7 @@
 //! truth ─▶ RunWindow::of ─▶ window::split(capture.exchanges) ─▶ inside ─▶ Sessions::index
 //!                                                              └▶ reused (truth sessions) ─▶ session_reused_outside_run
 //! truth ─▶ agents_and_sessions ─▶ index_agents(sessions) ─▶ AgentIndex (session, exchange → agent)
-//! world: the truth's agents (model-driven), the indexed exchanges sorted by (at_us, agent, id),
+//! world: the truth's agents (model-driven), the indexed exchanges in capture order (at_us, id),
 //!        the messages they use; exchange_agent rows from the index
 //! Resolver(truth rows) ─▶ labels, each checked against the world ─▶ World::new (all checks again)
 //! diagnostics ─▶ counts by failure name ─▶ World::add_note (the manifest's notes)
@@ -170,9 +170,9 @@ pub fn label(
                 .map(|agent| (exchange.clone(), agent.clone()))
         })
         .collect();
-    exchanges.sort_by(|(a, a_agent), (b, b_agent)| {
-        (a.at_us, a_agent, a.id).cmp(&(b.at_us, b_agent, b.id))
-    });
+    // The capture's order, (`at_us`, id): the agent is truth the capture
+    // cannot order by, and the export's input view must be the capture's.
+    exchanges.sort_by_key(|(exchange, _)| (exchange.at_us, exchange.id));
     let agent_rows: Vec<Label> = exchanges
         .iter()
         .map(|(exchange, agent)| {
