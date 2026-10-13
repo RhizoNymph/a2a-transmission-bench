@@ -114,7 +114,7 @@ DemoSwarmSource::open(Inputs, Options)
                        session_conflict (noted) when two agents claim one
       turn_check ──▶ client_turn_mismatch (noted)
       world: decl = truth agents (model, anthropic/claude);
-             exchanges = the owned in-window ones, sorted (at_us, agent, id);
+             exchanges = the owned in-window ones, in capture order (at_us, id);
              messages = those they use, in capture order;
              exchange_agent rows from the index
       Checker(WorldInputs, exchange_agent rows)
@@ -327,8 +327,12 @@ exchange is kept without it (`invalid_label`, writer side,
 - **One run is one world.** The world holds the in-window exchanges of
   the sessions the truth names; agents are every name the truth gives.
 - **Determinism.** Agents, sessions and claims are ordered maps;
-  exchanges sort by (time, agent, id); two exports of the same inputs are
-  byte-identical (tested), `diagnostics.json` included.
+  exchanges keep the capture's (time, id) order; two exports of the same
+  inputs are byte-identical (tested), `diagnostics.json` included.
+- **Ties keep the capture's order.** Two agents' exchanges in one
+  microsecond stay in (time, id) order, never reordered by agent: the
+  agent is truth the capture cannot sort by, and an export whose files
+  differ from the capture's manifest is refused (tested).
 - **No excerpts.** The truth's `content.excerpt` is parsed (strict
   schema) and never copied into labels, diagnostics or docs.
 - The format's world checks apply: an agent's exchanges must strictly

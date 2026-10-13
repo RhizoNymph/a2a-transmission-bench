@@ -161,6 +161,10 @@ pub struct Shape {
     /// a001 ends with a fifth exchange whose response repeats `PUT p1`
     /// under `toolu_w1` (as a retried request would).
     pub repeated_put: bool,
+    /// a002's first exchange starts in the same microsecond as a001's
+    /// last, under a smaller id (as the gateway may mint them), so the
+    /// capture's (`at_us`, id) order puts a002 before a001.
+    pub tied: bool,
 }
 
 struct Log {
@@ -172,16 +176,23 @@ struct Log {
     clock: u64,
     counter: u128,
     turn_offset: u32,
+    /// The next exchange shares the last one's microsecond and takes id
+    /// counter 0, below every earlier one's.
+    tie_next: bool,
 }
 
 impl Log {
     /// One exchange of `agent`: the history as request, then `response`;
     /// afterwards the history holds the response and `result`, if any.
     fn turn(&mut self, agent: &mut Agent, response: Message, result: Option<Message>) {
-        self.clock += 1;
+        let tied = std::mem::take(&mut self.tie_next);
+        if !tied {
+            self.clock += 1;
+        }
         let at = self.base + self.clock * 10_000_000;
         self.counter += 1;
-        let id = ExchangeId::from_raw((u128::from(at / 1000) << 80) | self.counter);
+        let counter = if tied { 0 } else { self.counter };
+        let id = ExchangeId::from_raw((u128::from(at / 1000) << 80) | counter);
         let last_tool = agent
             .history
             .last()
@@ -430,6 +441,7 @@ pub fn write_as(
         clock: 0,
         counter: 0,
         turn_offset: shape.turn_offset,
+        tie_next: false,
     };
     let mut prior_a002 = shape.prior.then(|| Agent::new("a002"));
     if let Some(agent) = &mut prior_a002 {
@@ -461,6 +473,7 @@ pub fn write_as(
     if shape.repeated_put {
         log.turn(&mut a001, put("toolu_w1", "p1", P1), None);
     }
+    log.tie_next = shape.tied;
     log.turn(
         &mut a002,
         get("toolu_r1", "p1"),
@@ -495,6 +508,25 @@ pub fn write_as(
         stranger = agent.turns;
     }
 
+    // The adapter's capture order: exchanges by (`at_us`, id), messages by
+    // first use in them.
+    log.exchanges
+        .sort_by_key(|exchange| (exchange.at_us, exchange.id));
+    let mut used = Vec::with_capacity(log.messages.len());
+    for id in log.exchanges.iter().flat_map(|exchange| {
+        exchange
+            .request
+            .messages
+            .iter()
+            .chain(&exchange.response.messages)
+    }) {
+        if !used.iter().any(|held: &Message| held.id() == *id)
+            && let Some(held) = log.messages.iter().find(|held| held.id() == *id)
+        {
+            used.push(held.clone());
+        }
+    }
+    log.messages = used;
     let dataset = DatasetId::new(dataset).unwrap_or_else(|error| panic!("{error}"));
     let world = WorldKey::new(world).unwrap_or_else(|error| panic!("{error}"));
     write_capture(dir, &dataset, &world, &log.messages, &log.exchanges);
