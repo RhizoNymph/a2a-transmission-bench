@@ -1,5 +1,8 @@
 # Release results, 2026-10
 
+A second held-out release, on crosstalk `a74f808` with eight new runs, is in
+[release-2026-10-r2.md](release-2026-10-r2.md).
+
 crosstalk against the bench's naive baseline `a2a-reference`, both scored by
 a2a-transmission-bench, in two parts:
 
