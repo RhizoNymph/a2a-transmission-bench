@@ -1,14 +1,14 @@
-# Parity results: P2–P4 against ct-eval
+# Parity results: P1–P7 against ct-eval
 
 Stages from [../../docs/design/separation.md](../../docs/design/separation.md) §7.2,
-run on 2026-10-06 at bench commit `2a24ddd` (`feat/cli`), release build.
+run on 2026-10-06; P2–P4 at bench commit `2a24ddd` (`feat/cli`), release build.
 
 - **Golden inputs:** crosstalk `9707b1d` (PR #108): `ct-eval export --format a2a-bench/1`
   and `ct-eval run --predictions-out`, in
   `~/Code/ai/crosstalk/golden-scratch/sanity/<run>/`. Predictions are ct-eval's reference
   matcher, except headline/boilerplate (crosstalk gateway export).
 - **Baseline:** ct-eval's own `report.json` at crosstalk `7f8a2fb`
-  (`parity/baseline-7f8a2fb/`, kept on the design branch's worktree).
+  ([`parity/baseline-7f8a2fb/`](../baseline-7f8a2fb/README.md)).
 - **Datasets:** `~/Data/ai/agents` through the repository's `datasets.toml`.
 - Every result file here holds counts, ids, digests, gate names and selection settings
   only; no message, label or source text.
@@ -123,7 +123,9 @@ Every remaining difference, explained:
   `hf download --local-dir` copy (revision in `.cache/huggingface/download/*.metadata`), not
   an HF cache snapshot, and the bench's `source_revision` recognises only `snapshots/<hash>`
   paths and git work trees. wiki-demo and swarm-traces: golden `unknown`, bench
-  `unversioned` (spelling of "no revision").
+  `unversioned` (spelling of "no revision"). Both fixed since: `source_revision` reads
+  an HF local dir's metadata (salt is now `2eba8f37…`) and spells no revision `unknown`
+  (`docs/features/cli.md`).
 
 No signed-message id differences arose: every messages file is byte-identical.
 
@@ -149,7 +151,7 @@ gates/crosstalk-live.toml --examples 0` on the 4d3d2c3 golden exports.
 | --- | --- | --- | --- |
 | wiki `--demo`, forwarding off | equal (84 values) | 0.985 / 1.000 | none apply |
 | SALT `--limit 53`, forwarding off | equal (93 values) | 0.854 / 0.955 | 5/5 pass |
-| SALT `--limit 53`, forwarding on | equal (82 values) | 0.894 / 0.882 | forwarding gate fails on both sides (0.885 < 0.94; the 0.86 bound is on `chore/gates-salt-forwarding-on`) |
+| SALT `--limit 53`, forwarding on | equal (82 values) | 0.894 / 0.882 | forwarding gate fails on both sides (0.885 < 0.94; the bound has since been lowered to 0.86, bench PR #18) |
 
 The only listed differences are the lengths of the `misses` and
 `false_positives` example lists, because ct-eval's reports were written with

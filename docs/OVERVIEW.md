@@ -6,9 +6,16 @@ Overview:
     datasets into a provider-neutral on-disk format (messages, exchanges,
     labels), runs any detector as a separate process over the inputs, and
     scores the detector's predictions against the labels with regression
-    gates per detector. Status: design approved (docs/design/separation.md);
-    the library crates and the a2a-bench CLI are integrated; parity stages
-    P2-P4 passed on 2026-10-06 (results on test/parity).
+    gates per detector. Status: built to the design
+    (docs/design/separation.md); parity stages P1-P7 against crosstalk-eval
+    passed on 2026-10-06 (parity/results/README.md), after which crosstalk
+    retired ct-eval's scoring. Current tags: a2a-bench-v1.1.1 (bench
+    release) and a2a-bench-format-v1.0.0 (the format crate crosstalk's
+    adapter pins); crate versions stay at the workspace's 0.1.0. Published
+    results: docs/results/release-2026-10.md (first held-out demo-swarm
+    release at demo-swarm@1, and the public-dataset table) and
+    docs/results/release-2026-10-r2.md (second held-out release, at
+    demo-swarm@2).
   subsystems:
     format: >
       a2a-bench-format. On-disk types for messages, exchanges, labels and
@@ -54,8 +61,13 @@ Overview:
     messages, exchanges); the detector writes
     predictions.jsonl. a2a-bench score reads labels, exchanges and
     predictions and writes report.json, a table and gate outcomes. Detectors
-    are external processes; crosstalk's adapter (ct-bench-detect) lives in
-    the crosstalk repo and depends only on a2a-bench-format.
+    are external processes; crosstalk's adapter (ct-bench-detect, crate
+    crosstalk-bench-adapter in crates/bench-adapter) lives in the crosstalk
+    repo and uses only a2a-bench-format from the bench (pinned to tag
+    a2a-bench-format-v1.0.0). For demo-swarm it also writes the capture
+    (input view) of a saved node0 run, which the bench labels from the
+    swarm's truth; holdout runs are whole runs, committed per run in
+    splits/demo-swarm@<n>.holdout.commit.
 Features Index:
   format:
     description: The on-disk format a2a-bench/1 - messages, exchanges, labels, predictions, manifest, framing, cross-file checks (including location-sorted evidence in predictions)

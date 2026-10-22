@@ -35,8 +35,9 @@ scores its predictions and diffs exports or predictions for parity. Design:
   `crates/reference`).
 - Conversion, scoring rules, gates' contents, the format: the library
   crates. The CLI only wires them.
-- Real split lists and revision pins: none exist yet (`splits/` holds
-  nothing, `datasets.toml` pins nothing).
+- Real dev lists and revision pins: none exist yet (`splits/` holds only
+  demo-swarm's holdout commitment lists, `demo-swarm@1` and `@2`, which
+  `export` writes; `datasets.toml` pins nothing).
 - `diff --agreement` (design §5.2) and gates keyed by dataset version
   (design §8): not built.
 - The demo-swarm runs themselves: node0 makes them and crosstalk's
@@ -214,7 +215,7 @@ diff
 | `tests/holdout.rs` | holdout refusals, commitment, release runs, aggregate reports | |
 | `tests/demo_swarm_holdout.rs` | demo-swarm holdout runs over the crate's synthetic capture (`#[path]` to its fixture): manifest marks, seed rule, commit list, inside-repo refusal, dev unchanged, the capture's predictions and the reference detector scored with aggregates, image-digest releases | |
 | `tests/canon.rs` | channel resources differing only in canonical form align | |
-| `tests/units.rs` | revisions (HF symlink, HF local dir common and mixed, git guard, unknown), pins, commitment, flags, names |
+| `tests/units.rs` | revisions (HF symlink, HF local dir common and mixed, git guard, unknown), pins, commitment, flags, names | |
 | `tests/diff_agents.rs` | `diff --normalize-ids`: same split under other names diffs empty, another split differs, header-only differences reported apart | |
 
 ## Invariants and constraints

@@ -424,10 +424,8 @@ any exported byte for the same inputs):
 ## Real-data comparison
 
 The saved node0 runs (`crosstalk/bench-runs/20261006T020835Z`, headline,
-and `20261006T021639Z`, boilerplate) hold the gateway's own formats;
-the adapter that writes their captures is being built, so the full
-label comparison waits for it (stage P7). Done now: both runs'
-`truth.jsonl` parse under the strict v2 schema, and their row counts
+and `20261006T021639Z`, boilerplate) hold the gateway's own formats.
+Both runs' `truth.jsonl` parse under the strict v2 schema, and their row counts
 (`tests/real_truth.rs`) against ct-eval's `diagnostics.json` from the
 parity baseline (`parity-out/bench-*-swarm/`, ct-eval at 7f8a2fb, every
 row joined, nothing dropped):
@@ -452,5 +450,14 @@ ct-eval's tables for both runs hold only `agent_cluster / row /
 key_group_not_a_cluster / noted / 20`; every key group is one agent
 (`agents_per_key` 1), so the bench reports the same 20 and labels no
 cluster. ct-eval resolved 254 (headline) and 247 (boilerplate) in-window
-exchanges, none excluded; the bench's world should hold the same counts
-once the capture exists.
+exchanges, none excluded.
+
+Stage P7 then labelled the adapter's captures of both runs
+(`ct-bench-detect from-export`) and scored its predictions with
+`gates/crosstalk-gateway-export.toml`: equal to ct-eval (headline 1.000 /
+1.000; boilerplate 1.000 / 0.883, 89.1 FP/1k), every gate passing
+([../../parity/results/README.md](../../parity/results/README.md) "P7",
+and cli.md). Held-out runs scored since are in the release results
+([../results/release-2026-10.md](../results/release-2026-10.md) at `@1`,
+[../results/release-2026-10-r2.md](../results/release-2026-10-r2.md) at
+`@2`).
