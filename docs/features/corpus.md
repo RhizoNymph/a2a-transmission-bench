@@ -37,7 +37,8 @@ never on a crosstalk crate.
   pinned revision; the CLI enforces it.
 - The holdout commitment file (`splits/<dataset>@<n>.holdout.commit`) and
   aggregate-only holdout reports: the scorer and CLI.
-- Real split files: none exist yet.
+- Real dev lists: none exist yet (`splits/` holds only demo-swarm's
+  holdout commitment lists, which the CLI writes).
 - Dataset bytes: tests use synthetic worlds only.
 
 ## Data and control flow

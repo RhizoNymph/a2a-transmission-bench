@@ -152,8 +152,8 @@ channel label.
 | `src/run/export.rs` | an export directory | `score_export` (manifest digest and file trailer digests checked) |
 | `src/run/error.rs` | run errors | `RunError` (incl. `FileDigest`, `MissingTrailer`), `FileName` |
 | `gates/reference.toml` | ct-eval's detector-less gates (9) | |
-| `gates/crosstalk-live.toml` | ct-eval's `detector = "live"` gates (20; variants `forwarding-off`, `forwarding-on`) | |
-| `gates/crosstalk-gateway-export.toml` | ct-eval's `gateway-export` gates (8) | |
+| `gates/crosstalk-live.toml` | ct-eval's `detector = "live"` gates (20; variants `forwarding-off`, `forwarding-on`; SALT forwarding-on recall 0.86) | |
+| `gates/crosstalk-gateway-export.toml` | ct-eval's `gateway-export` gates (8: five `demo-swarm/headline`, recall and precision ≥ 0.95, no reread; three `demo-swarm/boilerplate`, FP/1k ≤ 115, recall ≥ 0.95, precision ≥ 0.86) | |
 | `crates/score/tests/common/mod.rs` | synthetic world builder (`Draft`), message and label helpers, file writers | |
 | `tests/score.rs`, `score_many_labels.rs`, `score_discarded.rs`, `access_only.rs`, `tiers.rs` | ct-eval's scoring tests on bench types; forwarding, out-of-reach, exemptions, coverage | |
 | `tests/predict.rs` | rows to predictions, splits, merges, unattributed agents | |
@@ -212,8 +212,13 @@ channel label.
   take `min`, `violations` a whole `max` (optional `reason`), `fp_per_1k`
   a `max`. A gate on a dataset the run did not score is `other_dataset`; a
   gate with no data is `skipped`. Thresholds are ct-eval's at `7f8a2fb`,
-  verbatim. Search: `--gates`, `A2A_BENCH_GATES` (empty is unset), the
-  repository's `gates/`; a path is a file or a directory of `*.toml` files
+  verbatim, except three changed in the bench at crosstalk's request, each
+  recorded in its gates file: `crosstalk-live`'s SALT forwarding-on
+  forwarding recall `min` 0.94 → 0.86 (crosstalk PR #109), and
+  `crosstalk-gateway-export`'s `demo-swarm/boilerplate` `fp_per_1k` `max`
+  130 → 115 and `precision` `min` 0.80 → 0.86 (crosstalk PR #114, set
+  from the spread of four replayed boilerplate runs). Search: `--gates`,
+  `A2A_BENCH_GATES` (empty is unset), the repository's `gates/`; a path is a file or a directory of `*.toml` files
   read in name order; only a missing `--gates` is an error. A failed gate
   exits 2.
 - **No crosstalk dependency.** The crate depends on `a2a-bench-format`,
